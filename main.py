@@ -4216,14 +4216,12 @@ def create_dashboard_app(settings: Settings):
                 status="warning",
             )
             return jsonify({"label": label, "applied": "The company will not be emailed again."})
-        active = agent if (agent_thread and agent_thread.is_alive()) else None
+        active = agent if (agent_thread and agent_thread.is_alive()) else send_agent
         if active is None:
-            if send_agent is None:
-                try:
-                    send_agent = OutreachAgent(settings)
-                except GuardUnavailable as e:
-                    return jsonify({"error": _guard_refusal(e)}), 503
-            active = send_agent
+            try:
+                active = send_agent = OutreachAgent(settings)
+            except GuardUnavailable as e:
+                return jsonify({"error": _guard_refusal(e)}), 503
         active.loop_orchestrator.propose_reply_answers(
             [{"email": email, "subject": subject or "Re:", "body": body}]
         )

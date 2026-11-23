@@ -13844,7 +13844,7 @@ MUTATIONS: list[Mutation] = [
         "SEC52",
         "security-hardening",
         ".gitignore",
-        "docs/review/**/*[Nn][Oo][Tt][ _-][Ff][Oo][Rr][ _-][Ee][Kk][Aa][Ll][Aa][Bb]*/\n",
+        "docs/review/**/*[Nn][Oo][Tt][ _-][Ff][Oo][Rr][ _-][Ss][Uu][Pp][Pp][Ll][Ee][Cc][Oo]*/\n",
         "",
         ["tests/test_the_container_is_locked_down.py"],
         "a review folder marked not for SUPPLECO can be committed",
