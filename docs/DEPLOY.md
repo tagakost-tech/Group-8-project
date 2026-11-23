@@ -1,4 +1,4 @@
-# Deployment Guide — SUPPLECO Outreach Agent
+# Deployment Guide — Omega IFS Outreach Agent
 
 ## Quick preflight
 
@@ -32,8 +32,9 @@ Before anything opens the database, put `UNSUBSCRIBE_SECRET` and
 erasure key. The agent, the dashboard and every command except `doctor`
 refuse to start without it. Then add the client list (README, Client
 list): while `CLIENT_FILTER_ENABLED` is on, live sending is refused until
-it loads and screens at least one company. Put the Company Profile PDF at
-`PDF_PATH` and set `SENDER_TITLE` (section 7). `docs/SETTINGS.md` lists
+it loads and screens at least one company. Set `SENDER_TITLE` (section 7);
+the Company Profile PDF at `PDF_PATH` is optional, needed only with
+`ATTACH_PROFILE=true` (off for Omega). `docs/SETTINGS.md` lists
 every other setting.
 
 ```powershell
@@ -157,7 +158,7 @@ Only links the agent recorded when it sent the email work: `/unsubscribe/`
 followed by `u` and 32 hex digits. A link in the old form (an encoded
 address, a dot and a signature) is refused; no email with one was ever sent.
 
-**What the inbox reader believes.** SUPPLECO's mail server (Microsoft 365,
+**What the inbox reader believes.** Omega IFS's mail server (Microsoft 365,
 Gmail and most others do this) writes the result of its sender checks into
 an `Authentication-Results` header at the top of each message. The agent
 reads only that top-most header. When it says `dmarc=fail`, or both
@@ -362,7 +363,7 @@ characters: a new database refuses a shorter key, because whoever held a
 copy of the database could guess it and then test guessed addresses against
 every erasure. Then:
 
-- **Back it up apart from the database** (for example in SUPPLECO's password
+- **Back it up apart from the database** (for example in Omega IFS's password
   manager). A backup of the database without the key cannot match tokens to
   guessed addresses; the key without the database holds no personal data.
 - **Never change it.** A new key would no longer recognise anyone erased
@@ -386,7 +387,7 @@ every erasure. Then:
 ## 7. The country lock (`ENABLED_COUNTRIES`)
 
 Whether a company may be emailed without its prior consent depends on its
-country, and only SUPPLECO's counsel can decide which countries are allowed
+country, and only Omega IFS's counsel can decide which countries are allowed
 (the review's country table, decision L1.1). Until the full country rules
 are built, an interim lock applies:
 
@@ -404,7 +405,7 @@ Fill these in only from counsel's signed table.
 
 ### The first email's language, title and attachment
 
-The first email is SUPPLECO's own text: `templates/email_template.html` in
+The first email is Omega IFS's own text: `templates/email_template.html` in
 English and `templates/email_template_it.html` in Italian. Each contact gets
 every email - the first, both follow-ups, the legal footer - in one language:
 
@@ -413,7 +414,7 @@ every email - the first, both follow-ups, the legal footer - in one language:
   a company shown to be in one of them. Everyone else, `.com` and `.eu`
   addresses included, gets English.
 - `SENDER_TITLE`: what the sender is responsible for ("I am responsible for
-  ... at Suppleco" / "mi occupo di ... in Suppleco"), so an area such as
+  ... at Omega IFS" / "mi occupo di ... in Omega IFS"), so an area such as
   `Business Development`. A live first email through a mailbox without a
   title is refused, and the contact waits, pending, for a mailbox that has
   one; `doctor`'s "Sender title" fails naming the mailboxes without one.
@@ -424,9 +425,10 @@ every email - the first, both follow-ups, the legal footer - in one language:
   `SENDER_ACCOUNTS`: the same for each extra mailbox.
 - `EMAIL_SUBJECT_IT`: the Italian recipients' subject. Blank, they get the
   English subject (`EMAIL_SUBJECT`, or the `EMAIL_SUBJECTS` A/B variants).
-- With `ATTACH_PROFILE=true`, the default, a live first email is refused
-  while `PDF_PATH` is missing, a folder, empty or unreadable: the text says
-  the profile is attached. `doctor` fails; a dry run and the Direct Send
+- `ATTACH_PROFILE` is optional and `false` by default, as Omega uses it: its
+  first email attaches nothing. With `ATTACH_PROFILE=true`, a live first
+  email is refused while `PDF_PATH` is missing, a folder, empty or
+  unreadable. `doctor` fails; a dry run and the Direct Send
   preview say so. The file is looked for at each first email, so one put in
   place needs no restart. Follow-ups carry no attachment.
 - Italian recipients also get the Italian follow-ups
@@ -443,11 +445,11 @@ it is not run, nothing would age out, so schedule the command on its own. In
 PowerShell, with the project's real folder:
 
 ```powershell
-$project = "C:\path\to\SUPPLECO Outreach Product"
+$project = "C:\path\to\Omega Outreach Agent"
 $py = (Get-Command py).Source
 $options = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 $retention = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py retention" -WorkingDirectory $project
-Register-ScheduledTask -TaskName "SUPPLECO outreach retention" -Action $retention -Trigger (New-ScheduledTaskTrigger -Daily -At 02:30) -Settings $options
+Register-ScheduledTask -TaskName "Omega outreach retention" -Action $retention -Trigger (New-ScheduledTaskTrigger -Daily -At 02:30) -Settings $options
 ```
 
 - `py -3.11 main.py retention --dry-run` first: it counts what a run would
@@ -475,9 +477,9 @@ installed; a Python installed for one user is not there for the others.
 **Check it once by hand** after registering it:
 
 ```powershell
-Start-ScheduledTask -TaskName "SUPPLECO outreach retention"
-Get-ScheduledTaskInfo -TaskName "SUPPLECO outreach retention"
-(Get-ScheduledTask -TaskName "SUPPLECO outreach retention").Principal.LogonType
+Start-ScheduledTask -TaskName "Omega outreach retention"
+Get-ScheduledTaskInfo -TaskName "Omega outreach retention"
+(Get-ScheduledTask -TaskName "Omega outreach retention").Principal.LogonType
 py -3.11 main.py doctor
 ```
 
@@ -495,13 +497,13 @@ Schedule the backup daily, and a restore rehearsal every four weeks, with
 the same settings as section 8:
 
 ```powershell
-$project = "C:\path\to\SUPPLECO Outreach Product"
+$project = "C:\path\to\Omega Outreach Agent"
 $py = (Get-Command py).Source
 $options = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 $backup = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py backup" -WorkingDirectory $project
-Register-ScheduledTask -TaskName "SUPPLECO outreach backup" -Action $backup -Trigger (New-ScheduledTaskTrigger -Daily -At 02:00) -Settings $options
+Register-ScheduledTask -TaskName "Omega outreach backup" -Action $backup -Trigger (New-ScheduledTaskTrigger -Daily -At 02:00) -Settings $options
 $check = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py restore-check" -WorkingDirectory $project
-Register-ScheduledTask -TaskName "SUPPLECO outreach restore check" -Action $check -Trigger (New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Sunday -At 03:00) -Settings $options
+Register-ScheduledTask -TaskName "Omega outreach restore check" -Action $check -Trigger (New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Sunday -At 03:00) -Settings $options
 ```
 
 Check them as in section 8: after the backup runs, `doctor`'s "Backup" line
@@ -693,7 +695,7 @@ backup:
 ```powershell
 $drill = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py restore-drill" -WorkingDirectory $project
 $quarterly = New-ScheduledTaskTrigger -Weekly -WeeksInterval 13 -DaysOfWeek Sunday -At 04:00
-Register-ScheduledTask -TaskName "SUPPLECO outreach restore drill" -Action $drill -Trigger $quarterly -Settings $options
+Register-ScheduledTask -TaskName "Omega outreach restore drill" -Action $drill -Trigger $quarterly -Settings $options
 ```
 
 Check it after each run: `LastTaskResult` 0 means PASS. Also run it by hand
@@ -715,32 +717,32 @@ Work through this before the first live email. `doctor` shows most of it: a
 | --- | --- | --- | --- |
 | Unsubscribe secret | every command refuses to start while it is the shipped value or shorter than 32 characters | IT | Generate `UNSUBSCRIBE_SECRET` (README, Quick start). |
 | Erasure key | FAIL while blank or shorter than 32 characters; commands refuse to start without it, and a new database refuses a short one | IT | Generate `ERASURE_KEY` once, at least 32 characters, back it up apart from the database, never change it (section 6). "Erasure key matches the database" fails if it is ever changed. |
-| Legal identity | FAIL, "Legal identity (email footer)" | SUPPLECO | `LEGAL_ENTITY_NAME`, `LEGAL_REGISTERED_OFFICE`, `LEGAL_COMPANY_REGISTRATION`, `PRIVACY_CONTACT_EMAIL`; for an S.r.l. or S.p.A. also `LEGAL_SHARE_CAPITAL` and `LEGAL_SINGLE_MEMBER` (section 5). |
+| Legal identity | FAIL, "Legal identity (email footer)" | Omega IFS | `LEGAL_ENTITY_NAME`, `LEGAL_REGISTERED_OFFICE`, `LEGAL_COMPANY_REGISTRATION`, `PRIVACY_CONTACT_EMAIL`; for an S.r.l. or S.p.A. also `LEGAL_SHARE_CAPITAL` and `LEGAL_SINGLE_MEMBER` (section 5). |
 | Privacy notice page | FAIL while `PRIVACY_NOTICE_URL` is blank; whether the page is online is not checked | Counsel approves the text, IT publishes it | The outline is `docs/privacy/privacy_notice_en.md`, a draft for counsel. Publish it over https and set `PRIVACY_NOTICE_URL`. |
 | Countries | FAIL, "Country lock" | Counsel (decision L1.1) | `ENABLED_COUNTRIES`, and `UNKNOWN_COUNTRY_ALLOWED`, only from the signed country table (section 7). |
 | Opt-out route | FAIL, "Opt-out route" | IT | `IMAP_ENABLED=true` with a working inbox login, or a public https `BASE_URL` (section 3). |
-| Client list | FAIL, "Client list file", while it cannot be read or screens no company | SUPPLECO sales | The workbook in `data/` and `CLIENT_LIST_PATH` (README, Client list). |
+| Client list | FAIL, "Client list file", while it cannot be read or screens no company | Omega sales | The workbook in `data/` and `CLIENT_LIST_PATH` (README, Client list). |
 | Lists encrypted | WARN, "Lists encrypted", while `LISTS_KEY` is blank or a plain copy of a list is still beside it; with the key set, "Client list file" fails on a plain list | IT | `LISTS_KEY`, each list encrypted with `main.py lists encrypt`, the plain workbooks deleted, the key backed up apart from the data (section 13). |
-| Sender title | FAIL, "Sender title", naming each mailbox without one | SUPPLECO sales | `SENDER_TITLE`, and `SENDER_n_TITLE` for a mailbox with its own name (section 7). |
-| Company Profile PDF | FAIL, "PDF attachment present", while `ATTACH_PROFILE` is on | SUPPLECO sales | The PDF at `PDF_PATH` (section 7). |
+| Sender title | FAIL, "Sender title", naming each mailbox without one | Omega sales | `SENDER_TITLE`, and `SENDER_n_TITLE` for a mailbox with its own name (section 7). |
+| Company Profile PDF (optional) | FAIL, "PDF attachment present", only while `ATTACH_PROFILE` is on; SKIP while it is off | Omega sales | Nothing while `ATTACH_PROFILE=false`, as for Omega; with it on, the PDF at `PDF_PATH` (section 7). |
 | Footer in the templates | FAIL, "Legal footer in templates" | Developer | Every email and follow-up template keeps `{{legal_footer}}` and `{{unsubscribe_url}}`. |
 | Dashboard password | FAIL while blank, only spaces or shorter than 12 characters; the dashboard refuses to start | IT | `DASHBOARD_PASSWORD`, 12 characters or more, before the first start (section 3a). |
 | Sending mailbox | WARN, "SMTP credentials set"; WARN, "Microsoft sign-in", while a Microsoft 365 mailbox uses a password or the certificate ends within 30 days; `doctor --smtp` tries a live login, and "Microsoft sign-in (live)" a token and an IMAP sign-in | IT | Decide the mailbox. For a Microsoft 365 mailbox, set up Microsoft sign-in, with no password (section 12). F-20 is open (README). |
 | Reading the inbox | FAIL, "Inbox read", while an inbox has had no complete read within three check intervals; WARN, "Inbox gap", when an outage ran past the 14-day look-back | IT | `IMAP_ENABLED` and the `IMAP_*` settings; the agent reads the inbox and the Junk Email folder. An "Inbox gap" names the dates to check by hand. |
 | SPF, DKIM, DMARC | WARN for SPF and DMARC when a record is missing, SKIP when DNS could not be asked; DKIM is not checked | IT | Publish all three for the sending domain (section 4). |
-| Sender name and company | WARN, "Sender identity set (not placeholder)" | SUPPLECO sales | `SENDER_NAME` and `COMPANY_NAME`. |
-| Hot-lead alerts | WARN, "Hot-lead alerts" | SUPPLECO sales | `LEAD_ALERT_EMAIL`. |
-| Profile as a link | WARN, "Profile sent as a link, not attached", while the PDF is attached | SUPPLECO sales | SUPPLECO's first email says the profile is attached, so keep `ATTACH_PROFILE=true` unless SUPPLECO rewords it; with `ATTACH_PROFILE=false`, `PROFILE_URL` is linked only in a template that has `{{body}}`. |
+| Sender name and company | WARN, "Sender identity set (not placeholder)" | Omega sales | `SENDER_NAME` and `COMPANY_NAME`. |
+| Hot-lead alerts | WARN, "Hot-lead alerts" | Omega sales | `LEAD_ALERT_EMAIL`. |
+| Profile as a link | WARN, "Profile sent as a link, not attached", while the PDF is attached | Omega sales | Omega's first email attaches nothing, so keep `ATTACH_PROFILE=false`; `PROFILE_URL` is linked only in a template that has `{{body}}`, and the shipped first email has none. |
 | Warm-up | WARN, "Warm-up ramp" | IT | Keep the defaults: off, a first day above 10 or a daily rise above 5 warns. |
 | Open tracking | WARN when on | IT | Keep `OPEN_TRACKING_ENABLED=false` (section 3). |
-| AI processing agreement | WARN when an AI sees recipients' data without it | SUPPLECO, with counsel | `AI_DPA_REFERENCE`, only if an AI switch is on. |
+| AI processing agreement | WARN when an AI sees recipients' data without it | Omega, with counsel | `AI_DPA_REFERENCE`, only if an AI switch is on. |
 | Retention schedule | WARN, "Retention run", until a run in the last two days | IT | The scheduled task of section 8. |
 | Backups | WARN, "Backup", until a backup in the last two days | IT | The scheduled tasks of section 9. |
 | Journal copy | not seen | IT | A second copy of `data\journal.jsonl` on another disk or a share (section 9). |
 | Restore drill | not seen | IT | `py -3.11 main.py restore-drill` once by hand, ending in `Restore drill PASSED`, and the scheduled task every three months (section 9). |
-| Incident plan | not seen | SUPPLECO, with IT | Read `docs/INCIDENT_PLAYBOOK.md`, fill in who is the operator and the privacy contact, and print it. |
+| Incident plan | not seen | Omega, with IT | Read `docs/INCIDENT_PLAYBOOK.md`, fill in who is the operator and the privacy contact, and print it. |
 | Always-on host | not seen | IT | A machine that stays on, and someone who starts the agent again after a reboot (F-39). |
-| Dry run | not seen | Developer, with SUPPLECO sales | `py -3.11 main.py run --dry-run`, only once L1.1 is signed and L1.13 answered, as the counsel sheet proposes (L1.9). It emails no prospect, but it searches and stores contacts and, with `IMAP_ENABLED=true`, acts on the inbox and sends lead alerts. |
+| Dry run | not seen | Developer, with Omega sales | `py -3.11 main.py run --dry-run`, only once L1.1 is signed and L1.13 answered, as the counsel sheet proposes (L1.9). It emails no prospect, but it searches and stores contacts and, with `IMAP_ENABLED=true`, acts on the inbox and sends lead alerts. |
 | Inbox placement test | not seen | Developer, with IT | The dashboard's Spam / inbox test card is disabled until counsel's country table. |
 
 `doctor`'s other lines each name what is missing or what to do: a missing
@@ -755,7 +757,7 @@ list`), and a log line that holds an address in clear.
 
 ## 11. Running the AI on your own server
 
-The only AI the agent can use is a model on a server of SUPPLECO's own: this
+The only AI the agent can use is a model on a server of Omega IFS's own: this
 machine, or another machine on the company's private network. No outside AI
 company receives any data. A `.env` that still holds one of the old cloud
 AI settings, `GEMINI_API_KEY`, `GROQ_API_KEY` or `GROQ_MODEL`, stops
@@ -917,7 +919,7 @@ sent because the address is no longer private. `doctor`'s question is not
 affected by the pause.
 
 `AI_DPA_REFERENCE` must still be filled in: while it is blank, no question
-that carries a recipient's data is asked. (With the AI only on SUPPLECO's own
+that carries a recipient's data is asked. (With the AI only on Omega's own
 server, whether this gate is still needed is the owner's decision; the code
 keeps it until then.) For a
 model on the company's own server with no outside processor, a plain note
@@ -1087,7 +1089,7 @@ each question measures:
   same answer every time) and speed.
 
 The pass marks, in `PASS_MARKS` at the top of `modules/ai_benchmark.py`, are
-a proposal for SUPPLECO to agree, and are changed there:
+a proposal for Omega IFS to agree, and are changed there:
 
 | Question | Measure | Pass mark |
 | --- | --- | --- |
@@ -1355,9 +1357,9 @@ the benchmark's.
 password sign-in for SMTP AUTH is switched off by default at the end of
 December 2026 (F-18; Microsoft revised its timeline on 27 January 2026,
 and a refused password login answers `550 5.7.30`). More important: a mailbox password kept on this
-machine is the main way a thief could send spam or phishing from SUPPLECO's
+machine is the main way a thief could send spam or phishing from Omega IFS's
 domain. With Microsoft sign-in, no mailbox password exists on this machine.
-The agent signs in as an app registered in SUPPLECO's Microsoft Entra, with a
+The agent signs in as an app registered in Omega's Microsoft Entra, with a
 certificate whose private key never leaves this machine (OAuth 2.0 "client
 credentials", then SASL XOAUTH2 for IMAP and SMTP).
 
@@ -1404,7 +1406,7 @@ copied anywhere. Git for Windows includes `openssl`. In the agent's folder:
 
 ```powershell
 openssl req -x509 -newkey rsa:3072 -sha256 -days 730 -noenc `
-  -subj "/CN=SUPPLECO outreach agent" `
+  -subj "/CN=Omega outreach agent" `
   -keyout agent-key.pem -out agent-cert.pem
 Get-Content agent-key.pem, agent-cert.pem | Set-Content -Encoding ascii data\microsoft-signin.pem
 Remove-Item agent-key.pem
@@ -1439,7 +1441,7 @@ Docker it reaches the container through the `data/` folder.
 
 1. In the Microsoft Entra admin center, open **App registrations** and choose
    **New registration**.
-2. Name it, for example "SUPPLECO outreach agent". Choose **Accounts in this
+2. Name it, for example "Omega outreach agent". Choose **Accounts in this
    organizational directory only**. Leave the redirect URI blank.
 3. On its **Overview** page, note the **Application (client) ID** and the
    **Directory (tenant) ID**.
@@ -1472,7 +1474,7 @@ In PowerShell, as an Exchange administrator:
 Install-Module -Name ExchangeOnlineManagement
 Import-Module ExchangeOnlineManagement
 Connect-ExchangeOnline -Organization <Directory (tenant) ID>
-New-ServicePrincipal -AppId <Application (client) ID> -ObjectId <Object ID> -DisplayName "SUPPLECO outreach agent"
+New-ServicePrincipal -AppId <Application (client) ID> -ObjectId <Object ID> -DisplayName "Omega outreach agent"
 ```
 
 The `<Object ID>` is the one on the **Enterprise applications** page for the
@@ -1485,7 +1487,7 @@ every sign-in fails.
 For each mailbox the agent sends from (and only those):
 
 ```powershell
-$sp = Get-ServicePrincipal -Identity "SUPPLECO outreach agent"
+$sp = Get-ServicePrincipal -Identity "Omega outreach agent"
 Add-MailboxPermission -Identity "outreach@example.com" -User $sp.Identity -AccessRights FullAccess
 ```
 
@@ -1500,7 +1502,7 @@ role, it has none for IMAP, so it cannot replace the mailbox grant for this
 agent. Do not give the app any RBAC for Applications role either: such a
 role is added on top of the grants above, and one with a wide scope would
 open more mailboxes. Check that none exists with
-`Test-ServicePrincipalAuthorization -Identity "SUPPLECO outreach agent"` (it
+`Test-ServicePrincipalAuthorization -Identity "Omega outreach agent"` (it
 should list no role). Check which mailboxes the app can open with
 `Get-MailboxPermission -Identity "outreach@example.com"` on each mailbox,
 and keep the list in IT's records.
@@ -1608,7 +1610,7 @@ Then make and upload a new one.
 
 ## 13. Encrypting the client and competitor lists (`LISTS_KEY`)
 
-The client list and the competitor list name SUPPLECO's customers and rivals.
+The client list and the competitor list name Omega IFS's customers and rivals.
 As plain workbooks, anyone who gets a copy of the install folder can open
 them: a backup, a zip sent to a colleague, a folder synced to the cloud.
 With `LISTS_KEY` set, each list is kept on disk only encrypted.
@@ -1618,7 +1620,7 @@ key. Whoever has it sees neither list.
 
 **What it does not protect:** someone who has the whole disk, or the folder
 together with `.env`, which holds the key. That is the job of disk
-encryption (BitLocker on the agent's computer, set up by SUPPLECO's IT). It
+encryption (BitLocker on the agent's computer, set up by Omega's IT). It
 does not protect the list while the agent runs either: the agent holds it
 in memory, as it must to screen with it. And it covers the two list files
 only: when the agent skips a contact because its company is on a list, the
@@ -1637,7 +1639,7 @@ by the folder's permissions and by disk encryption, as before).
   refused too. Each is treated like a missing list: live sending stops
   (`CLIENT_LIST_MISSING`, `COMPETITOR_LIST_MISSING` in the activity log),
   `doctor` fails, and the reason is written out. It is never read as an
-  empty list, which would let the agent email SUPPLECO's customers. Dry runs
+  empty list, which would let the agent email Omega IFS's customers. Dry runs
   still work.
 - With `LISTS_KEY` blank, the lists are plain files, as before, and `doctor`
   warns ("Lists encrypted").
@@ -1655,17 +1657,17 @@ by the folder's permissions and by disk encryption, as before).
 
    `LISTS_KEY=...`, at least 32 characters, or every command refuses to
    start.
-2. **Back the key up apart from the data** (for example in SUPPLECO's
+2. **Back the key up apart from the data** (for example in Omega IFS's
    password manager, next to `ERASURE_KEY`), not in the same backup as the
    folder. A backup that holds the key and the lists together protects
    nothing.
 3. Encrypt each list:
 
    ```powershell
-   py -3.11 main.py lists encrypt "data\Suppleco_Elenco_Clienti.xlsx"
+   py -3.11 main.py lists encrypt "data\clients.xlsx"
    ```
 
-   It writes `data\Suppleco_Elenco_Clienti.xlsx.enc`, checks that it decrypts
+   It writes `data\clients.xlsx.enc`, checks that it decrypts
    to exactly the same file, and says which line of `.env` to change. Set
    `CLIENT_LIST_PATH` (and `COMPETITOR_LIST_PATH` for the competitor list)
    to the `.enc` file.
@@ -1688,11 +1690,11 @@ The agent never writes a plain copy, but a person editing the list needs
 one, briefly:
 
 ```powershell
-py -3.11 main.py lists decrypt "data\Suppleco_Elenco_Clienti.xlsx.enc" --out "data\Suppleco_Elenco_Clienti.xlsx"
+py -3.11 main.py lists decrypt "data\clients.xlsx.enc" --out "data\clients.xlsx"
 # edit it in Excel, save, close Excel
-move "data\Suppleco_Elenco_Clienti.xlsx.enc" "data\Suppleco_Elenco_Clienti.xlsx.enc.old"
-py -3.11 main.py lists encrypt "data\Suppleco_Elenco_Clienti.xlsx" --delete-plain
-del "data\Suppleco_Elenco_Clienti.xlsx.enc.old"
+move "data\clients.xlsx.enc" "data\clients.xlsx.enc.old"
+py -3.11 main.py lists encrypt "data\clients.xlsx" --delete-plain
+del "data\clients.xlsx.enc.old"
 ```
 
 `decrypt` writes only to the file `--out` names, refuses to overwrite one,
@@ -1706,7 +1708,7 @@ keep its own AutoRecover copy of an open workbook; close it normally.
 
 - **Lost:** the encrypted lists cannot be read by anyone, the agent
   included. Live sending stops until they are back. Make a new key, get the
-  original workbooks again from SUPPLECO sales, and encrypt them with the new
+  original workbooks again from Omega IFS sales, and encrypt them with the new
   key (step 3). Companies marked as clients from the dashboard since the
   workbook was last exported are in the encrypted file only: ask sales to
   check the list, and mark them again. Their contacts already marked stay
@@ -1761,17 +1763,17 @@ It exits 1 on an error, so a scheduled task shows that it failed.
 3. *Actions*: Start a program. Program: `py`. Arguments:
    `-3.11 main.py security-check`. Start in: the install folder. With the
    install's own virtual environment, Program is
-   `C:\SUPPLECO\agent\.venv\Scripts\python.exe` (the install folder's) and
+   `C:\Omega\agent\.venv\Scripts\python.exe` (the install folder's) and
    Arguments `main.py security-check`.
 4. *Settings*: "Stop the task if it runs longer than" 1 hour.
 
 Or from an administrator command prompt, with the install folder in place
-of `C:\SUPPLECO\agent` and the agent's account in place of `<account>`
+of `C:\Omega\agent` and the agent's account in place of `<account>`
 (schtasks asks for its password; with the install's own virtual
 environment, put `.venv\Scripts\python.exe` in place of `py -3.11`):
 
 ```powershell
-schtasks /Create /TN "SUPPLECO security check" /SC WEEKLY /D MON /ST 07:00 /TR "cmd /c cd /d C:\SUPPLECO\agent && py -3.11 main.py security-check" /RU <account>
+schtasks /Create /TN "Omega security check" /SC WEEKLY /D MON /ST 07:00 /TR "cmd /c cd /d C:\Omega\agent && py -3.11 main.py security-check" /RU <account>
 ```
 
 Look at the dashboard's Recent Errors on Monday, as for any other error.
@@ -1784,8 +1786,8 @@ notices. Update a copy, test it, then swap:
 
 1. Stop the agent and the dashboard. Take a backup
    (`py -3.11 main.py backup`).
-2. Copy the whole install folder, for example `C:\SUPPLECO\agent` to
-   `C:\SUPPLECO\agent-new`, with `.env` and `data\`, but without `.venv` if
+2. Copy the whole install folder, for example `C:\Omega\agent` to
+   `C:\Omega\agent-new`, with `.env` and `data\`, but without `.venv` if
    there is one. In the copy, make a new virtual environment:
    `py -3.11 -m venv .venv`. The copy must have its own packages: an
    install set up as in section 1 has its packages in the one Python 3.11
@@ -1806,7 +1808,7 @@ notices. Update a copy, test it, then swap:
    All must pass, the security check with no error.
 5. Swap: rename the live folder (for example to `agent-old`) and the copy
    to the live name. From now on start everything with the install's own
-   Python, `C:\SUPPLECO\agent\.venv\Scripts\python.exe main.py ...`, in place
+   Python, `C:\Omega\agent\.venv\Scripts\python.exe main.py ...`, in place
    of `py -3.11 main.py ...`: the dashboard, the agent and every scheduled
    task, this check included. (It still works after the rename; only
    `.venv\Scripts\activate` and `pip.exe` remember the old folder name, so
@@ -1827,9 +1829,9 @@ installs `requirements.txt` fresh), run the tests in a copy as above, then
 the error "pip-audit is not installed" every time: with Docker, schedule the
 rebuild instead, monthly at least.
 
-## 15. Handing the agent and its data to SUPPLECO
+## 15. Handing the agent and its data to Omega IFS
 
-SUPPLECO gets a full copy of the agent: the program, the documents (this
+Omega gets a full copy of the agent: the program, the documents (this
 guide and `docs/USER_MANUAL.md` among them) and its own data. The data is
 the database (the contacts found, their status, every opt-out, bounce and
 block, the erasure records, the data-subject requests and the history of
@@ -1843,12 +1845,12 @@ Four things never go in:
    `docs/review` folder (the owner's prices, deal and meeting notes, and
    internal security notes);
 2. `.env` and every copy or variant of it (the owner's own passwords and
-   keys; SUPPLECO makes its own `.env` from `.env.example`, which does go in);
+   keys; Omega makes its own `.env` from `.env.example`, which does go in);
 3. `.git` (its history may hold files deleted since);
 4. working files: `logs/`, `__pycache__` and the other caches, virtual
    environments, old backups and every other database file, and every key
    or certificate file (`*.pem`, `*.key`, `*.pfx`, `*.p12`, and the file
-   `MICROSOFT_CERTIFICATE_PATH` names). SUPPLECO makes its own Microsoft
+   `MICROSOFT_CERTIFICATE_PATH` names). Omega makes its own Microsoft
    certificate (section 12).
 
 `ERASURE_KEY` and `LISTS_KEY` travel inside the archive, and nowhere else.
@@ -1868,12 +1870,12 @@ ever printed or written to a log.
    install folder:
 
    ```powershell
-   py -3.11 scripts/make_handover.py D:\handover\suppleco-agent.suppleco
+   py -3.11 scripts/make_handover.py D:\handover\omega-agent.handover
    ```
 
    It asks for a passphrase twice: at least 16 characters, for example five
    unrelated words. The passphrase is never stored or shown. Write it on
-   paper until SUPPLECO has opened the archive.
+   paper until Omega IFS has opened the archive.
 4. It checks that the agent and the dashboard are stopped and that the
    database is not behind its journal, takes a fresh checked backup of the
    database (the live file is never copied), and copies everything else but
@@ -1898,32 +1900,32 @@ ever printed or written to a log.
    a restore from an older backup) are matched to their recipient only
    under this install's `UNSUBSCRIBE_SECRET`, which does not travel. So the
    archive carries each one that matches an address the database holds as
-   that address's held opt-out, applied at SUPPLECO's first start, and says
+   that address's held opt-out, applied at Omega's first start, and says
    how many. If it prints a note about held clicks that match no address,
    ask the developer before handing over.
 
-**Sending it.** Give SUPPLECO's IT the archive and `open_handover.py`, for
+**Sending it.** Give Omega's IT the archive and `open_handover.py`, for
 example on an encrypted USB stick or through a file share. **Give the
 passphrase by phone**, never in the same email or message as the archive.
-Once SUPPLECO has confirmed that `doctor` passes in its copy, delete every
+Once Omega has confirmed that `doctor` passes in its copy, delete every
 copy of the archive: it holds every contact.
 
 **After the handover, your copy stays stopped.** Two copies would not know
-of each other's emails and opt-outs: an opt-out that reaches SUPPLECO's copy
+of each other's emails and opt-outs: an opt-out that reaches Omega's copy
 is unknown to yours.
 
-### SUPPLECO's IT: opening the archive
+### Omega IFS's IT: opening the archive
 
 1. On the agent's computer, with Python 3.11, install the one package the
    opener needs: `py -3.11 -m pip install "cryptography>=50.0,<51.0"`.
 2. Open the archive into a new folder:
 
    ```powershell
-   py -3.11 open_handover.py suppleco-agent.suppleco --into C:\SUPPLECO\agent
+   py -3.11 open_handover.py omega-agent.handover --into C:\Omega\agent
    ```
 
    With a copy of the agent already installed, `py -3.11 main.py
-   handover-restore suppleco-agent.suppleco --into C:\SUPPLECO\agent` does the
+   handover-restore omega-agent.handover --into C:\Omega\agent` does the
    same.
 3. It refuses a folder that already holds a `.env` or a database, or
    anything at all, before it asks for the passphrase: it never replaces an
@@ -1943,7 +1945,7 @@ is unknown to yours.
    install the packages, make `.env` from `.env.example`, copy the two
    lines from `.env.handover-keys` into it, **keep a copy of both keys
    apart from this computer, never change `ERASURE_KEY`**, delete
-   `.env.handover-keys`, fill in the rest of `.env` with SUPPLECO's own
+   `.env.handover-keys`, fill in the rest of `.env` with Omega's own
    values (a new `DASHBOARD_PASSWORD` and `UNSUBSCRIBE_SECRET`: links
    already sent keep working, as the database records them), and run
    `doctor` until it shows no `[FAIL]`. Then `main.py lists check`, a

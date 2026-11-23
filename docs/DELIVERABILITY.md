@@ -32,7 +32,7 @@ decisions.
   the recipient's company wherever the subject contains `{org}` (the default
   follow-up subjects do; the default `EMAIL_SUBJECT` does not), and rotate only
   with `AB_TESTING_ENABLED=true` and several `EMAIL_SUBJECTS`. The first email
-  is SUPPLECO's own fixed text, in Italian for the countries in
+  is Omega IFS's own fixed text, in Italian for the countries in
   `ITALIAN_COUNTRIES` (default `IT`), by the address or the company, and in
   English for everyone else; the
   follow-ups are short and plain, in the same language.
@@ -71,7 +71,7 @@ shared check (`DispatchPipeline.send_verdict`) and the same send
 (`_process_contact`). A first email more than `FIRST_CONTACT_MAX_AGE_DAYS`
 after collection is refused too, and so is a live first email through a
 mailbox without `SENDER_TITLE` or, while `ATTACH_PROFILE` is on, without the
-Company Profile PDF. A contact with a send still `preparing` (cut off by a
+Company Profile PDF (optional, and off for Omega). A contact with a send still `preparing` (cut off by a
 stop or a locked database) is held until that send is settled, 26 minutes at
 most, and never emailed again by it. The send also stops if an erasure, an
 opt-out or a block lands while the email is being prepared. Direct Send differs on purpose: the send
@@ -87,32 +87,33 @@ Send is a preview.
 
 These are the questions a reviewer will ask. Current status and recommendation:
 
-1. **Sending identity — open.** Mail goes out as SUPPLECO from a company
+1. **Sending identity — open.** Mail goes out as Omega IFS from a company
    mailbox; which mailbox is IT's decision. A Microsoft 365 mailbox signs in
    with a certificate, not a password (`docs/DEPLOY.md` section 12):
    Exchange Online refuses password logins over IMAP (F-17), and password
    SMTP AUTH is switched off by default at the end of December 2026 (F-18).
-   A mailbox at another provider signs in with its password. When the
-   review checked, suppleco.com's mail was delivered to
-   internetservizi.it, not to Exchange Online (F-20), so replies, bounces and
-   opt-outs may never reach the inbox the agent reads. A real company domain
-   can carry **SPF + DKIM + DMARC**; suppleco.com had no DKIM and no DMARC
-   record (F-21). Microsoft treats bulk mail from an ordinary mailbox as
+   A mailbox at another provider signs in with its password. The review
+   found an earlier placeholder client's domain delivering its mail to
+   another provider, not to Exchange Online (F-20), so replies, bounces and
+   opt-outs could never reach the inbox the agent reads; Omega's sending
+   domain has not been checked for this. A real company domain
+   can carry **SPF + DKIM + DMARC**; that placeholder domain had no DKIM and
+   no DMARC record (F-21). Microsoft treats bulk mail from an ordinary mailbox as
    best-effort use, and a restricted mailbox can send nothing until an admin
    releases it, so the outreach should not run from someone's everyday mailbox
    (F-22). _Operator to-do:_ choose the mailbox and its sign-in, publish
    SPF/DKIM/DMARC for its domain (the dashboard panel shows SPF/DMARC live),
    and make sure replies to it reach the inbox the agent reads.
 
-2. **The company-profile attachment.** SUPPLECO's own first email says the
-   Company Profile is attached, so with `ATTACH_PROFILE=true`, the default,
-   every first email carries the PDF at `PDF_PATH`, and a live first email is
-   refused without it. A 6.9 MB PDF on a **cold first email** hurts
+2. **The company-profile attachment.** The PDF is optional, and off for
+   Omega: its first email attaches nothing and mentions no attachment, so
+   with `ATTACH_PROFILE=false`, the default, no first email carries a PDF.
+   Turned on, every first email carries the PDF at `PDF_PATH`, and a live
+   first email is refused without it. A PDF on a **cold first email** hurts
    deliverability (attachments are a spam/malware signal and are best sent
-   after a reply; F-23), and `doctor` warns while it is attached. Linking it
-   instead (`ATTACH_PROFILE=false` + `PROFILE_URL=https://…`) needs SUPPLECO's
-   text reworded first: the shipped first email has no place for the link
-   and would still say the profile is attached.
+   after a reply; F-23), and `doctor` warns while it is attached.
+   `PROFILE_URL` (`https://www.omegaifs.it` by default) is linked only in a
+   template that has `{{body}}`; the shipped first email has none.
 
 3. **Warm-up pace.** The defaults start at 5/day and add 3/day, up to 100
    (start low; 100/day is reached on the 33rd sending day, about 6-7 weeks of
@@ -141,7 +142,7 @@ These are the questions a reviewer will ask. Current status and recommendation:
   all writes are transactional.
 - **AI:** only a model on the company's own server, through
   `LLM_PROVIDER=openai_compatible`; no outside AI company. The shipped emails use no AI
-  text: the first email is SUPPLECO's fixed text. In an operator's template
+  text: the first email is Omega IFS's fixed text. In an operator's template
   that asks for an AI body or opening line, the content falls back to
   hand-written copy if the model is unavailable, so sending never blocks on
   AI.

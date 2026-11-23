@@ -1,4 +1,4 @@
-# SUPPLECO Outreach Agent — Study Guide
+# Omega IFS Outreach Agent — Study Guide
 
 A complete, plain-English reference to everything the agent does, how each part
 works, and prepared answers for the hard questions. Read the **Q&A appendix**
@@ -14,21 +14,25 @@ controls) · `ARCHITECTURE.md` (the org-chart view) ·
 
 ## 1. What it is, in one paragraph
 
-An autonomous B2B cold-outreach system. It **discovers** European companies that
-sell food supplements / nutraceuticals, **extracts and qualifies** their contact
-addresses, **sends SUPPLECO's own first email** to each, in Italian or English
-by the recipient's country and with the Company Profile PDF attached, **sends**
+An autonomous B2B cold-outreach system. It **discovers** European manufacturers
+that buy small metal parts made to their drawings, **extracts and qualifies** their contact
+addresses, **sends Omega IFS's own first email** to each, in Italian or English
+by the recipient's country and with no attachment (the Company Profile PDF is
+optional and off for Omega, `ATTACH_PROFILE=false`), **sends**
 within reputation-safe limits, runs **timed follow-ups**, watches the inbox for
 **replies / bounces / unsubscribes**, and **learns** which searches produce real
 leads. It runs as a single Python service with a web dashboard. The end customer
-is **SUPPLECO** (an Italian contract manufacturer), and outreach goes out **as
-SUPPLECO** from a company mailbox; which mailbox, and how the agent signs in to
+is **Omega IFS** (a family-owned Italian maker of special cold-formed fasteners
+and precision parts, made to customer drawings), and outreach goes out **as
+Omega** from a company mailbox; which mailbox, and how the agent signs in to
 it, is still open (§6).
 
-**Not pharma.** SUPPLECO makes food supplements & nutraceuticals (vitamins,
-probiotics, omega/collagen, sports nutrition, herbal, beauty-from-within). The
-agent targets **buyers** of contract manufacturing — supplement _brands,
-distributors, retailers, pharmacies_ — never other manufacturers (competitors).
+**Buyers, not rivals.** Omega cold-forms special fasteners and precision parts
+from wire 0.5–25 mm, with in-house tooling, and is IATF 16949, ISO 9001 and
+ISO 14001 certified. The agent targets **buyers** of such parts — _automotive
+Tier-1 suppliers, window and furniture hardware makers, electrical equipment
+and appliance makers_ and similar European manufacturers — never other
+fastener makers or distributors (competitors).
 
 ---
 
@@ -77,7 +81,8 @@ screens and the blockers, and adds refusals of its own: a first email more
 than `FIRST_CONTACT_MAX_AGE_DAYS` (30) after collection, and, for a live
 send, a recipient outside the enabled countries, a contact with no recorded
 lawful basis, a first email through a mailbox without `SENDER_TITLE`, or
-one without the Company Profile PDF while `ATTACH_PROFILE` is on. It also
+one without the Company Profile PDF while `ATTACH_PROFILE` is on (it is off
+for Omega). It also
 refuses a template without the legal footer, and checks the suppression list
 again just before it writes anything about the person and just before the
 email goes, so an erasure, opt-out or block that lands meanwhile stops it. A
@@ -105,7 +110,7 @@ Everything deterministic is plain, testable code.
 | Language / runtime | Python (single process; agent runs on a background thread)                                                         |
 | Dashboard          | Flask + a JSON API served by waitress, HTTP Basic Auth, vanilla JS + Chart.js frontend; Chart.js and Font Awesome are served from `static/vendor/` (without Chart.js the charts say so and the rest works) |
 | Data               | SQLite in **WAL** mode, `busy_timeout=5000`; every write is a transaction                                          |
-| AI                 | Only an OpenAI-compatible server on SUPPLECO's own machine or private network, at `LLM_BASE_URL` (`LLM_PROVIDER=openai_compatible`), over `httpx`; no cloud AI provider |
+| AI                 | Only an OpenAI-compatible server on Omega IFS's own machine or private network, at `LLM_BASE_URL` (`LLM_PROVIDER=openai_compatible`), over `httpx`; no cloud AI provider |
 | Discovery          | DuckDuckGo (`ddgs`) search + `curl_cffi` fetch (browser TLS fingerprint; `httpx` fallback) + `BeautifulSoup` parse |
 | Email              | `smtplib` (SMTP send, pooled) · `imaplib` (inbox) · `dnspython` (MX)                                               |
 | Timezone           | `zoneinfo` Europe/Rome via `modules/clock.py`                                                                      |
@@ -138,9 +143,9 @@ monitor, the contact explainer) run directly on its connection.
 | `ai_generator.py`       | The **LLM interface**: `generate_email_body` (Copywriter), `classify_relevance` (Analyst), `suggest_discovery_queries` (Strategist), plus `generate_opening_line`, `classify_reply_intent` (reply tie-break) and `generate_companies` (legacy discovery). Retries with `Retry-After` handling; on failure each returns an empty result so callers fall back. The three classifiers (relevance, company country, reply intent) are asked at temperature 0 on every provider, so the same case gets the same verdict. |
 | `ai_benchmark.py`       | `main.py ai-benchmark`: asks `ai_generator`'s relevance, country, reply and query questions about the invented cases in `benchmark/cases`, several times each, and scores them by what a wrong answer costs against the pass marks in `PASS_MARKS`; writes nothing to the database (DEPLOY.md §11). |
 | `ai_proof.py`           | `main.py ai-proof`: builds the agent as `main.py` does and puts a few of the benchmark's invented companies through its own qualification and dry-run send, and a few invented replies through the inbox's filing and its judgement of a reply, with the three AI questions on. It sends nothing, works in a database of its own that it removes afterwards, and fails if any step but the AI reaches the network (DEPLOY.md §11). |
-| `query_generator.py`    | **Free heuristic discovery** — supplement verticals × buyer types × European countries, weighted by the learning loop. Runs when the search queue is empty, the backlog is under `MAX_PENDING_BACKLOG`, and the AI steps produced no queries. Terms proven empty are skipped.                                                                                                                               |
+| `query_generator.py`    | **Free heuristic discovery** — the client's own buyer phrases, then its market verticals × buyer types, × European countries (all from `client/omega.json`), weighted by the learning loop. Runs when the search queue is empty, the backlog is under `MAX_PENDING_BACKLOG`, and the AI steps produced no queries. Terms proven empty are skipped.                                                                                                                               |
 | `learning.py`           | **Learning loop.** Aggregates per-search outcomes; up-weights verticals/countries that produced verified contacts (and especially replies); feeds the query generator and the Strategist.                                                                                                                                                                                                                   |
-| `email_sender.py`       | Builds the MIME message (HTML + plain text + `List-Unsubscribe`; the Company Profile PDF on first emails only), sends over a **pooled, lock-guarded SMTP** connection, logs every attempt, writing its row `preparing` before the server sees it.                                                                                                                                                                                                                              |
+| `email_sender.py`       | Builds the MIME message (HTML + plain text + `List-Unsubscribe`; the Company Profile PDF on first emails only, while `ATTACH_PROFILE` is on, which it is not for Omega), sends over a **pooled, lock-guarded SMTP** connection, logs every attempt, writing its row `preparing` before the server sees it.                                                                                                                                                                                                                              |
 | `sequences.py`          | **Follow-up engine.** Enrollments, timed steps (delay-days), advance/complete/cancel. Auto-cancels on reply/unsubscribe. UTC-safe date math.                                                                                                                                                                                                                                                                |
 | `imap_monitor.py`       | Watches the inbox and the Junk Email folder, and holds live sends while one goes unread; classifies **hard bounce / soft bounce / unsubscribe / data request / auto-reply / read receipt / reply**. Parses the failed recipient from a DSN (`Final-Recipient`) and suppresses hard bounces; treats opt-outs, data requests and (from people emailed) declines as objections; marks replies "responded"; ignores auto-replies and read receipts.         |
 | `warmup.py`             | **Warm-up scheduler.** Daily allowance = start + (day−1)×increment, capped at max; resets on the Italy calendar day; `can_send()` gates the loop.                                                                                                                                                                                                                                                           |
@@ -175,27 +180,29 @@ monitor, the contact explainer) run directly on its connection.
 - **Copywriter** — `generate_email_body`: writes a short (≤~3 sentence), natural
   email body per contact; **guardrailed** (no invented facts, no greeting/sign-off,
   strips stray ones). Used only in a template that asks for `{{body}}`: the
-  shipped first email is SUPPLECO's fixed text, so it is not called for it.
+  shipped first email is Omega IFS's fixed text, so it is not called for it.
 - **Analyst** — `classify_relevance`: YES/NO on whether a scraped company is a
   plausible _client_. It answers NO only when the page clearly shows a
   company based outside Europe (Europe being the whole continent, the UK,
-  Switzerland and Norway included), a contract or private-label manufacturer
-  (a competitor: it offers to make FOR other brands), or media, job boards,
-  directories, schools, hospitals and industries with nothing to do with
-  supplements, health foods or wellness products;
-  otherwise YES, a small brand that makes its own products in its own lab,
-  kitchen, farm or workshop, a shop or pharmacy, and a company whose page
+  Switzerland and Norway included), a maker or distributor of screws, bolts,
+  rivets, pins or other fasteners or cold-formed parts (a competitor: it
+  sells what Omega sells), or news and media sites, job boards, directories,
+  schools, car dealers and garages, consumer shops and companies that do not
+  design or build physical products with metal parts in them;
+  otherwise YES, a manufacturer, OEM or Tier-1 or Tier-2 supplier that builds
+  products or assemblies with metal parts in them, an engineering or assembly
+  company that buys metal components made to its drawings, and a company whose page
   does not say where it is based included. It is judged by what the company
-  does, not by "Lab" or "Pharma" in its name, and making its own products
-  does not make a company a contract manufacturer. It leans to YES because a
+  does, not by a word in its name: a company that makes locks, hinges or
+  connectors uses fasteners but does not sell them, so it is a buyer. It leans to YES because a
   NO removes the company for good, while a YES leaves it where it would be
   without the AI. `classify_company_country` answers an ISO code, or
   UNKNOWN unless the page shows where the company itself is based; the
-  page's language, the countries it sells to and where its ingredients come
-  from do not count.
+  page's language, the countries it sells to and where its ingredients or
+  products come from do not count.
 
 **Local-only & fail-safe.** The only AI is an OpenAI-compatible server on
-SUPPLECO's own machine or private network (`LLM_PROVIDER=openai_compatible`,
+Omega's own machine or private network (`LLM_PROVIDER=openai_compatible`,
 `LLM_BASE_URL`, `LLM_MODEL`; for example Ollama). No cloud AI service is
 supported, and every address the server's host resolves to must be loopback
 or private, checked at start-up and again before each call. A leading
@@ -254,17 +261,18 @@ needs the channel the contact came through. Its preview (dry run) skips the
 reputation and pacing guards and adds no contact for an address not yet held;
 with `DRY_RUN=true` every Direct Send is a preview.
 
-**Sending identity (open):** mail goes out as SUPPLECO from a company mailbox;
+**Sending identity (open):** mail goes out as Omega IFS from a company mailbox;
 which mailbox is IT's decision. A Microsoft 365 mailbox signs in with a
 certificate, not a password (`MICROSOFT_*` settings, DEPLOY section 12):
 Exchange Online refuses password logins over IMAP, and switches password
 SMTP AUTH off by default at the end of December 2026. A mailbox at another
-provider signs in with its password. When the review checked, suppleco.com's
-mail was delivered to internetservizi.it, not to Exchange Online (F-20), so
-IT must confirm where replies arrive. With `IMAP_ENABLED=true`,
+provider signs in with its password. The review's finding that mail was
+delivered to another provider, not to Exchange Online (F-20), was made on an
+earlier placeholder client's domain, not on Omega's, so IT must confirm where
+replies arrive. With `IMAP_ENABLED=true`,
 live sending stops while an inbox the agent reads, or its junk folder, has had
-no complete read within three check intervals, as when its login fails. suppleco.com also had no DKIM
-and no DMARC record when the review checked (F-21).
+no complete read within three check intervals, as when its login fails. That placeholder domain also had no DKIM
+and no DMARC record (F-21); Omega's sending domain has not been checked.
 
 **Scaling volume:** extra mailboxes can be added (`SENDER_2_EMAIL`…). The agent
 rotates through them and **each warms up independently**, so the daily total is
@@ -279,7 +287,7 @@ the default 8-19 window).
 (The controls in full: `COMPLIANCE.md`. The legal questions, with the
 developer's proposed answers, are in `docs/privacy/decisions_for_counsel.md`.)
 
-Whether SUPPLECO may email a company without its prior consent depends on the
+Whether Omega IFS may email a company without its prior consent depends on the
 recipient's country, and that is counsel's decision (L1.1). The code assumes no
 answer: the **country lock** sends live email only to the countries in
 `ENABLED_COUNTRIES`, blank by default, so nothing goes out until counsel signs
@@ -306,7 +314,7 @@ Docker image binds `0.0.0.0`). Basic Auth always applies: the dashboard
 refuses to start without a `DASHBOARD_PASSWORD` of at least 12 characters,
 wherever it listens, and never runs Flask's debugger. Wrong passwords, write
 origins, body size and field types are checked on every request, and the page
-runs under a strict Content-Security-Policy (DEPLOY section 3a). SUPPLECO-branded, responsive (desktop → phone). Tabs: **Overview** (stats +
+runs under a strict Content-Security-Policy (DEPLOY section 3a). Omega IFS-branded, responsive (desktop → phone). Tabs: **Overview** (stats +
 charts), **Insights** (incl. the **Deliverability & Reputation** panel, A/B,
 sequences, per-domain sends, the errors of the last 14 days), **Contacts** (each row expands to explain
 why the contact was or wasn't emailed, with its history), **Campaigns**,
@@ -395,13 +403,13 @@ not start; `BASE_URL`) · **Inbox** (`IMAP_*`). Sending also includes
 ## 10. Q&A appendix — likely questions, strong answers
 
 **"What are you sending from?"**
-A company mailbox, as SUPPLECO; which one, and how the agent signs in to it, is
+A company mailbox, as Omega IFS; which one, and how the agent signs in to it, is
 IT's open decision (§6). A Microsoft 365 mailbox signs in with a certificate,
 never a password (`MICROSOFT_*` settings, DEPLOY section 12): Exchange Online
 refuses password logins for IMAP (F-17) and switches them off by default for
 SMTP at the end of December 2026 (F-18). A mailbox at another provider signs
-in with its password. When the review checked, suppleco.com's mail was
-delivered to internetservizi.it, not Exchange Online (F-20). The dashboard
+in with its password. Where Omega's mail is delivered has not been checked
+(the review's F-20 was found on an earlier placeholder domain). The dashboard
 checks and displays SPF/DMARC live, and monitors the domain against Spamhaus
 DBL / SURBL.
 
@@ -446,7 +454,7 @@ for emailed opt-outs. Consumer mailboxes and PEC addresses are never emailed.
 
 **"What happens when the AI/API is down or rate-limited?"**
 Nothing breaks. The shipped emails use no AI at all: the first email is
-SUPPLECO's fixed text. Every AI call has a deterministic fallback — hand-written
+Omega's fixed text. Every AI call has a deterministic fallback — hand-written
 email body, free heuristic discovery, rule-based relevance. It honors `Retry-After` and
 degrades gracefully. AI is a quality booster, never a dependency.
 
@@ -538,7 +546,7 @@ browser test also runs the browser tests.
 
 **"What would you do next?"**
 IT's choice of mailbox and, for Microsoft 365, the certificate sign-in set
-up in SUPPLECO's Entra (W1; DEPLOY section 12); DKIM and DMARC on the sending domain (F-21); Google Postmaster
+up in Omega's Entra (W1; DEPLOY section 12); DKIM and DMARC on the sending domain (F-21); Google Postmaster
 Tools for reputation; public HTTPS hosting for one-click unsubscribe; and, once
 counsel answers, the full country table (W2) in place of the interim country
 lock.

@@ -1,9 +1,9 @@
 # Architectural & Code Quality Audit Report
-## SUPPLECO Autonomous B2B Outreach Agent
+## Omega IFS Autonomous B2B Outreach Agent
 
-**Document Reference**: SUPPLECO-AUDIT-2026-M1  
+**Document Reference**: OMEGA-AUDIT-2026-M1  
 **Author**: Implementation Worker (`worker_m1`)  
-**Target Repository**: SUPPLECO B2B Outreach Engine: this repository's code as of 2026-10-09  
+**Target Repository**: Omega B2B Outreach Engine: this repository's code as of 2026-10-09  
 **Git Branch**: `refactor/modular-agent`  
 **Date**: 2026-10-06  
 **Status**: Historical. Written as the baseline for the stage split (2c9d87e).
@@ -37,18 +37,18 @@ live without its share capital. For the code as it is, see
 ## 1. Executive Summary & System Architecture Overview
 
 ### 1.1 Executive Summary
-The SUPPLECO Outreach Agent is an enterprise autonomous system designed for targeted B2B customer discovery, qualification, and automated multi-touch cold email outreach across Italy and the broader European market. Operating under stringent European legal standards—specifically the General Data Protection Regulation (GDPR, EU 2016/679) and Article 2250 of the Italian Civil Code—the platform combines web scraping, heuristic (rule-based) lead scoring with optional AI relevance classification, MX/SMTP mailbox verification, rate-limited email dispatch, IMAP inbox monitoring, and autonomous feedback loops.
+The Omega IFS Outreach Agent is an enterprise autonomous system designed for targeted B2B customer discovery, qualification, and automated multi-touch cold email outreach across Italy and the broader European market. Operating under stringent European legal standards—specifically the General Data Protection Regulation (GDPR, EU 2016/679) and Article 2250 of the Italian Civil Code—the platform combines web scraping, heuristic (rule-based) lead scoring with optional AI relevance classification, MX/SMTP mailbox verification, rate-limited email dispatch, IMAP inbox monitoring, and autonomous feedback loops.
 
 When this audit was written, the core orchestration engine resided in a single 3,293-line `agent.py`, and the suite had 1,099 tests. Today the engine is split across four stage modules (`modules/exclusion_manager.py`, `dispatch_pipeline.py`, `backlog_draining.py`, `loop_orchestration.py`); `OutreachAgent` in `agent.py` (696 lines) is a facade that keeps every old method name and delegates to them. The default `python -m pytest` run has 1,355 tests, and another 42 Playwright UI tests run with `pytest -m ui`.
 
 This audit profiles the architecture, inventories the supporting modules (`modules/` now holds 30 modules plus `__init__.py`; the five added since the audit are the four stage modules and `contact_explainer.py`), analyzes the database persistence and deliverability guardrails, and describes the refactoring blueprint that was then carried out in e83dadd: `agent.py` is now a facade over four stage modules.
 
 ### 1.2 System Architecture Overview
-The SUPPLECO Outreach Agent operates as an autonomous pipeline spanning seven distinct operational stages:
+The Omega IFS Outreach Agent operates as an autonomous pipeline spanning seven distinct operational stages:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   SUPPLECO PIPELINE ARCHITECTURE                                   │
+│                                   OMEGA IFS PIPELINE ARCHITECTURE                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 
    [ 1. DISCOVERY ]
@@ -140,7 +140,7 @@ The state of `OutreachAgent` is maintained through 47 attributes that are read a
 | 20 | `_email_template` | `str` | `__init__` | Loaded default HTML email template content. |
 | 21 | `_template_variants` | `list[tuple]` | `__init__` | Discovered A/B testing template variants `(name, content)`. |
 | 22 | `_subject_variants` | `list[str]` | `__init__` | Configured A/B email subject lines. |
-| 23 | `_pdf_path` | `Optional[str]` | `__init__` | Absolute path to attached company profile PDF. |
+| 23 | `_pdf_path` | `Optional[str]` | `__init__` | Absolute path to the company profile PDF, attached only while `ATTACH_PROFILE` is on (off for Omega). |
 | 24 | `lead_scorer` | `Optional[LeadScorer]` | `_init_v2` | Heuristic rule-based lead qualification scorer. |
 | 25 | `relevance_filter` | `Optional[RelevanceFilter]` | `_init_v2` | Heuristic domain, keyword, and country relevance classifier. |
 | 26 | `email_verifier` | `Optional[EmailVerifier]` | `_init_v2` | DNS MX probe and SMTP socket ping validator. |
@@ -259,14 +259,14 @@ The `modules/` package contains 31 files: `__init__.py` and 30 modules. Besides 
 | 5 | `modules/file_handler.py` | 154 | `FileHandler` (`ensure_directories`, `get_pdf_path`) | Template loading, PDF resolution, setup validation. | `pathlib` |
 | 6 | `modules/search.py` | 1,421 | `SearchModule`, `PERSONAL_DOMAINS`, `_is_certified_mail` | DuckDuckGo search plus robots-aware site scraper, PEC detection, personal-domain screening. | `httpx`, `ddgs`, `bs4`, `curl_cffi` (optional), `urllib`, `re` |
 | 7 | `modules/lead_scoring.py` | 323 | `LeadScorer` | Rule-based 0–100 score: role (0–35), email quality (0–25), organization keywords (0–25), source page (0–15); tiers A–D. | `re`, `logging` |
-| 8 | `modules/relevance.py` | 736 | `RelevanceFilter` | Deterministic gate: placeholder/junk addresses, non-European domains and mailboxes, competitor self-descriptions, negative keywords, optional SUPPLECO-vertical match. | `urllib.parse`, `re` |
+| 8 | `modules/relevance.py` | 736 | `RelevanceFilter` | Deterministic gate: placeholder/junk addresses, non-European domains and mailboxes, competitor self-descriptions, negative keywords, optional Omega IFS-vertical match. | `urllib.parse`, `re` |
 | 9 | `modules/verification.py` | 343 | `EmailVerifier` | Syntax check (email_validator), MX lookup, optional SMTP RCPT TO probe (no VRFY). | `dns.resolver`, `smtplib`, `email_validator` |
 | 10 | `modules/warmup.py` | 189 | `WarmupScheduler` | Per-mailbox warm-up ramp (start + (day−1) × increment, capped). | `modules.database`, `modules.clock` |
 | 11 | `modules/domain_throttle.py` | 187 | `DomainThrottle` | Caps sends to any one recipient domain per local calendar day (resets at midnight, Europe/Rome). | `modules.database`, `modules.clock` |
 | 12 | `modules/retry_queue.py` | 387 | `RetryQueue` | Exponential-backoff retries (5 min × 6^attempt, 3 attempts) with in_flight claiming and stale-claim recovery. | `modules.database`, `datetime` |
 | 13 | `modules/unsubscribe.py` | 225 | `UnsubscribeHandler` | HMAC-SHA256 signed opt-out tokens; opt-outs recorded via `Database.record_opt_out`. | `hmac`, `hashlib`, `base64` |
 | 14 | `modules/analytics.py` | 330 | `Analytics` | 1x1 open-tracking pixel (records only the open time; off unless `OPEN_TRACKING_ENABLED`) and dashboard chart/funnel data. | `modules.database`, `modules.clock`, `uuid` |
-| 15 | `modules/ai_generator.py` | 548 | `AIGenerator` | LLM interface (only an OpenAI-compatible server on SUPPLECO's own machine or private network, at `LLM_BASE_URL`; Gemini and Groq removed 16 Nov 2026). Company/discovery queries, opening lines, email bodies, relevance and reply-intent classification. | `httpx`, `re` |
+| 15 | `modules/ai_generator.py` | 548 | `AIGenerator` | LLM interface (only an OpenAI-compatible server on Omega's own machine or private network, at `LLM_BASE_URL`; Gemini and Groq removed 16 Nov 2026). Company/discovery queries, opening lines, email bodies, relevance and reply-intent classification. | `httpx`, `re` |
 | 16 | `modules/sequences.py` | 364 | `SequenceEngine` | Follow-up sequences: enroll, due-step detection, advance, cancel (recording why). A reply ends the sequence at its next due step, when the follow-up pass finds the contact closed. | `modules.database`, `modules.clock` |
 | 17 | `modules/imap_monitor.py` | 1,119 | `ImapMonitor` | IMAP poller: DSN bounces, opt-outs, replies, auto-replies; durable scan watermark. | `imaplib`, `email`, `modules.database`, `modules.reply_intent` |
 | 18 | `modules/query_generator.py` | 158 | `QueryGenerator`, `EUROPEAN_COUNTRIES` | Heuristic discovery queries: vertical seeds × modifiers × European countries. | `random` |

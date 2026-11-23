@@ -1,6 +1,6 @@
-# User manual - SUPPLECO Outreach Agent
+# User manual - Omega IFS Outreach Agent
 
-For the people at SUPPLECO who use the agent day to day. No technical
+For the people at Omega who use the agent day to day. No technical
 knowledge is needed. Installing, updating, backups and anything that goes
 wrong with the computer itself belong to IT: they use `docs/DEPLOY.md` and
 `docs/INCIDENT_PLAYBOOK.md`.
@@ -12,14 +12,17 @@ Your screens show your own data.
 
 **It does:**
 
-- search the web for European food-supplement and nutraceutical brands,
-  starting from SUPPLECO's own buyer keywords and the searches you add;
+- search the web for European manufacturers that buy small metal parts
+  made to their drawings (automotive Tier-1 suppliers, window and furniture
+  hardware makers, electrical equipment and appliance makers and similar),
+  starting from Omega IFS's own buyer keywords and the searches you add;
 - read the companies' own websites for a business email address;
 - check each address (does the domain take mail, is it a real business
-  address, is the company a customer or a competitor of SUPPLECO) and give
+  address, is the company a customer or a competitor of Omega) and give
   each contact a score;
-- send SUPPLECO's first email, in Italian to Italian companies and in English
-  to the others, with the Company Profile PDF, from SUPPLECO's mailbox, within
+- send Omega's first email, in Italian to Italian companies and in English
+  to the others, with no attachment (the Company Profile PDF is optional and
+  off for Omega), from Omega's mailbox, within
   safe daily limits and office hours;
 - send the follow-ups, if they are switched on;
 - read the mailbox for replies, bounces and opt-outs, stop emailing anyone
@@ -29,14 +32,14 @@ Your screens show your own data.
 
 **It does not:**
 
-- email an existing SUPPLECO customer or a listed competitor, a personal
+- email an existing Omega customer or a listed competitor, a personal
   mailbox (Gmail, Libero and the like), a certified-mail (PEC) address, or
   anyone in a country that is not switched on;
 - email again anyone who opted out, whose email bounced, or who was blocked
   or erased: that is permanent;
-- answer replies. A person at SUPPLECO answers every reply;
+- answer replies. A person at Omega answers every reply;
 - send anything to an outside AI company. If an AI is used at all, it runs
-  on SUPPLECO's own server;
+  on Omega's own server;
 - start again by itself after the computer restarts. Someone has to start
   it (section 3).
 
@@ -74,9 +77,13 @@ Ready to send", the Ready to send card (section 4.1) says why.
 
 ## 4. The dashboard, tab by tab
 
+The main app is now at `/` (screens Today, Review, Quotes, Carbon, Leads,
+Markets); the full dashboard this section describes is at `/classic`
+(**Classic dashboard** at the foot of the app's sidebar).
+
 The tabs are on the left. At the top of every tab:
 
-- **Add Query**: type a search, for example `vegan protein brand Austria`,
+- **Add Query**: type a search, for example `automotive door lock manufacturer in Germany`,
   and press Add Query. The agent runs it on its next pass.
 - **Start Agent** and **Stop** (section 3).
 
@@ -121,7 +128,7 @@ Tracked and Warmup Status once a minute.
 ![The Insights tab](manual/02-insights.png)
 
 - **Deliverability & Reputation**: the sending address; whether its domain
-  has SPF and DMARC records (they help SUPPLECO's email reach the inbox;
+  has SPF and DMARC records (they help Omega IFS's email reach the inbox;
   "could not be checked just now" means the check could not run, not that
   they are missing); emails sent; the **bounce rate** (emails that did not
   arrive; above the limit shown, the agent pauses all sending by itself);
@@ -171,7 +178,7 @@ The status of a contact:
 | Responded / Replied | The person replied. Follow-ups stop. |
 | Unverified | The address could not be confirmed; not emailed. |
 | Low score | Not a good enough fit to email (the minimum is a setting). |
-| Irrelevant / Off-target | Not a supplement brand, or not in a target market. |
+| Irrelevant / Off-target | Not a company that builds products with metal parts, or not in a target market. |
 | Failed | The email could not be sent. |
 | Blocked, unsubscribed, bounced and other closed states | Never emailed again. |
 
@@ -182,7 +189,7 @@ The buttons on each row:
 
 - **The arrow** opens the row: why the contact was or was not emailed, and
   its history.
-- **Client**: this company is an SUPPLECO customer. It is added to the client
+- **Client**: this company is an Omega IFS customer. It is added to the client
   list (after you confirm), and the agent never emails it as a prospect.
 - **Send**: put the contact back in the queue. A contact that a check
   turned down (low score, off-target, unverified) is checked again before
@@ -213,7 +220,7 @@ sent from, subject, status and opens. The statuses say what happened:
 
 To email one chosen business address now, with the same email the agent
 sends. Fill in the address, optionally the name and the company, and **how
-this contact reached SUPPLECO** (an inbound request, a trade fair, an existing
+this contact reached Omega IFS** (an inbound request, a trade fair, an existing
 customer, a referral): a live send needs it. Press **Dry run (no send)** to
 see the email first, then **Send Email**. Tick the box to add the contact to
 the automatic follow-ups.
@@ -239,7 +246,7 @@ Be careful: the two markers `{{legal_footer}}` and `{{unsubscribe_url}}`
 (the legal footer and the opt-out link) must stay in every template. If one
 is removed, live sending is refused until it is back (the Ready to send row
 "Legal footer in templates"). Ask
-SUPPLECO's counsel before you change what the email says about privacy.
+Omega IFS's counsel before you change what the email says about privacy.
 
 ### 4.7 Search Logs
 
@@ -276,7 +283,7 @@ results and how many websites it read, and whether it finished.
 
 ## 6. The client and competitor lists
 
-The agent never emails a company on the client list (SUPPLECO's customers) or
+The agent never emails a company on the client list (Omega IFS's customers) or
 on the competitor list. Both lists are kept encrypted on the agent's
 computer, so a copy of the folder without the key shows neither.
 
@@ -290,12 +297,12 @@ computer, so a copy of the folder without the key shows neither.
 - **If a list cannot be read** (the Ready to send row "Client list" or
   "Competitor list" shows Problem), live sending stops until it is fixed.
   This is on purpose: a list read as empty would let the agent email
-  SUPPLECO's customers. Call IT.
+  Omega's customers. Call IT.
 
 ## 7. Replies, opt-outs and data requests
 
 - **Replies.** The agent reads the mailbox. A reply with interest becomes an
-  Interested Lead and an alert. A person at SUPPLECO answers every reply, from
+  Interested Lead and an alert. A person at Omega IFS answers every reply, from
   the mailbox. The agent stops the follow-ups for anyone who replied.
 - **Opt-outs.** Someone can say no by clicking the link at the foot of the
   email, by replying (for example "stop", "unsubscribe", "cancellami"), or
@@ -304,7 +311,7 @@ computer, so a copy of the folder without the key shows neither.
   permanent: never Unblock it, and never add the person again by hand.
 - **Bounces.** An email that cannot be delivered marks the address as
   bounced, and it is never emailed again.
-- **Data requests** (someone asks what SUPPLECO holds about them, or to be
+- **Data requests** (someone asks what Omega holds about them, or to be
   erased). The law gives one month to answer. A request that arrives in the
   agent's mailbox is registered by the agent and shows in **Privacy and
   inbox**. A request that arrives another way (post, phone, another

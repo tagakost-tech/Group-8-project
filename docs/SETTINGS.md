@@ -1,4 +1,4 @@
-# Settings reference — SUPPLECO Outreach Agent
+# Settings reference — Omega IFS Outreach Agent
 
 Every setting the agent reads, from `Settings` in `config.py`, with its
 default and what it does. README and `docs/DEPLOY.md` point here as the
@@ -69,7 +69,7 @@ not marked Live.
 | `SMTP_USERNAME` | text | _blank_ | Mailbox | | The sending mailbox and its login. Mail goes out From and Reply-To this address, and the opt-out mailto is addressed to it. `doctor` warns while it is blank or a template placeholder. |
 | `SMTP_PASSWORD` | text | _blank_ | Mailbox | | Its password, for a mailbox that signs in with one (SMTP AUTH). Must be blank for a Microsoft 365 mailbox while Microsoft sign-in is set up (below): the agent does not start otherwise. |
 | `SENDER_NAME` | text | `Omega IFS` | | | The From name and `{{sender_name}}` in the templates: the first email's "My name is ...", and the follow-ups' signature. Set it to the person who sends. |
-| `SENDER_TITLE` | text | _blank_ | Live | | What the sender is responsible for, as `{{sender_title}}`: the first email says "I am responsible for ... at Suppleco" and "mi occupo di ... in Suppleco", so an area such as `Business Development` reads best. While the first-email templates use it, a live first email through a mailbox without a title is refused (the contact stays pending, and a retry waits for a titled mailbox), and `doctor` fails naming the mailboxes without one. A dry run shows `[set SENDER_TITLE]`. Extra mailboxes without a title of their own take this one. |
+| `SENDER_TITLE` | text | _blank_ | Live | | What the sender is responsible for, as `{{sender_title}}`: the first email says "I am responsible for ... at Omega IFS" and "mi occupo di ... in Omega IFS", so an area such as `Business Development` reads best. While the first-email templates use it, a live first email through a mailbox without a title is refused (the contact stays pending, and a retry waits for a titled mailbox), and `doctor` fails naming the mailboxes without one. A dry run shows `[set SENDER_TITLE]`. Extra mailboxes without a title of their own take this one. |
 | `SENDER_SIGNATURE` | text | _blank_ | | | The signature under the first email (`{{sender_signature}}`), its lines separated by the two characters `\n`. Blank, it is the sender's name, the title and `COMPANY_NAME`, one per line. |
 | `COMPANY_NAME` | text | `Omega IFS` | | | `{{company_name}}` in the templates and `{company_name}` in `EMAIL_SUBJECT`, and the last line of a blank `SENDER_SIGNATURE`. |
 
@@ -89,11 +89,11 @@ counts as a Microsoft mailbox too: it may keep no password, and must use
 `smtp.office365.com` port 587 (and `outlook.office365.com` port 993 for
 IMAP), so leave out its own hosts and ports. A mailbox on another provider
 keeps its password. All blank: Microsoft sign-in is off.
-How SUPPLECO's IT sets up the app: DEPLOY section 12.
+How Omega IFS's IT sets up the app: DEPLOY section 12.
 
 | Setting | Type | Default | Required | Dashboard | What it does |
 | --- | --- | --- | --- | --- | --- |
-| `MICROSOFT_TENANT_ID` | text | _blank_ | | | The Directory (tenant) ID from the app registration's Overview page (a GUID), or SUPPLECO's verified domain such as `suppleco.onmicrosoft.com`. |
+| `MICROSOFT_TENANT_ID` | text | _blank_ | | | The Directory (tenant) ID from the app registration's Overview page (a GUID), or Omega's verified domain in Entra (its `.onmicrosoft.com` name or a domain it has verified). |
 | `MICROSOFT_CLIENT_ID` | text | _blank_ | | | The app registration's Application (client) ID (a GUID). |
 | `MICROSOFT_CERTIFICATE_PATH` | text | _blank_ | | | The PEM file holding the app's private key and its certificate, for example `data/microsoft-signin.pem`; relative to the project folder. RSA of 2048 bits or more. On Linux and in Docker it must be readable by the agent's account only (`chmod 600`), or the agent does not start. Read again each time a token is asked for, so a renewed certificate is used without a restart. `doctor` warns 30 days before it ends. |
 | `MICROSOFT_CERTIFICATE_PASSPHRASE` | text | _blank_ | | | The passphrase of an encrypted private key; blank for a key without one. Left out of every printed copy of the settings. |
@@ -208,8 +208,8 @@ The periods are the developer's proposals, pending counsel (decision L5.1;
 
 | Setting | Type | Default | Required | Dashboard | What it does |
 | --- | --- | --- | --- | --- | --- |
-| `TARGET_QUERIES` | text | _blank_ | | | Comma-separated search queries for a single run without `--query`, from the command line or the dashboard. Blank, a single run takes up to five searches queued with Add Query or `add-query`, or else the free query generator, which searches SUPPLECO's own buyer keywords (Italian and English, from its 10 November 2026 list) first and then supplement categories; SUPPLECO's supplier-side keywords are never searched, as they find competitors. In continuous mode they are only the topics of AI company discovery, which is skipped while this is blank. |
-| `HEURISTIC_DISCOVERY_ENABLED` | true/false | `true` | | | The free query generator, at no API cost: continuous mode's discovery when no AI suggests queries, and a single run's source when nothing else is set. It starts from SUPPLECO's own buyer keywords. |
+| `TARGET_QUERIES` | text | _blank_ | | | Comma-separated search queries for a single run without `--query`, from the command line or the dashboard. Blank, a single run takes up to five searches queued with Add Query or `add-query`, or else the free query generator, which searches Omega IFS's own buyer phrases (Italian, German and English, from `client/omega.json`) first and then its market categories; words for what Omega itself sells (fasteners, screws, cold forming) are never searched, as they find competitors. In continuous mode they are only the topics of AI company discovery, which is skipped while this is blank. |
+| `HEURISTIC_DISCOVERY_ENABLED` | true/false | `true` | | | The free query generator, at no API cost: continuous mode's discovery when no AI suggests queries, and a single run's source when nothing else is set. It starts from Omega's own buyer phrases in `client/omega.json`. |
 | `LEARNING_ENABLED` | true/false | `true` | | | Biases the free query generator toward the product kinds and countries that have produced results. |
 | `MAX_PENDING_BACKLOG` | whole number | `300` | | yes | Continuous mode skips discovery while at least this many contacts wait to be emailed, and works through them first. |
 | `SCRAPE_RATE_LIMIT` | number | `2.0` | | | Seconds the scraper waits before each page it fetches; at least 0.5. |
@@ -225,9 +225,9 @@ The periods are the developer's proposals, pending counsel (decision L5.1;
 | `VERIFY_SMTP_PROBE` | true/false | `false` | | | Also asks the recipient's mail server whether the mailbox exists, without sending an email. Only with `VERIFY_MX` on. A mail server whose address is not on the public internet (this machine, the office network and the like) is never contacted, and the address fails the check. |
 | `LEAD_SCORING_ENABLED` | true/false | `true` | | | Scores each contact from its role, address, company name and the page it was found on. The backlog is emailed highest score first. |
 | `MIN_LEAD_SCORE_TO_EMAIL` | whole number | `15` | | yes | The lowest score a contact needs to be emailed; a contact scoring lower is discarded. |
-| `RELEVANCE_FILTER_ENABLED` | true/false | `false` | | | Drops a contact before it is emailed when the address is a placeholder, the domain or mailbox is outside Europe, the company describes itself as a contract manufacturer (a competitor) or uses a non-target word. |
+| `RELEVANCE_FILTER_ENABLED` | true/false | `false` | | | Drops a contact before it is emailed when the address is a placeholder, the domain or mailbox is outside Europe, the company describes itself as a fastener maker or distributor (a competitor) or uses a non-target word. |
 | `RELEVANCE_REQUIRE_VERTICAL` | true/false | `true` | | | With the relevance filter on, also drops a contact whose company name, description, page or domain shows none of the `RELEVANCE_VERTICALS` words. |
-| `RELEVANCE_VERTICALS` | text | _blank_ | | | The words, comma-separated, that place a company in SUPPLECO's market. Blank, the gate uses the built-in vocabulary in `modules/relevance.py` (food supplements and nutraceuticals in five languages); a list replaces it, to narrow the gate. SUPPLECO's own buyer keywords always count. |
+| `RELEVANCE_VERTICALS` | text | _blank_ | | | The words, comma-separated, that place a company in Omega IFS's market. Blank, the gate uses the market words in `client/omega.json` (`verticals`: automotive, furniture and window hardware, electrical, appliances and similar, in English, Italian and German), read by `modules/relevance.py`; a list replaces it, to narrow the gate. Omega's own buyer phrases always count. |
 
 ## Email content
 
@@ -239,7 +239,7 @@ The periods are the developer's proposals, pending counsel (decision L5.1;
 | `EMAIL_SUBJECTS` | text | _blank_ | | | Subject variants for A/B testing, comma-separated, with the placeholders of `EMAIL_SUBJECT`; a variant cannot contain a comma. Blank uses `EMAIL_SUBJECT`. |
 | `ATTACH_PROFILE` | true/false | `false` | | | Attaches the Company Profile PDF (`PDF_PATH`) to every first email, never to a follow-up. On, a live first email is refused while the PDF is missing, a folder, empty or unreadable, and `doctor` fails; it also warns that an attachment on a cold email is a spam signal. `false` sends no PDF and, with `PROFILE_URL` set, links the profile in a template that has `{{body}}`; Omega's first email attaches nothing and says nothing is attached. |
 | `PROFILE_URL` | text | `https://www.omegaifs.it` | | | The company profile's `https://` address, linked in first emails whose template has `{{body}}` while `ATTACH_PROFILE` is `false`; `doctor` then warns while it is blank or not https. |
-| `PDF_PATH` | text | `assets/presentation.pdf` | Live | | The Company Profile PDF, needed while `ATTACH_PROFILE` is on. It is looked for at each first email, so a file put in place is picked up without a restart. It is git-ignored, so add it yourself; a relative path starts at the project folder. |
+| `PDF_PATH` | text | `assets/presentation.pdf` | Live | | The Company Profile PDF, optional: needed only while `ATTACH_PROFILE` is on, which it is not for Omega. It is looked for at each first email, so a file put in place is picked up without a restart. It is git-ignored, so add it yourself; a relative path starts at the project folder. |
 | `SEQUENCES_ENABLED` | true/false | `false` | | | Follow-up emails: two of them (`templates/followup_1.html` and `followup_2.html`), the first 3 days after the first email and the second 4 days after that. |
 | `DEFAULT_SEQUENCE_NAME` | text | `Standard Outreach` | | | The name the follow-up sequence is stored under; the agent creates it when it first starts with sequences on. |
 
@@ -278,7 +278,7 @@ The periods are the developer's proposals, pending counsel (decision L5.1;
 
 ## AI (optional)
 
-The AI runs only on a model on SUPPLECO's own server (or another machine on
+The AI runs only on a model on Omega IFS's own server (or another machine on
 its private network); no outside AI company receives any data. The settings
 `GEMINI_API_KEY`, `GROQ_API_KEY` and `GROQ_MODEL` no longer exist: a `.env`
 that still has one of these lines stops start-up with a message naming the
@@ -288,15 +288,15 @@ Docker's `env_file` does with every line of `.env`). "The AI on" below means `LL
 
 | Setting | Type | Default | Required | Dashboard | What it does |
 | --- | --- | --- | --- | --- | --- |
-| `LLM_PROVIDER` | text | _blank_ | | | `openai_compatible` turns the AI on: it then asks the model on SUPPLECO's own server at `LLM_BASE_URL`, a server that speaks the OpenAI chat interface, such as Ollama. Blank means no AI. Read in any case. Any other value, such as the old `gemini` or `groq`, stops start-up: no outside AI company may receive data. |
+| `LLM_PROVIDER` | text | _blank_ | | | `openai_compatible` turns the AI on: it then asks the model on Omega's own server at `LLM_BASE_URL`, a server that speaks the OpenAI chat interface, such as Ollama. Blank means no AI. Read in any case. Any other value, such as the old `gemini` or `groq`, stops start-up: no outside AI company may receive data. |
 | `LLM_BASE_URL` | text | _blank_ | | | The model server's address up to and including `/v1`, for example `http://127.0.0.1:11434/v1` for Ollama on the same machine. Required when `LLM_PROVIDER` is `openai_compatible`, and read only then: `doctor` warns when it is set while `LLM_PROVIDER` is blank. It must point at this machine or the private network: every address its host resolves to must be loopback (`127.x`, `::1`) or private (`10.x`, `172.16.x` to `172.31.x`, `192.168.x`, `fc00::/7`). A public, link-local, multicast or unspecified address stops start-up. A name that cannot be looked up at start-up does not stop the agent (opt-outs are still read), but `doctor` reports it and no AI question is sent until it resolves; an IP address avoids the lookup. The address is resolved again before every AI call, a call to an address that is no longer private sends nothing, and the call goes to the address that was checked, never to the name looked up a second time. http or https, with no user name, password, query or fragment, and not ending in `/chat/completions`; trailing slashes are dropped. `doctor` warns when the path does not end in `/v1`. |
 | `LLM_MODEL` | text | _blank_ | | | The model's name as that server knows it, for example `qwen2.5:14b`. Required when `LLM_PROVIDER` is `openai_compatible`; there is no default. |
 | `LLM_REASONING_EFFORT` | text | `none` | | | Sent as `reasoning_effort` in each chat request to `LLM_BASE_URL`: `none`, `low`, `medium` or `high`, in any case, or blank to send no such field (for a server that refuses it). Read only when `LLM_PROVIDER` is `openai_compatible`; any other value then stops start-up. A model that reasons first can spend minutes on a one-word question unless this is `none`. |
 | `LLM_API_KEY` | text | _blank_ | | | Sent as a Bearer token to `LLM_BASE_URL` when set; when blank no Authorization header is sent. Ollama needs none. Never printed. |
 | `LLM_TIMEOUT_SECONDS` | whole number | `30` | | | How long one call to `LLM_BASE_URL` may take in all, from 5 to 300 seconds: the agent stops waiting when it runs out, however steadily the server sends its header lines or its bytes, and whether or not it falls silent part-way. It must be a whole number (anything else stops start-up), but the 5 to 300 range is checked only when `LLM_PROVIDER` is `openai_compatible`. A local model can be slow to load. |
-| `AI_DPA_REFERENCE` | text | _blank_ | | | Where the AI provider's data processing agreement is filed. While it is blank, no AI call that carries a recipient's data is made, so the switches below do nothing, and `doctor` warns while one of them is on: `COMPANY_COUNTRY_AI`, on by default, counts once the AI is on. With the AI only on SUPPLECO's own server there is no outside processor; whether this gate is still needed is the owner's decision, and until then it works as before (for example `own server, no outside processor`). |
+| `AI_DPA_REFERENCE` | text | _blank_ | | | Where the AI provider's data processing agreement is filed. While it is blank, no AI call that carries a recipient's data is made, so the switches below do nothing, and `doctor` warns while one of them is on: `COMPANY_COUNTRY_AI`, on by default, counts once the AI is on. With the AI only on Omega's own server there is no outside processor; whether this gate is still needed is the owner's decision, and until then it works as before (for example `own server, no outside processor`). |
 | `AI_PERSONALIZATION_ENABLED` | true/false | `false` | | | The AI writes the opening line from the recipient's company, in a template that has `{{opening_line}}`. None of the shipped templates has one; only the built-in fallback, used while `templates/email_template.html` is missing, does. Needs the AI on and `AI_DPA_REFERENCE`. |
-| `AI_HUMANIZE_EMAILS` | true/false | `false` | | | The AI writes the body, in a template that has `{{body}}`, instead of the hand-written copy, which it falls back to when it fails. None of the shipped templates has one: the first email is SUPPLECO's own fixed text, and the follow-ups keep their own copy. Needs the AI on and `AI_DPA_REFERENCE`. |
+| `AI_HUMANIZE_EMAILS` | true/false | `false` | | | The AI writes the body, in a template that has `{{body}}`, instead of the hand-written copy, which it falls back to when it fails. None of the shipped templates has one: the first email is Omega's own fixed text, and the follow-ups keep their own copy. Needs the AI on and `AI_DPA_REFERENCE`. |
 | `AI_RELEVANCE_ENABLED` | true/false | `false` | | | The AI judges whether each contact's company is a target; only a clear no drops it. Needs the AI on and `AI_DPA_REFERENCE`. |
 | `COMPANY_COUNTRY_AI` | true/false | `true` | | | When neither the address, the company website nor its page shows the company's country, the AI is asked for it from what the fit check already sends (company name, address domain, page description); an Italian answer gets the Italian email. Asked once per contact, before its first email, and never for an address the country lock (ENABLED_COUNTRIES) refuses. Needs the AI on and `AI_DPA_REFERENCE`. |
 | `AI_REPLY_CLASSIFICATION_ENABLED` | true/false | `false` | | | When the keyword rules cannot tell whether a reply shows interest, the AI decides from the reply's own text (600 characters). Needs the AI on and `AI_DPA_REFERENCE`. |

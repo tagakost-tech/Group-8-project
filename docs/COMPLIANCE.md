@@ -1,26 +1,26 @@
 # Compliance — GDPR / ePrivacy (B2B cold outreach)
 
 This agent performs **B2B** cold outreach to **business** contacts at European
-companies on behalf of SUPPLECO (contract manufacturer of food supplements &
-nutraceuticals), an Italian company. This document records what every email
+companies on behalf of Omega IFS (maker of special cold-formed fasteners and
+precision parts to customer drawings), an Italian company. This document records what every email
 carries and the controls the software enforces, and says plainly where a
 control depends on configuration.
 
 It is a technical record, not legal advice. The legal questions are in
 `docs/privacy/decisions_for_counsel.md` (the counsel sheet), each with the
-developer's proposed answer. Every one stays open until SUPPLECO's counsel
+developer's proposed answer. Every one stays open until Omega's counsel
 answers it, and this record cites them by id (L1.1 and so on). The drafts
 counsel completes, among them the legitimate-interest assessment, the privacy
 notice and the request procedure, are in `docs/privacy/`.
 
 ## 1. Controller identity
 
-The controller is SUPPLECO. Its identity is configuration, never hard-coded,
-because only SUPPLECO can supply it:
+The controller is Omega IFS. Its identity is configuration, never hard-coded,
+because only Omega can supply it:
 
 | `.env` key                   | What it holds                                                                  |
 | ---------------------------- | ------------------------------------------------------------------------------ |
-| `LEGAL_ENTITY_NAME`          | Registered name, e.g. "SUPPLECO S.r.l."                                          |
+| `LEGAL_ENTITY_NAME`          | Registered name, as on the company register                                    |
 | `LEGAL_REGISTERED_OFFICE`    | Sede legale, full postal address                                               |
 | `LEGAL_COMPANY_REGISTRATION` | "Reg. Imprese di … n. … – P.IVA …"                                             |
 | `LEGAL_SHARE_CAPITAL`        | Capitale sociale (required for an S.p.A./S.r.l.)                               |
@@ -36,13 +36,13 @@ Direct Send), `doctor` reports `[FAIL]` and exits 1, and the dashboard log shows
 `LEGAL_SHARE_CAPITAL` and `LEGAL_SINGLE_MEMBER` are required too; for any other
 company a blank share capital only makes `doctor` warn. A `PRIVACY_NOTICE_URL`
 that does not start with `https://` stops the settings loading at all. Dry runs
-still work. The privacy notice itself is SUPPLECO's document, for counsel to
+still work. The privacy notice itself is Omega's document, for counsel to
 approve (L3.1), and must be published at that URL: nothing checks that it is.
 What the footer must state about the company is decision L6.
 
 ## 2. Lawful basis and the country lock
 
-Whether SUPPLECO may email a company without its prior consent depends on the
+Whether Omega IFS may email a company without its prior consent depends on the
 recipient's country, and in some countries on whether the address is generic
 (info@) or names an employee. That is counsel's decision, country by country
 (L1.1, with L1.2 and L1.3), and no country is decided yet. The review's
@@ -111,7 +111,7 @@ included, in Italian: the footer is the same draft translated sentence for
 sentence, also for counsel (L3.2), recorded as `notice-li-2-it`,
 `notice-consent-2-it` or `notice-customer-2-it` (`NOTICE_VERSIONS_IT`).
 Version 1 (`notice-li-1` and so on) said "an AI service"; version 2, from 16
-November 2026, says the AI is a model running on SUPPLECO's own server and that
+November 2026, says the AI is a model running on Omega IFS's own server and that
 no outside AI company receives the data. Only the AI sentence changed.
 So does a contact whose company is shown to be in one of those countries,
 by its website's domain, by its own page (an Italian VAT number or legal
@@ -131,7 +131,7 @@ HTTPS).
 | Business addresses only | Consumer mailbox providers across Europe (gmail, libero, gmx, web.de, orange.fr, wanadoo, t-online, seznam, wp.pl …) are never harvested, and the send check refuses them on every path, Direct Send included.                                                                                                                                                                                                                       |
 | No certified mail       | PEC addresses (legal correspondence) are never harvested, and the send check refuses them on every path.                                                                                                                                                                                                                                                                                                                             |
 | Enabled countries only  | The country lock (section 2) refuses every live send to a recipient outside the enabled countries.                                                                                                                                                                                                                                                                                                                                   |
-| Relevant recipients     | Lead scoring; the relevance filter (European, supplement vertical, competitor keywords) when `RELEVANCE_FILTER_ENABLED=true` - it is off by default; competitors screened by SUPPLECO's named list once `COMPETITOR_LIST_PATH` points at it (blank by default; `doctor` then shows `[SKIP] none configured`); existing clients screened by the client list, without which live sending is refused while `CLIENT_FILTER_ENABLED` is on. |
+| Relevant recipients     | Lead scoring; the relevance filter (European, target-market vertical, competitor keywords) when `RELEVANCE_FILTER_ENABLED=true` - it is off by default; competitors screened by Omega IFS's named list once `COMPETITOR_LIST_PATH` points at it (blank by default; `doctor` then shows `[SKIP] none configured`); existing clients screened by the client list, without which live sending is refused while `CLIENT_FILTER_ENABLED` is on. |
 | A company that said no  | After an opt-out by email or a data request from someone the agent emailed, a one-click unsubscribe or an erasure, no address at that company is emailed or collected again (section 7).                                                                                                                                                                                                                                             |
 | Provenance              | Each contact records the page it was found on (none for a Direct Send), its source channel, its basis and the rules version (section 2). After each live send, `consent_log` records the basis it relied on, once per address and basis, with the contact, the channel and the rules version.                                                                                                                                        |
 | robots.txt              | Read before a site's pages are fetched, and its rules for all crawlers (`User-agent: *`) are obeyed. The fetcher presents itself as a Chrome browser (its User-Agent and TLS fingerprint are Chrome's, `modules/search.py`), so a site cannot write a rule for this agent by name. A robots.txt that cannot be fetched or read counts as allowing everything.                                                                        |
@@ -345,7 +345,7 @@ suppression list and blocks no company (section 6).
 - Have the legitimate-interest assessment completed for each country where it
   is relied on (L2.1), and review it periodically and before any change of
   target market.
-- Honour objections across **all** of SUPPLECO's systems, not just this tool
+- Honour objections across **all** of Omega IFS's systems, not just this tool
   (L5.12).
 - Answer access and erasure requests within one month (Art. 12(3)), from the
   register (`main.py dsr list`).
@@ -357,8 +357,8 @@ suppression list and blocks no company (section 6).
 
 ## 9. Security measures (GDPR Art. 32)
 
-- **The AI stays on SUPPLECO's own machines.** The only AI the agent can use is
-  a model on SUPPLECO's own server (`LLM_PROVIDER=openai_compatible`, for
+- **The AI stays on Omega IFS's own machines.** The only AI the agent can use is
+  a model on Omega's own server (`LLM_PROVIDER=openai_compatible`, for
   example Ollama). No cloud AI service is supported: a `.env` that still
   holds one of the old cloud AI settings, `GEMINI_API_KEY`, `GROQ_API_KEY`
   or `GROQ_MODEL`, stops start-up, naming the
@@ -457,7 +457,7 @@ suppression list and blocks no company (section 6).
   created readable by the app's own user only (0700), and the journal and
   the database file 0600.
   On Windows the folders take the permissions of the install folder, which
-  SUPPLECO's IT sets.
+  Omega's IT sets.
 - **The container is locked down.** `docker-compose.yml` publishes the
   dashboard on this machine only (`127.0.0.1`), runs the image read-only
   (only `data/`, `logs/`, `assets/`, `templates/` and `/tmp` can be
@@ -527,7 +527,7 @@ suppression list and blocks no company (section 6).
   first. Above 10 MB it reads only the headers and the first 256 KB of the
   text, without marking the message read: an opt-out, a data request or a
   bounce report is short text at the start, so it is still recognised.
-- **Forged mail cannot stop a company.** SUPPLECO's mail server writes what it
+- **Forged mail cannot stop a company.** Omega's mail server writes what it
   checked into an `Authentication-Results` header. The agent reads only the
   top-most one (the server adds its own on top; a sender can write fake ones
   only below it). When it says `dmarc=fail`, or both `spf=fail` and
@@ -569,7 +569,7 @@ suppression list and blocks no company (section 6).
   `login.microsoftonline.com` (certificate checked, no redirect, no proxy,
   time limit), lives in memory for about an hour and is never logged. The
   key file must be readable by the agent only (refused otherwise on Linux
-  and in Docker), is never committed or built into the image, and SUPPLECO's
+  and in Docker), is never committed or built into the image, and Omega's
   IT gives the app access to the outreach mailboxes only. A refused sign-in
   stops sending as a wrong password does. `doctor` warns while a Microsoft
   365 mailbox still uses a password and 30 days before the certificate ends.

@@ -23,7 +23,7 @@ Turning the deterministic workers into LLM agents would trade cheap, fast,
 **testable** (about 5,000 tests in the default `py -3.11 -m pytest` run, plus
 about 130 browser tests under `-m ui`) function calls for costly, slow,
 non‑deterministic model calls - and those only work while the company's own
-model server is up (an OpenAI-compatible server such as Ollama on SUPPLECO's
+model server is up (an OpenAI-compatible server such as Ollama on Omega IFS's
 own machine or private network, via `LLM_PROVIDER=openai_compatible`; no
 cloud AI service is supported; `py -3.11 main.py doctor` reports the server).
 
@@ -107,8 +107,12 @@ flowchart TD
 | **GDPR Export**         | `export.py`                                                                                          | Deterministic       | Access export and erasure for one address                                                                                                                                                                                                             |
 | **Template Linter**     | `deliverability.py`                                                                                  | Deterministic       | Advisory spam-word and structure checks on templates                                                                                                                                                                                                  |
 | **Strategist**          | `ai_generator.suggest_discovery_queries`                                                             | **Cognitive (LLM)** | Built + dormant (`ai_strategist_enabled`); picks next discovery queries, informed by `_discovery_focus_hint`. It falls back first to AI company discovery (`generate_companies`, which runs on a key alone, with `TARGET_QUERIES` as its topics, and is skipped while that is blank, the default), then to the free generator               |
-| **Copywriter**          | `ai_generator.generate_opening_line`, `ai_generator.generate_email_body`                             | **Cognitive (LLM)** | Tailored openers (`ai_personalization_enabled`) and whole AI-written bodies (`ai_humanize_emails`), only in a template that asks for `{{opening_line}}` or `{{body}}`; the shipped templates, SUPPLECO's fixed text in Italian and English, ask for neither. Both fall back to hand-written copy |
+| **Copywriter**          | `ai_generator.generate_opening_line`, `ai_generator.generate_email_body`                             | **Cognitive (LLM)** | Tailored openers (`ai_personalization_enabled`) and whole AI-written bodies (`ai_humanize_emails`), only in a template that asks for `{{opening_line}}` or `{{body}}`; the shipped templates, Omega IFS's fixed text in Italian and English, ask for neither. Both fall back to hand-written copy |
 | **Analyst**             | `ai_generator.classify_relevance` + reply triage                                                     | **Cognitive (LLM)** | Nuanced target/no-target — wired (`ai_relevance_enabled`); reply-draft suggestions still to build                                                                                                                                                     |
+
+The dashboard: the main app is now at `/` (screens Today, Review, Quotes,
+Carbon, Leads, Markets); the full dashboard these docs describe is at
+`/classic`.
 
 ## Escalation plan (the framework's L0→L3)
 

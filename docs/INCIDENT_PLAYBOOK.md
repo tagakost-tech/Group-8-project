@@ -1,16 +1,16 @@
 # Incident playbook
 
-For SUPPLECO's operator (the person who runs the outreach agent) and SUPPLECO's
+For Omega IFS's operator (the person who runs the outreach agent) and Omega's
 IT. One page per incident. Each page says who does what in the first hour,
 then in the first day. Print it and keep it next to the machine that runs the
 agent.
 
 Who is who:
 
-- **Operator**: the person at SUPPLECO who runs the agent and the dashboard.
-- **IT**: SUPPLECO's IT, who runs the machine and the Microsoft 365 tenant.
+- **Operator**: the person at Omega who runs the agent and the dashboard.
+- **IT**: Omega's IT, who runs the machine and the Microsoft 365 tenant.
 - **Privacy contact**: the person named in `PRIVACY_CONTACT_EMAIL`.
-- **Counsel**: SUPPLECO's lawyer for data protection.
+- **Counsel**: Omega's lawyer for data protection.
 
 Fill in before go-live, and keep it current:
 
@@ -64,11 +64,11 @@ you can (`py -3.11 main.py dashboard`) and do not press Start.
 ## 1. Mailbox takeover suspected
 
 Signs: emails in Sent Items that the agent did not send, replies to emails
-nobody wrote, a Microsoft alert about a sign-in, bounces for emails SUPPLECO
-never sent, spam reports about SUPPLECO's domain.
+nobody wrote, a Microsoft alert about a sign-in, bounces for emails Omega IFS
+never sent, spam reports about Omega's domain.
 
 Why it matters: whoever controls the mailbox can send spam or phishing as
-SUPPLECO, to SUPPLECO's clients.
+Omega, to Omega's clients.
 
 ### First hour
 
@@ -87,7 +87,7 @@ SUPPLECO, to SUPPLECO's clients.
 | --- | --- |
 | IT | Find how the attacker got in: a copied key file, the `.env`, a phished admin. If the machine itself was entered, treat it as incident 3 too. |
 | IT | Make a new certificate on the agent's machine and upload it (`docs/DEPLOY.md` section 12, steps 1 and 3, and "Renewing the certificate"), and give the mailbox back to the app (steps 6 and 7). Run `py -3.11 main.py doctor --smtp` before the agent runs again. |
-| Operator and privacy contact | If phishing or spam went out from SUPPLECO's domain, **tell the people who got it**: what they received, that it was not from SUPPLECO, not to click its links or open its attachments, and who to call at SUPPLECO. Use the list from the message trace. |
+| Operator and privacy contact | If phishing or spam went out from Omega IFS's domain, **tell the people who got it**: what they received, that it was not from Omega, not to click its links or open its attachments, and who to call at Omega. Use the list from the message trace. |
 | Privacy contact and counsel | If the attacker could read the mailbox, personal data was exposed (replies, opt-outs, lead alerts): decide whether it is a breach to notify, as in incident 3. |
 | IT | Watch the domain's reputation for a week: bounces, spam reports, blocklists (`docs/DELIVERABILITY.md`). |
 
@@ -97,7 +97,7 @@ Start the agent again only once IT has found and closed the way in.
 
 ## 2. Wrong people emailed in bulk
 
-Examples: SUPPLECO's clients, competitors, people who had opted out, a
+Examples: Omega IFS's clients, competitors, people who had opted out, a
 company that was blocked, people in a country not yet approved.
 
 ### First hour
@@ -142,7 +142,7 @@ send was cut off after the server took it).
 
 | Who | What |
 | --- | --- |
-| Operator | Tell SUPPLECO's sales lead and the privacy contact how many, and which kind (clients, competitors, opted-out people). |
+| Operator | Tell Omega IFS's sales lead and the privacy contact how many, and which kind (clients, competitors, opted-out people). |
 
 ### First day
 
@@ -169,9 +169,9 @@ who should not have; malware on the machine.
 
 | Who | What |
 | --- | --- |
-| Operator | If the machine is still there, stop the agent and the dashboard (above). Do not wipe or reinstall anything yet. Tell IT and the privacy contact now. Write down the time. **The 72-hour clock for the Garante starts when SUPPLECO becomes aware of the breach.** |
+| Operator | If the machine is still there, stop the agent and the dashboard (above). Do not wipe or reinstall anything yet. Tell IT and the privacy contact now. Write down the time. **The 72-hour clock for the Garante starts when Omega IFS becomes aware of the breach.** |
 | IT | If the machine is lost: lock and, if possible, remotely wipe it. Check that its disk was encrypted (BitLocker): an encrypted disk with its key safe lowers the risk a great deal. |
-| IT | Delete the agent's certificate in Microsoft Entra (incident 1, first hour). Whoever has the key file can send as SUPPLECO. |
+| IT | Delete the agent's certificate in Microsoft Entra (incident 1, first hour). Whoever has the key file can send as Omega. |
 | IT | Work out what was on the machine or copied. The list of what each store holds is in `docs/privacy/breach_procedure.md`, "Breaches this product could suffer": the database `data\agent.db`, `data\backups\` (the last 14 full copies), `data\journal.jsonl`, `data\exports\`, `data\spool\`, `logs\` and `.env`. Also any copy of `data\` or the journal kept elsewhere. |
 
 ### First day
@@ -206,7 +206,7 @@ the backup.
 | --- | --- |
 | Operator | Stop the agent and the dashboard (above). |
 | IT | Copy the whole `data\` folder as it is now to a safe place (an encrypted disk). It is your way back if the restore goes wrong, and evidence if it was an attack. |
-| IT | Disable the backup, retention and restore drill tasks until the restore is verified (`Disable-ScheduledTask -TaskName "SUPPLECO outreach backup"`, and the same for "SUPPLECO outreach retention" and "SUPPLECO outreach restore drill"). Each backup deletes the oldest of the 14 copies and trims the journal to the oldest copy kept, so a backup taken of a damaged database, or before `replay-journal` has run, can cost you the copy you need and the journal lines it needs. (A backup of a restored database that has not been replayed yet keeps the whole journal, but it still deletes the oldest copy.) |
+| IT | Disable the backup, retention and restore drill tasks until the restore is verified (`Disable-ScheduledTask -TaskName "Omega outreach backup"`, and the same for "Omega outreach retention" and "Omega outreach restore drill"). Each backup deletes the oldest of the 14 copies and trims the journal to the oldest copy kept, so a backup taken of a damaged database, or before `replay-journal` has run, can cost you the copy you need and the journal lines it needs. (A backup of a restored database that has not been replayed yet keeps the whole journal, but it still deletes the oldest copy.) |
 | IT | If the disk was lost, put the newest copy of the journal back as `data\journal.jsonl` first (`docs/DEPLOY.md` section 9). |
 | IT | **Drill the backup before you restore it.** This restores it in a temporary folder, replays the journal, and checks that nothing is lost; it does not touch the live database: `py -3.11 main.py restore-drill --newest`, or for a copy from elsewhere `py -3.11 main.py restore-drill --backup <path to the backup file>`. It must end with `Restore drill PASSED`. If it fails, tell the developer. The report counts what is missing by kind (opt-outs, company blocks, address blocks, bounces, erasures, sends). Its "Sends" line says how many emails went out since the backup, for example "12 send(s) since the backup, all restored". Something missing means the journal did not record it, so an older backup fails the same way: the developer must decide with you whether to restore anyway and stop those people or companies again by hand. A missing send is an email the agent would send a second time. |
 

@@ -5,7 +5,7 @@ Status: the developer's drafts for counsel. The wording is counsel's, and no ans
 How to fill them:
 
 - `{id}`, `{received}` and `{due}` are the request's number, the date it arrived and its due date, as `main.py dsr show <id>` prints them.
-- `{controller}` is SUPPLECO's legal entity name (`LEGAL_ENTITY_NAME`, L6). `{privacy contact}` is the privacy contact address (`PRIVACY_CONTACT_EMAIL`, L2.6).
+- `{controller}` is Omega IFS's legal entity name (`LEGAL_ENTITY_NAME`, L6). `{privacy contact}` is the privacy contact address (`PRIVACY_CONTACT_EMAIL`, L2.6).
 - Text in square brackets is a choice the sender makes, or waits for the decision it names.
 - The named person sends each answer (L5.5), and signs it with their name, `{controller}` and `{privacy contact}`.
 
@@ -23,7 +23,7 @@ Keep the last sentence only for a request found in a reply: one registered by ha
 
 ## 2. Request for more information
 
-Only where there is reasonable doubt about who is asking (Art. 12(6)), for example a request from an address SUPPLECO did not email (2).
+Only where there is reasonable doubt about who is asking (Art. 12(6)), for example a request from an address Omega IFS did not email (2).
 
 > Thank you for your message of {received} about the personal data {controller} holds (our reference {id}). Before we act on it, we need to be sure that it comes from the person the data is about, because [it was sent from an address we did not write to].
 >
@@ -43,7 +43,7 @@ For a contact a retention run has already erased, whose channel is kept but whos
 
 > We found your address on [your company's own website / a contact, legal or about page of your company's website / a third-party directory or listing]. The page itself is no longer recorded: it was erased with your other details.
 
-**Recipients.** The code names only Microsoft and the sales staff. Add the provider that first receives mail sent to our domain (L2.5), any address-verification service (L2.5), and the developer and any hosting provider with access to our data (L2.7). No outside AI company is a recipient: the AI runs on a model on SUPPLECO's own server. If AI was in use, say so in those words; the sentence on transfers outside the European Economic Area stays the one counsel approves.
+**Recipients.** The code names only Microsoft and the sales staff. Add the provider that first receives mail sent to our domain (L2.5), any address-verification service (L2.5), and the developer and any hosting provider with access to our data (L2.7). No outside AI company is a recipient: the AI runs on a model on Omega IFS's own server. If AI was in use, say so in those words; the sentence on transfers outside the European Economic Area stays the one counsel approves.
 
 **How long we keep it.** The code refers the person to the notice. Replace that with the periods that apply to them, from the notice's section "How long we keep it" (L5.1).
 

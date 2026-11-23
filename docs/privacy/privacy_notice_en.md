@@ -1,16 +1,16 @@
 # Privacy notice for business contacts (outline)
 
-Status: outline for counsel. Step G14 is built, and this outline describes the agent as handed to SUPPLECO in November 2026. This is the full notice that the link in every email points to (`PRIVACY_NOTICE_URL`). GDPR Art. 14(1) and (2) list what it must contain; each heading below is one item. The wording is counsel's (decision L3.1). The short version at the foot of each email is built from the same items (step G14), in one version per lawful basis. Every period and default below is the developer's proposal, pending counsel.
+Status: outline for counsel. Step G14 is built, and this outline describes the agent as handed to Omega IFS in November 2026. This is the full notice that the link in every email points to (`PRIVACY_NOTICE_URL`). GDPR Art. 14(1) and (2) list what it must contain; each heading below is one item. The wording is counsel's (decision L3.1). The short version at the foot of each email is built from the same items (step G14), in one version per lawful basis. Every period and default below is the developer's proposal, pending counsel.
 
 ## Who we are and how to reach us (Art. 14(1)(a)-(b))
 
-SUPPLECO's legal identity (decision L6) and the privacy contact address (L2.6). Our representative's details, if counsel decides one is needed (L1.10). No data protection officer unless L2.6 decides otherwise.
+Omega IFS's legal identity (decision L6) and the privacy contact address (L2.6). Our representative's details, if counsel decides one is needed (L1.10). No data protection officer unless L2.6 decides otherwise.
 
 ## Why we use your data, and on what basis (Art. 14(1)(c), 14(2)(b))
 
 We use it:
 
-- to offer SUPPLECO's contract manufacturing of food supplements to your company;
+- to offer Omega IFS's special cold-formed fasteners and precision parts, made to customer drawings, to your company;
 - to pass your reply to our sales staff, if it shows interest;
 - to honour any objection or request you make to us.
 
@@ -18,7 +18,7 @@ The basis is set by how your address reached us. It is recorded with your contac
 
 - **Legitimate interest (Art. 6(1)(f); footer version `notice-li-2`).** For an address found on your company's own website, or on a contact, legal or about page there; in a third-party directory or listing; at a trade fair; or given to us by a referral. The interest we pursue: offering our services to businesses that may need them. Whether third-party sites may be used at all is L1.4 and L1.11. The assessment is `lia_template.md` (L2.1).
 - **Consent (Art. 6(1)(a); footer version `notice-consent-2`).** For an address your company gave us with a request to us. You may withdraw your consent at any time (see "Your rights").
-- **Existing customer (art. 130(4) Codice Privacy; footer version `notice-customer-2`).** For our customers, about products like those you bought from us. It needs the right to object to be offered when the address was collected and in every email; every email offers it. Whether and how SUPPLECO uses this channel is L1.5.
+- **Existing customer (art. 130(4) Codice Privacy; footer version `notice-customer-2`).** For our customers, about products like those you bought from us. It needs the right to object to be offered when the address was collected and in every email; every email offers it. Whether and how Omega uses this channel is L1.5.
 
 ## What data we use (Art. 14(1)(d))
 
@@ -55,10 +55,10 @@ The basis is set by how your address reached us. It is recorded with your contac
 
 - Microsoft, which runs our mailbox, and the provider that first receives mail sent to our domain (L2.5).
 - An address-verification service, if one is adopted (L2.5).
-- No outside AI company. If counsel allows AI at all (L2.4), it is a model running on SUPPLECO's own server, so your data does not leave our systems for it. The footer of each email says so while a feature that lets the AI see your data is switched on.
+- No outside AI company. If counsel allows AI at all (L2.4), it is a model running on Omega IFS's own server, so your data does not leave our systems for it. The footer of each email says so while a feature that lets the AI see your data is switched on.
 - The developer and any hosting provider, if they have access to our data (L2.7).
 - Our sales staff, if you reply with interest.
-- Transfers outside the EEA: none planned beyond Microsoft's own, under its processing terms and standard contractual clauses; none for AI, which runs on SUPPLECO's own server. For each transfer: whether the European Commission has made an adequacy decision and, where safeguards are used instead, what they are and how to obtain a copy of them or where they are available.
+- Transfers outside the EEA: none planned beyond Microsoft's own, under its processing terms and standard contractual clauses; none for AI, which runs on Omega's own server. For each transfer: whether the European Commission has made an adequacy decision and, where safeguards are used instead, what they are and how to obtain a copy of them or where they are available.
 
 ## How long we keep it (Art. 14(2)(a))
 

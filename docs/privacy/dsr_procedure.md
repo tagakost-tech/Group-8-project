@@ -1,6 +1,6 @@
 # Answering data-subject requests (outline)
 
-Status: outline for counsel. Step G11 is built, and this outline describes the agent as handed to SUPPLECO in November 2026. It gives a procedure for access (Art. 15), erasure (17) and objection (21). Rectification (16), restriction (18) and portability (20) have no command of their own: `main.py dsr add` registers them with the kind "other", and until the outline adds steps for them they are handled by hand by the named person. Who answers requests and who confirms erasures is L5.5.
+Status: outline for counsel. Step G11 is built, and this outline describes the agent as handed to Omega IFS in November 2026. It gives a procedure for access (Art. 15), erasure (17) and objection (21). Rectification (16), restriction (18) and portability (20) have no command of their own: `main.py dsr add` registers them with the kind "other", and until the outline adds steps for them they are handled by hand by the named person. Who answers requests and who confirms erasures is L5.5.
 
 Every request is answered without undue delay, and at the latest within one month of receipt. That month can be extended by two further months where necessary, taking into account the complexity and number of the requests. The person is told of any extension, with the reasons, within the first month (Art. 12(3)).
 
@@ -42,10 +42,10 @@ When a retention run has already replaced a request's address with its token (se
 
 ## 2. Identity
 
-- A request from the address SUPPLECO emailed is answered without further identification.
+- A request from the address Omega IFS emailed is answered without further identification.
 - More information is asked for only where there is reasonable doubt (Art. 12(6)), for example a request from a different address (template 2).
-- A request found in a reply is registered under the address it came from, whether or not SUPPLECO emailed it. Nothing checks who is asking (L5.3).
-- When SUPPLECO's mail server found the email possibly forged (its `Authentication-Results` header says `dmarc=fail`, both `spf=fail` and `dkim=fail`, or `compauth=fail`; or the sender's domain has no DMARC record and neither SPF nor DKIM passed for that domain; or the header cannot be read), the request is still registered and the address still stops, but the activity log shows a `MAIL_UNAUTHENTICATED` line for it. That is reasonable doubt: before sending any data, confirm with the person at the address (template 2).
+- A request found in a reply is registered under the address it came from, whether or not Omega emailed it. Nothing checks who is asking (L5.3).
+- When Omega's mail server found the email possibly forged (its `Authentication-Results` header says `dmarc=fail`, both `spf=fail` and `dkim=fail`, or `compauth=fail`; or the sender's domain has no DMARC record and neither SPF nor DKIM passed for that domain; or the header cannot be read), the request is still registered and the address still stops, but the activity log shows a `MAIL_UNAUTHENTICATED` line for it. That is reasonable doubt: before sending any data, confirm with the person at the address (template 2).
 
 ## 3. Acting
 
@@ -83,7 +83,7 @@ When a retention run has already replaced a request's address with its token (se
 ### Objection (L1.6, step G5c)
 
 - The address goes on the do-not-contact list, and the contact is erased at the next daily run (L1.16).
-- The company's domain is blocked too when the objection comes by the one-click Unsubscribe button, or by email from someone the agent emailed. A data request found in a reply from someone the agent emailed blocks it as well, and so does an erasure, which keeps the block only as a keyed token. An interested reply never blocks it, and a plain decline stops only the address (L1.16). An email SUPPLECO's mail server found possibly forged (see section 2) never blocks the domain: it stops only its own address.
+- The company's domain is blocked too when the objection comes by the one-click Unsubscribe button, or by email from someone the agent emailed. A data request found in a reply from someone the agent emailed blocks it as well, and so does an erasure, which keeps the block only as a keyed token. An interested reply never blocks it, and a plain decline stops only the address (L1.16). An email Omega IFS's mail server found possibly forged (see section 2) never blocks the domain: it stops only its own address.
 - With a public `BASE_URL`, a click on the unsubscribe link in the email stops only that address. Without one, the link is an email to the main mailbox, read as an objection by email.
 - A link sent after the last backup still works after a restore and `main.py replay-journal` (step G16).
 - Free-mail and PEC domains are never blocked whole.
@@ -96,8 +96,8 @@ When a retention run has already replaced a request's address with its token (se
 The product tells no one. Art. 4(9) defines a recipient as anyone the data are disclosed to, whether a third party or not, which covers processors (Art. 4(10)). The list therefore covers:
 
 - lead-alert recipients, and a Teams channel if alerts go there (L5.11);
-- the provider that first receives mail sent to suppleco.com (L2.5);
-- any address-verification service (L2.5); there is no outside AI provider to tell, as the AI runs on SUPPLECO's own server;
+- the provider that first receives mail sent to Omega's domain (L2.5);
+- any address-verification service (L2.5); there is no outside AI provider to tell, as the AI runs on Omega's own server;
 - a CRM, if decision S5 names one;
 - the copies in the sending mailbox (L5.4).
 
