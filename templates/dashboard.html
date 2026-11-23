@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Omega IFS · Outreach</title>
+    <!-- Icons -->
+    <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css" />
+    <!-- Chart.js -->
+    <script src="/static/vendor/chartjs/chart.umd.js"></script>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar">
+        <div class="brand">
+          <img
+            src="/static/img/omega-logo.webp"
+            alt=""
+            class="brand-logo"
+            width="40"
+            height="40"
+          />
+          <div class="brand-text">
+            <span class="brand-name">Omega IFS</span>
+            <span class="brand-sub">New-customer outreach</span>
+          </div>
+        </div>
+
+        <!-- A tablist, so the sidebar is reachable by keyboard. These were
+             bare <li> with a click handler: no tab stop, no role, no state
+             exposed - the entire navigation was mouse-only. -->
+        <ul class="nav-links" role="tablist" aria-orientation="vertical">
+          <li
+            role="tab"
+            id="nav-tab-overview"
+            data-target="tab-overview"
+            aria-controls="tab-overview"
+            aria-selected="true"
+            tabindex="0" class="active"
+          >
+            <i class="fa-solid fa-sun" aria-hidden="true"></i> Today
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-review"
+            data-target="tab-review"
+            aria-controls="tab-review"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-user-check" aria-hidden="true"></i> Review
+            <span id="reviewCount" class="nav-count" aria-label="proposals waiting"></span>
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-contacts"
+            data-target="tab-contacts"
+            aria-controls="tab-contacts"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-users" aria-hidden="true"></i> Leads
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-markets"
+            data-target="tab-markets"
+            aria-controls="tab-markets"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-compass" aria-hidden="true"></i> Markets
+          </li>
+        </ul>
+        <button
+          type="button"
+          class="nav-more"
+          id="navMore"
+          aria-expanded="false"
+          aria-controls="navAdvanced"
+        >
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i> Advanced
+        </button>
+        <ul class="nav-links nav-advanced" id="navAdvanced" role="tablist" aria-orientation="vertical" hidden>
+          <li
+            role="tab"
+            id="nav-tab-insights"
+            data-target="tab-insights"
+            aria-controls="tab-insights"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Deliverability
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-emails"
+            data-target="tab-emails"
+            aria-controls="tab-emails"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> Sent emails
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-directsend"
+            data-target="tab-directsend"
+            aria-controls="tab-directsend"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Write one email
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-template"
+            data-target="tab-template"
+            aria-controls="tab-template"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-pen-nib" aria-hidden="true"></i> Email texts
+          </li>
+          <li
+            role="tab"
+            id="nav-tab-searches"
+            data-target="tab-searches"
+            aria-controls="tab-searches"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search log
+          </li>
+        </ul>
+
+        <button type="button" class="nav-help" id="openHelp">
+          <i class="fa-solid fa-circle-question" aria-hidden="true"></i> How it works
+        </button>
+        <div class="sidebar-footer">
+          <div class="status-indicator online"></div>
+          <span>System Online</span>
+        </div>
+      </nav>
+
+      <!-- Dimmed backdrop shown behind the mobile drawer -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <header class="top-bar">
+          <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          </button>
+          <div class="search-module">
+            <form id="addQueryForm" class="query-form">
+              <div class="input-group">
+                <i class="fa-solid fa-search" aria-hidden="true"></i>
+                <input
+                  type="text"
+                  id="newQuery"
+                  placeholder="Add target queries (e.g. automotive door lock manufacturer in Germany)"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn-primary">Add Query</button>
+            </form>
+          </div>
+          <div class="control-panel">
+            <button id="startBtn" class="btn-success">
+              <i class="fa-solid fa-play" aria-hidden="true"></i> Start Agent
+            </button>
+            <button id="stopBtn" class="btn-danger" disabled>
+              <i class="fa-solid fa-stop" aria-hidden="true"></i> Stop
+            </button>
+          </div>
+        </header>
+
+        <!-- TAB: OVERVIEW -->
+        <section
+          id="tab-overview"
+          class="tab-content active"
+          role="tabpanel"
+          aria-labelledby="nav-tab-overview"
+          tabindex="0"
+        >
+          <!-- What needs a person comes first: the agent proposes, people
+               decide, so the first screen is the decisions waiting. -->
+          <section class="needs-you" aria-labelledby="needsYouTitle">
+            <h2 id="needsYouTitle" class="desk-title">Needs you</h2>
+            <ul class="needs-list">
+              <li>
+                <span class="needs-count" id="nyWaiting">–</span>
+                <span class="needs-text">first emails and follow-ups wait for your decision</span>
+                <button type="button" class="btn-primary btn-sm" data-go="tab-review" data-view="waiting">Review them</button>
+              </li>
+              <li>
+                <span class="needs-count" id="nyReplies">–</span>
+                <span class="needs-text">replies from prospects wait for an answer</span>
+                <button type="button" class="btn-secondary btn-sm" data-go="tab-review" data-view="waiting">Answer</button>
+              </li>
+              <li>
+                <span class="needs-count" id="nyApproved">–</span>
+                <span class="needs-text">approved emails go out with the next batch</span>
+                <button type="button" class="btn-secondary btn-sm" data-go="tab-review" data-view="approved">See them</button>
+              </li>
+            </ul>
+            <p class="needs-note" id="nyNote"></p>
+          </section>
+
+          <section class="results" aria-labelledby="resultsTitle">
+            <h2 id="resultsTitle" class="desk-title">Results so far</h2>
+            <div class="results-grid">
+              <figure class="bars">
+                <figcaption>Leads per sector</figcaption>
+                <ol id="chartSector" class="bar-list"></ol>
+              </figure>
+              <figure class="bars">
+                <figcaption>Leads per status</figcaption>
+                <ol id="chartStatus" class="bar-list"></ol>
+              </figure>
+              <figure class="bars">
+                <figcaption>Average fit score per sector</figcaption>
+                <ol id="chartFit" class="bar-list is-score"></ol>
+              </figure>
+            </div>
+          </section>
+
+          <div class="stats-grid">
+            <div class="stat-card gradient-1">
+              <div class="stat-icon">
+                <i class="fa-solid fa-address-book" aria-hidden="true"></i>
+              </div>
+              <div class="stat-details">
+                <h3>Total Contacts</h3>
+                <p id="statTotalContacts">0</p>
+              </div>
+            </div>
+            <div class="stat-card gradient-2">
+              <div class="stat-icon">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+              </div>
+              <div class="stat-details">
+                <h3>Emails Sent</h3>
+                <p id="statEmailsSent">0</p>
+              </div>
+            </div>
+            <div class="stat-card gradient-3">
+              <div class="stat-icon">
+                <i class="fa-solid fa-envelope-open" aria-hidden="true"></i>
+              </div>
+              <div class="stat-details">
+                <h3>Opens Tracked</h3>
+                <p id="statOpens">0</p>
+              </div>
+            </div>
+            <div class="stat-card gradient-4">
+              <div class="stat-icon">
+                <i class="fa-solid fa-fire" aria-hidden="true"></i>
+              </div>
+              <div class="stat-details">
+                <h3>Warmup Status</h3>
+                <p id="statWarmup">Day 1</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- The sidebar could read "Agent running" in green while every live
+               send was refused; each refusal was one activity row that
+               scrolled away. This card answers from the doctor's checks. -->
+          <div class="glass-card readiness-card" id="readinessCard">
+            <div class="card-header">
+              <h3>Ready to send</h3>
+              <div class="card-tools">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  id="toggleReadiness"
+                  aria-controls="readinessChecks"
+                  aria-expanded="true"
+                >
+                  Hide the checks
+                </button>
+                <button class="btn-secondary btn-sm" id="checkReadiness">
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  Check again
+                </button>
+              </div>
+            </div>
+            <p id="readinessDryRun" class="readiness-banner" hidden>
+              DRY RUN - nothing is sent
+            </p>
+            <p id="readinessHeadline" class="readiness-headline" aria-live="polite">
+              Checking…
+            </p>
+            <div id="readinessChecks" class="deliverability-panel"></div>
+            <div id="readinessMailboxes" class="readiness-mailboxes"></div>
+          </div>
+
+          <!-- Data requests have a one-month legal deadline; unfinished
+               erasures, held opt-outs and inbox gaps were visible only
+               through doctor on the command line. Read-only: answering
+               stays in the CLI. -->
+          <div class="glass-card readiness-card" id="privacyCard">
+            <div class="card-header">
+              <h3>Privacy and inbox - to act on</h3>
+            </div>
+            <div id="privacyChecks" class="deliverability-panel"></div>
+            <h4 class="panel-sub privacy-sub">Open data requests</h4>
+            <div id="dsrTable" class="table-responsive"></div>
+            <p class="panel-note">
+              Answer with <code>main.py dsr ...</code> on the command line.
+            </p>
+          </div>
+
+          <div class="charts-grid">
+            <div class="glass-card chart-container">
+              <h3>Emails Sent per Day</h3>
+              <div class="canvas-wrapper">
+                <canvas id="emailsPerDayChart"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-container">
+              <h3>Lead Funnel</h3>
+              <div class="canvas-wrapper">
+                <canvas id="leadFunnelChart"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-container">
+              <h3>Contact Status</h3>
+              <div class="canvas-wrapper">
+                <canvas id="contactStatusChart"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-container">
+              <h3>Success Rate</h3>
+              <div class="canvas-wrapper">
+                <canvas id="successRateChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- The agent has written a running narrative to activity_log since
+               day one and /api/activity has always served it; nothing on the
+               front end ever asked for it. This is what you watch while a run
+               is in progress. -->
+          <div class="glass-card card-flush activity-card">
+            <div class="card-header">
+              <h3>Live Activity</h3>
+              <div class="card-tools">
+                <label class="check-row follow-toggle">
+                  <input type="checkbox" id="activityFollow" checked /> Follow
+                </label>
+                <button
+                  class="btn-icon"
+                  id="refreshActivity"
+                  aria-label="Refresh activity"
+                  title="Refresh activity"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div
+              id="activityFeed"
+              class="activity-feed"
+              role="log"
+              aria-live="polite"
+              aria-label="Agent activity"
+            ></div>
+          </div>
+        </section>
+
+        <!-- TAB: REVIEW - the agent proposes, a person decides -->
+        <section
+          id="tab-review"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-review"
+          tabindex="0"
+        >
+          <header class="desk-head">
+            <div>
+              <h2 class="desk-title">Review</h2>
+              <p class="desk-lede">
+                The agent proposes, you decide. Nothing is sent until you
+                approve it, and what is sent is exactly what you approved.
+              </p>
+            </div>
+            <div id="reviewLevels" class="desk-levels" aria-live="polite"></div>
+          </header>
+          <form id="levelForm" class="level-form" hidden>
+            <label for="levelReason" id="levelFormLabel"></label>
+            <input id="levelReason" type="text" autocomplete="off" required />
+            <button type="submit" class="btn-primary btn-sm">Change it</button>
+            <button type="button" class="btn-secondary btn-sm" id="levelCancel">Cancel</button>
+          </form>
+          <div id="reviewMetrics" class="desk-metrics" aria-live="polite"></div>
+
+          <div class="desk">
+            <aside class="desk-queue" aria-label="Proposals">
+              <div class="queue-tabs" role="tablist" aria-label="Which proposals">
+                <button type="button" role="tab" class="queue-tab active" data-view="waiting" aria-selected="true">
+                  Waiting <span class="queue-n" id="qnWaiting"></span>
+                </button>
+                <button type="button" role="tab" class="queue-tab" data-view="approved" aria-selected="false">
+                  Approved <span class="queue-n" id="qnApproved"></span>
+                </button>
+                <button type="button" role="tab" class="queue-tab" data-view="decided" aria-selected="false">
+                  Decided
+                </button>
+              </div>
+              <ul id="reviewList" class="review-list"></ul>
+              <p id="reviewEmpty" class="panel-note" hidden></p>
+              <details class="paste-reply">
+                <summary>A prospect answered in your own mailbox?</summary>
+                <form id="pasteForm">
+                  <label for="pasteEmail">Their email address</label>
+                  <input id="pasteEmail" type="email" autocomplete="off" required />
+                  <label for="pasteSubject">Subject</label>
+                  <input id="pasteSubject" type="text" autocomplete="off" />
+                  <label for="pasteBody">Their reply</label>
+                  <textarea id="pasteBody" rows="5" required></textarea>
+                  <button type="submit" class="btn-secondary btn-sm">Sort the reply</button>
+                  <p id="pasteMsg" class="field-note" role="status"></p>
+                </form>
+              </details>
+              <p class="kbd-hint">
+                <kbd>J</kbd> <kbd>K</kbd> move, <kbd>A</kbd> approve,
+                <kbd>R</kbd> reject, <kbd>E</kbd> edit
+              </p>
+            </aside>
+
+            <article id="reviewDetail" class="sheet" hidden aria-labelledby="rvOrg">
+              <header class="sheet-head">
+                <div>
+                  <h3 id="rvOrg"></h3>
+                  <p id="rvStage" class="sheet-stage"></p>
+                </div>
+                <div id="rvFlags" class="review-flags"></div>
+              </header>
+
+              <table class="title-block" aria-label="What the agent found">
+                <tbody id="rvEvidence"></tbody>
+              </table>
+
+              <div class="sheet-body">
+                <label for="rvSubject">Subject</label>
+                <input id="rvSubject" type="text" autocomplete="off" />
+                <div class="editor-head">
+                  <label for="rvText" id="rvTextLabel">Email</label>
+                  <button type="button" class="link-btn" id="rvHtmlToggle" aria-pressed="false">Edit the HTML</button>
+                </div>
+                <textarea id="rvText" rows="11" spellcheck="true"></textarea>
+                <textarea id="rvBody" rows="14" spellcheck="false" hidden aria-label="Email HTML"></textarea>
+                <p class="word-count" id="rvWords" aria-live="polite"></p>
+                <p class="field-note">
+                  Blank line = new paragraph. The legal footer and the
+                  opt-out link are added when it is sent and cannot be removed.
+                </p>
+                <details class="preview">
+                  <summary>As the recipient will read it</summary>
+                  <div id="rvPreview" class="review-preview"></div>
+                </details>
+              </div>
+
+              <footer class="sheet-actions" id="rvActions">
+                <label for="rvReason" class="visually-hidden">Reason</label>
+                <input
+                  id="rvReason"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Reason: needed to reject, optional when approving"
+                />
+                <button type="button" id="rvApprove" class="btn-success">Approve</button>
+                <button type="button" id="rvReject" class="btn-danger">Reject</button>
+                <button type="button" id="rvReopen" class="btn-secondary" hidden>Reopen to edit</button>
+              </footer>
+              <p id="rvMsg" class="sheet-msg" role="status"></p>
+            </article>
+          </div>
+
+        </section>
+
+        <!-- TAB: MARKETS - where Omega could sell next -->
+        <section
+          id="tab-markets"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-markets"
+          tabindex="0"
+        >
+          <header class="desk-head">
+            <div>
+              <h2 class="desk-title">Markets</h2>
+              <p class="desk-lede">
+                The sectors that fit Omega today and the new ones worth testing,
+                with the evidence behind each. Queue a sector's searches to send
+                the agent looking there.
+              </p>
+            </div>
+          </header>
+          <section class="glass-card strategy is-tab" aria-labelledby="strategyTitle">
+            <div class="card-header">
+              <h3 id="strategyTitle">Where to look next</h3>
+            </div>
+            <p class="panel-note">
+              The sectors in Omega's profile, with the evidence behind each.
+              Queue a sector's searches to send the agent looking there; every
+              company it finds still comes back here for a person to judge.
+            </p>
+            <ul id="strategyList" class="strategy-list"></ul>
+          </section>
+        </section>
+
+        <!-- TAB: CONTACTS -->
+        <section
+          id="tab-contacts"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-contacts"
+          tabindex="0"
+        >
+          <div class="glass-card card-flush table-card">
+            <div class="card-header">
+              <h3>Leads</h3>
+              <div class="card-tools">
+                <div class="table-search">
+                  <i
+                    class="fa-solid fa-magnifying-glass"
+                    aria-hidden="true"
+                  ></i>
+                  <input
+                    type="text"
+                    data-table="contactsTable"
+                    placeholder="Search name, email, company…"
+                    autocomplete="off"
+                  />
+                </div>
+                <label for="sectorFilter" class="visually-hidden">Sector</label>
+                <select id="sectorFilter" class="sector-filter">
+                  <option value="">All sectors</option>
+                </select>
+                <a class="btn-secondary btn-sm" id="exportLeads" href="/api/export/leads.csv" download>
+                  <i class="fa-solid fa-file-export" aria-hidden="true"></i> Export approved leads
+                </a>
+                <button
+                  class="btn-icon"
+                  id="refreshContacts"
+                  aria-label="Refresh contacts"
+                  title="Refresh contacts"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <!-- Every contact was listed together whatever its state, so the
+                 discards the agent made - low score, off-target, failed
+                 verification - were buried among the ones it emailed. -->
+            <div
+              id="contactStatusChips"
+              class="filter-chips"
+              role="group"
+              aria-label="Filter contacts by status"
+            ></div>
+            <p id="contactsPageNote" class="panel-note table-page-note"></p>
+            <div class="table-responsive">
+              <table id="contactsTable" class="modern-table sortable">
+                <thead>
+                  <tr>
+                    <th scope="col">Fit</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Company</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Sector</th>
+                    <th scope="col" data-nosort>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: EMAILS -->
+        <section
+          id="tab-emails"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-emails"
+          tabindex="0"
+        >
+          <div class="glass-card card-flush table-card">
+            <div class="card-header">
+              <h3>Campaign Logs</h3>
+              <div class="card-tools">
+                <div class="table-search">
+                  <i
+                    class="fa-solid fa-magnifying-glass"
+                    aria-hidden="true"
+                  ></i>
+                  <input
+                    type="text"
+                    data-table="emailsTable"
+                    placeholder="Search recipient, account, subject, status…"
+                    autocomplete="off"
+                  />
+                </div>
+                <button
+                  class="btn-icon"
+                  id="refreshEmails"
+                  aria-label="Refresh campaign logs"
+                  title="Refresh campaign logs"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="emailsTable" class="modern-table sortable">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Recipient</th>
+                    <th scope="col">Sent from</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Opens</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: DIRECT SEND -->
+        <section
+          id="tab-directsend"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-directsend"
+          tabindex="0"
+        >
+          <div class="glass-card manual-card">
+            <div class="card-header">
+              <h3>Send an email to a specific address</h3>
+            </div>
+            <p class="manual-intro">
+              Type an address and send straight away, using the same
+              personalized email the agent sends. Optional name and company make
+              it more personal. Unsubscribed contacts are always skipped.
+            </p>
+            <form id="manualSendForm" class="manual-form">
+              <div class="form-row">
+                <label for="msEmail"
+                  >Email address <span class="req">*</span></label
+                >
+                <input
+                  type="email"
+                  id="msEmail"
+                  placeholder="name@company.com"
+                  required
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-grid">
+                <div class="form-row">
+                  <label for="msName"
+                    >Contact name <span class="opt">(optional)</span></label
+                  >
+                  <input
+                    type="text"
+                    id="msName"
+                    placeholder="e.g. Maria Rossi"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="form-row">
+                  <label for="msOrg"
+                    >Company <span class="opt">(optional)</span></label
+                  >
+                  <input
+                    type="text"
+                    id="msOrg"
+                    placeholder="e.g. Nordic Wellness"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <label for="msChannel"
+                  >How this contact reached Omega IFS
+                  <span class="req">*</span></label
+                >
+                <select id="msChannel">
+                  <option value="">Choose - needed to send</option>
+                  <option value="inbound_request">They asked us (inbound request)</option>
+                  <option value="trade_fair">Trade fair</option>
+                  <option value="existing_customer">Existing customer</option>
+                  <option value="referral">Referral</option>
+                </select>
+              </div>
+              <label class="check-row">
+                <input type="checkbox" id="msFollow" /> Enroll this contact in
+                automatic follow-ups
+              </label>
+              <div class="form-actions">
+                <button type="button" id="msPreviewBtn" class="btn-secondary">
+                  <i class="fa-solid fa-flask" aria-hidden="true"></i> Dry run
+                  (no send)
+                </button>
+                <button type="submit" id="msSendBtn" class="btn-primary">
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                  Send Email
+                </button>
+              </div>
+              <p id="msResult" class="ms-result"></p>
+            </form>
+          </div>
+
+          <div class="glass-card manual-card" style="margin-top: 24px">
+            <div class="card-header">
+              <h3>Spam / inbox test</h3>
+            </div>
+            <p class="manual-intro">
+              Would check whether your emails land in the inbox or in spam, by
+              sending a real message to <strong>mail-tester.com</strong>, which
+              grades it out of 10 and shows why (SPF/DKIM/DMARC, spam words,
+              blacklists).
+            </p>
+            <p id="stDisabledReason" class="manual-intro">
+              <strong>Disabled for now:</strong> a live send needs a channel and
+              an enabled country, and mail-tester.com would be stored as a
+              contact.
+            </p>
+            <form id="spamTestForm" class="manual-form">
+              <div class="form-row">
+                <label>Step 1 — get a test address</label>
+                <button
+                  type="button"
+                  id="stOpenBtn"
+                  class="btn-secondary"
+                  style="align-self: flex-start"
+                  disabled
+                >
+                  <i
+                    class="fa-solid fa-arrow-up-right-from-square"
+                    aria-hidden="true"
+                  ></i>
+                  Open mail-tester.com
+                </button>
+              </div>
+              <div class="form-row">
+                <label for="stAddr"
+                  >Step 2 — paste the address it gave you
+                  <span class="req">*</span></label
+                >
+                <input
+                  type="email"
+                  id="stAddr"
+                  placeholder="test-abc123@srv1.mail-tester.com"
+                  autocomplete="off"
+                  disabled
+                />
+              </div>
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  id="stSendBtn"
+                  class="btn-primary"
+                  disabled
+                >
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                  Step 3 — Send test
+                </button>
+                <a
+                  id="stScoreLink"
+                  class="btn-secondary"
+                  href="https://www.mail-tester.com"
+                  target="_blank"
+                  rel="noopener"
+                  style="display: none"
+                >
+                  <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+                  Step 4 — Check your score
+                </a>
+              </div>
+              <p id="stResult" class="ms-result"></p>
+            </form>
+          </div>
+        </section>
+
+        <!-- TAB: TEMPLATE EDITOR -->
+        <section
+          id="tab-template"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-template"
+          tabindex="0"
+        >
+          <div class="glass-card card-flush editor-card">
+            <div class="card-header">
+              <h3>Email Template Editor (HTML)</h3>
+              <button id="saveTemplateBtn" class="btn-primary">
+                <i class="fa-solid fa-save" aria-hidden="true"></i> Save
+                Template
+              </button>
+            </div>
+            <div class="editor-toolbar">
+              <label for="templateName">Text to edit</label>
+              <select id="templateName">
+                <option value="email_template">First email - English</option>
+                <option value="followup_1">Follow-up 1 - English</option>
+                <option value="followup_2">Follow-up 2 - English</option>
+                <option value="email_template_it">First email - Italian</option>
+                <option value="followup_1_it">Follow-up 1 - Italian</option>
+                <option value="followup_2_it">Follow-up 2 - Italian</option>
+              </select>
+              <span id="templateNote" class="template-note"></span>
+            </div>
+            <div class="editor-wrapper">
+              <div class="editor-pane">
+                <textarea
+                  id="templateEditor"
+                  spellcheck="false"
+                  placeholder="Loading template..."
+                ></textarea>
+              </div>
+              <div class="preview-pane">
+                <div class="preview-header">Live Preview</div>
+                <!-- sandbox with no allowances: a script in a template does
+                     not run, and the preview cannot reach the dashboard. -->
+                <iframe
+                  id="templatePreview"
+                  class="preview-frame"
+                  sandbox=""
+                  title="Template preview"
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: SEARCHES -->
+        <section
+          id="tab-searches"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-searches"
+          tabindex="0"
+        >
+          <div class="glass-card card-flush table-card">
+            <div class="card-header">
+              <h3>Search Queries</h3>
+              <div class="card-tools">
+                <div class="table-search">
+                  <i
+                    class="fa-solid fa-magnifying-glass"
+                    aria-hidden="true"
+                  ></i>
+                  <input
+                    type="text"
+                    data-table="searchesTable"
+                    placeholder="Search query, source, status…"
+                    autocomplete="off"
+                  />
+                </div>
+                <button
+                  class="btn-icon"
+                  id="refreshSearches"
+                  aria-label="Refresh search logs"
+                  title="Refresh search logs"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="searchesTable" class="modern-table sortable">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Query</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">Results</th>
+                    <th scope="col">Scraped</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: INSIGHTS -->
+        <section
+          id="tab-insights"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-insights"
+          tabindex="0"
+        >
+          <div class="insights-grid">
+            <div class="glass-card insights-wide">
+              <div class="card-header">
+                <h3>Deliverability &amp; Reputation</h3>
+                <div class="card-tools">
+                  <!-- /api/blacklist forces a fresh DNSBL lookup (the panel
+                       above shows a cached verdict) and returns the per-list
+                       breakdown. Neither was reachable from the UI. -->
+                  <button class="btn-secondary btn-sm" id="recheckBlacklist">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    Re-check blocklists
+                  </button>
+                  <button
+                    class="btn-icon"
+                    id="refreshDeliverability"
+                    aria-label="Refresh deliverability"
+                    title="Refresh deliverability"
+                  >
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+              <div id="deliverabilityPanel" class="deliverability-panel">
+                Loading…
+              </div>
+              <div id="blacklistDetail" class="blacklist-detail"></div>
+            </div>
+
+            <div class="glass-card insights-wide">
+              <div class="card-header">
+                <h3>Interested Leads</h3>
+                <button
+                  class="btn-icon"
+                  id="refreshLeads"
+                  aria-label="Refresh interested leads"
+                  title="Refresh interested leads"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="leadsPanel">Loading…</div>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Active Features</h3>
+                <button
+                  class="btn-icon"
+                  id="refreshInsights"
+                  aria-label="Refresh active features"
+                  title="Refresh active features"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="featuresGrid" class="features-grid"></div>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header"><h3>A/B Performance</h3></div>
+              <div class="table-responsive">
+                <table class="modern-table" id="abTable">
+                  <thead>
+                    <tr>
+                      <th scope="col">Variant</th>
+                      <th scope="col">Sent</th>
+                      <th scope="col">Opens</th>
+                      <th scope="col">Open Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header"><h3>Follow-up Sequences</h3></div>
+              <div id="sequenceStats" class="mini-stats"></div>
+            </div>
+
+            <!-- /api/retries has always reported the queue; nothing displayed
+                 it, so a backlog of sends waiting on a transient failure was
+                 invisible unless you read the log. -->
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Retry Queue</h3>
+                <button
+                  class="btn-icon"
+                  id="refreshRetries"
+                  aria-label="Refresh retry queue"
+                  title="Refresh retry queue"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="retryStats" class="mini-stats"></div>
+              <p id="retryNote" class="panel-note"></p>
+            </div>
+
+            <!-- /api/learning exposes which verticals and countries the agent
+                 has decided are worth its time. It steers query generation, so
+                 seeing it is the difference between "the agent is searching"
+                 and knowing what it is searching for. -->
+            <div class="glass-card insights-wide">
+              <div class="card-header">
+                <h3>What the agent has learned</h3>
+                <button
+                  class="btn-icon"
+                  id="refreshLearning"
+                  aria-label="Refresh learning"
+                  title="Refresh learning"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="learningPanel" class="learning-panel"></div>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header"><h3>Per-Domain Sends (Today)</h3></div>
+              <div class="table-responsive">
+                <table class="modern-table" id="domainTable">
+                  <thead>
+                    <tr>
+                      <th scope="col">Domain</th>
+                      <th scope="col">Sent</th>
+                      <th scope="col">Limit</th>
+                      <th scope="col">Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Operational dials only. Credentials and feature flags are
+                 deliberately not editable here - see RUNTIME_EDITABLE. -->
+            <div class="glass-card insights-wide">
+              <div class="card-header">
+                <h3>Settings</h3>
+                <button
+                  class="btn-icon"
+                  id="refreshConfig"
+                  aria-label="Reload settings"
+                  title="Reload settings"
+                >
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <p class="panel-note" id="configNote">
+                Changes are saved to the database and picked up by the agent on
+                its next loop - no restart needed. Credentials and feature flags
+                stay in <code>.env</code>.
+              </p>
+              <div id="configForm" class="config-grid"></div>
+              <p id="configResult" class="ms-result"></p>
+            </div>
+
+            <div class="glass-card insights-wide">
+              <div class="card-header"><h3>Recent Errors</h3></div>
+              <div id="errorFeed" class="error-feed"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <dialog id="helpDialog" class="help-dialog" aria-labelledby="helpTitle">
+      <h2 id="helpTitle">How the agent works</h2>
+      <ol class="help-steps">
+        <li><strong>It looks.</strong> It searches the sectors in Markets for European companies that build products with small metal parts, and reads what each company says about itself.</li>
+        <li><strong>It judges.</strong> It leaves out competitors, existing customers and companies that are not buyers, and gives each lead a fit score you can read part by part.</li>
+        <li><strong>It drafts.</strong> It writes a first email in Italian or English from Omega's own words. When it knows too little to personalise, it uses Omega's standard email.</li>
+        <li><strong>You decide.</strong> Nothing is sent until a person approves it in Review, and what is sent is exactly what was approved.</li>
+        <li><strong>It sends carefully.</strong> A few emails a day at first, office hours only, and it pauses if too many bounce.</li>
+        <li><strong>It learns from you.</strong> Sectors whose companies you reject are searched less.</li>
+      </ol>
+      <h3>How your data is protected</h3>
+      <ul>
+        <li>Company and contact lists are encrypted on disk, and passwords and keys live outside the code.</li>
+        <li>Every email names Omega and has a one-click opt-out. An opt-out or a refusal stops the whole company at once, and no one can undo that from the dashboard.</li>
+        <li>Only business contacts found on companies' own sites are used, with the page they came from kept. Data is erased after a set time, and any person can ask to see or erase theirs.</li>
+        <li>Any AI runs on Omega's own server; no company data goes to an outside AI service.</li>
+        <li>Approved leads can be exported to a CRM such as HubSpot (Leads, Export). Nothing connects to King ERP automatically.</li>
+      </ul>
+      <form method="dialog"><button class="btn-primary btn-sm">Close</button></form>
+    </dialog>
+    <script src="/static/js/dashboard.js"></script>
+  </body>
+</html>

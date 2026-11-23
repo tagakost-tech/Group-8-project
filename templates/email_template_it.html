@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buongiorno</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; font-size: 15px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="left">
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; text-align: left; padding: 24px 8px;">
+                    <tr>
+                        <td>
+                            <p style="margin: 0 0 16px 0;">Buongiorno,</p>
+                            <p style="margin: 0 0 16px 0;">Mi chiamo {{sender_name}} e mi occupo di {{sender_title}} in Omega IFS, azienda familiare italiana che dal 1946 realizza fastener speciali e particolari di precisione stampati a freddo.</p>
+                            <p style="margin: 0 0 16px 0;">Produciamo su disegno del cliente, da filo di diametro compreso tra 0,5 e 25 mm e con tolleranze fino al centesimo di millimetro, e siamo certificati IATF 16949, ISO 9001 e ISO 14001. Un particolare tornito spesso si può stampare a freddo, a un costo per pezzo più basso.</p>
+                            <p style="margin: 0 0 16px 0;">Se {{organization}} acquista particolari metallici in serie, ci invii un disegno con il materiale e il volume annuo: di solito rispondiamo con fattibilità e prezzo in meno di 8 ore.</p>
+
+                            <p style="margin: 20px 0 4px 0;">Cordiali saluti,</p>
+                            <p style="margin: 0;">{{sender_signature}}</p>
+
+                            <p style="margin: 26px 0 0 0; font-size: 11px; color: #9ca3af; line-height: 1.5;">
+                                Se questa email non è di Suo interesse, nessun problema &mdash; può
+                                <a href="{{unsubscribe_url}}" style="color: #9ca3af; text-decoration: underline;">cancellarsi qui</a>.
+                            </p>
+                            {{legal_footer}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    {{tracking_pixel}}
+</body>
+</html>

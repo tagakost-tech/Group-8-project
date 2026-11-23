@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buongiorno</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; font-size: 15px;">
+    <!-- SUPPLECO's own first email in Italian (10 Nov 2026), word for word:
+         sent to the countries ITALIAN_COUNTRIES lists. The same layout as
+         templates/email_template.html, which a test holds. -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="left">
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; text-align: left; padding: 24px 8px;">
+                    <tr>
+                        <td>
+                            <p style="margin: 0 0 16px 0;">Buongiorno,</p>
+                            <p style="margin: 0 0 16px 0;">Mi chiamo {{sender_name}} e mi occupo di {{sender_title}} in Suppleco.</p>
+                            <p style="margin: 0 0 16px 0;">Le scrivo per presentarle Suppleco come CDMO e per esplorare una possibile collaborazione con {{organization}}.</p>
+                            <p style="margin: 0 0 16px 0;">Siamo specializzati nello sviluppo, produzione e confezionamento di Integratori Alimentari, Dispositivi Medici e Alimenti a Fini Medici Speciali, in forme farmaceutiche solide, liquide e semisolide.</p>
+                            <p style="margin: 0 0 16px 0;">In allegato troverà il nostro Company Profile, che offre una panoramica completa delle nostre capacità produttive, tecnologie e certificazioni.</p>
+                            <p style="margin: 0 0 16px 0;">Senza alcun impegno da parte sua, sarei lieto di organizzare una breve call introduttiva per presentarle la nostra azienda e condividere alcuni case study di progetti di private label sviluppati con altri partner del settore.</p>
+                            <p style="margin: 0 0 16px 0;">Resto in attesa di un suo riscontro.</p>
+
+                            <p style="margin: 20px 0 4px 0;">Cordiali saluti,</p>
+                            <p style="margin: 0;">{{sender_signature}}</p>
+
+                            <p style="margin: 26px 0 0 0; font-size: 11px; color: #9ca3af; line-height: 1.5;">
+                                Se questa email non è di Suo interesse, nessun problema &mdash; può
+                                <a href="{{unsubscribe_url}}" style="color: #9ca3af; text-decoration: underline;">cancellarsi qui</a>.
+                            </p>
+                            {{legal_footer}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    {{tracking_pixel}}
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Development / test dependencies (install with: pip install -r requirements-dev.txt)
+pytest>=8.0
+
+# Browser-based dashboard UI tests via the webapp-testing skill.
+# After installing, run: python -m playwright install chromium
+# Then run the UI tests with: python -m pytest -m ui
+playwright>=1.40
+
+# Parses docker-compose.yml in tests/test_the_container_is_locked_down.py.
+pyyaml>=6.0,<7.0
+
+# Checks the installed packages for known vulnerabilities
+# (main.py security-check). Never installs or upgrades anything.
+pip-audit>=2.7,<3.0

@@ -1,0 +1,141 @@
+{
+  "question": "queries",
+  "description": "Propose five web-search queries for new European buyers. Asked through AIGenerator.suggest_discovery_queries with the hint as its focus; scored on format only: how many of the five proposals survive the product's own filters. The hints are invented, in the two shapes the agent gives one: the learner's summary (\"working well: ... | avoid (no results): ...\") or, before the learner has a signal, the most productive past searches joined by \"; \". One case has no hint (a second would send the same prompt again), ten carry a buyer hint, and four hard ones carry a hint that pulls toward supplier searches.",
+  "cases": [
+    {
+      "id": "qry-nohint-01",
+      "language": "en",
+      "category": "no_hint",
+      "focus_hint": "",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "No hint: the model has only the prompt's own rules to follow."
+    },
+    {
+      "id": "qry-hint-01",
+      "language": "en",
+      "category": "hint",
+      "focus_hint": "sports nutrition brands in Germany",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "A plain buyer hint, as the learning loop gives one."
+    },
+    {
+      "id": "qry-hint-02",
+      "language": "en",
+      "category": "hint",
+      "focus_hint": "probiotic online shops in Spain",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "A plain buyer hint for another vertical and country."
+    },
+    {
+      "id": "qry-hint-03",
+      "language": "en",
+      "category": "hint",
+      "focus_hint": "pharmacies with their own vitamin line in Austria",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "A buyer hint naming pharmacies."
+    },
+    {
+      "id": "qry-supplier-01",
+      "language": "en",
+      "category": "supplier_hint",
+      "focus_hint": "private label collagen in Italy",
+      "expected": 3,
+      "difficulty": "hard",
+      "why": "The hint uses a supplier word, tempting the model to search for competitors."
+    },
+    {
+      "id": "qry-supplier-02",
+      "language": "en",
+      "category": "supplier_hint",
+      "focus_hint": "contract manufacturing of gummies in France",
+      "expected": 3,
+      "difficulty": "hard",
+      "why": "The hint names contract manufacturing, which the prompt forbids in a query."
+    },
+    {
+      "id": "qry-hint-04",
+      "language": "de",
+      "category": "hint",
+      "focus_hint": "Nahrungsergänzungsmittel Marke Österreich; Vitamin Online-Shop Schweiz; Sportnahrung Händler Deutschland",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "Past German searches, as the agent hands them over before the learner has a signal; all buyer searches."
+    },
+    {
+      "id": "qry-supplier-03",
+      "language": "it",
+      "category": "supplier_hint",
+      "focus_hint": "brand di integratori alimentari Italy; produzione conto terzi integratori Lombardia; azienda nutraceutica Italy",
+      "expected": 3,
+      "difficulty": "hard",
+      "why": "One of three past searches is a supplier search; copying the pattern is natural, so a strict and a lenient reader differ on fair."
+    },
+    {
+      "id": "qry-hint-05",
+      "language": "en",
+      "category": "hint",
+      "focus_hint": "working well: probiotic, omega 3 supplement, Netherlands, Belgium | avoid (no results): Malta",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "The learner's summary with an avoid part; a model following the rules keeps buyer words and leaves Malta out."
+    },
+    {
+      "id": "qry-hint-06",
+      "language": "fr",
+      "category": "hint",
+      "focus_hint": "marque de compléments alimentaires France; pharmacie en ligne vitamines Belgique; distributeur nutrition sportive Suisse",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "Past French searches naming brands, an online pharmacy and a distributor: buyers only."
+    },
+    {
+      "id": "qry-hint-07",
+      "language": "it",
+      "category": "hint",
+      "focus_hint": "working well: brand di integratori alimentari, azienda nutraceutica, marchio di integratori, Italy",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "The learner's summary made of SUPPLECO's own Italian buyer phrases; none is a supplier word."
+    },
+    {
+      "id": "qry-supplier-04",
+      "language": "en",
+      "category": "supplier_hint",
+      "focus_hint": "sports nutrition brand Netherlands; white label protein powder Netherlands; vegan protein online shop Denmark; turnkey supplement line Belgium",
+      "expected": 3,
+      "difficulty": "hard",
+      "why": "Half the past searches seek a white-label or turnkey supplier; whether a model should echo them or drop them is arguable."
+    },
+    {
+      "id": "qry-hint-08",
+      "language": "es",
+      "category": "hint",
+      "focus_hint": "tienda online suplementos deportivos España; marca de colágeno Portugal; herbolario online vitaminas España",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "Past Spanish searches for shops and a brand; no supplier word to copy."
+    },
+    {
+      "id": "qry-hint-09",
+      "language": "en",
+      "category": "hint",
+      "focus_hint": "working well: beauty supplement, nutricosmetic, Poland, Czech Republic | avoid (no results): pre-workout supplement, Norway, Romania",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "A longer learner summary whose avoid list names a vertical and two countries; still only buyer words."
+    },
+    {
+      "id": "qry-hint-10",
+      "language": "sv",
+      "category": "hint",
+      "focus_hint": "kosttillskott varumärke Sverige; vitaminer nätbutik Finland; sportnäring återförsäljare Danmark",
+      "expected": 4,
+      "difficulty": "clear",
+      "why": "Past Swedish searches for a brand, a web shop and a reseller; a buyer hint in a less common language."
+    }
+  ]
+}

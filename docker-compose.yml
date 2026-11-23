@@ -1,0 +1,35 @@
+services:
+  outreach:
+    build: .
+    image: suppleco-outreach-agent
+    # This machine only. A public unsubscribe page goes through a tunnel or
+    # reverse proxy running on this machine (docs/DEPLOY.md, section 3).
+    ports:
+      - "127.0.0.1:5000:5000"
+    env_file:
+      - .env
+    environment:
+      # Ensure the dashboard binds so the host can reach it, and tracking/
+      # unsubscribe links point at your public URL (see docs/DEPLOY.md).
+      - DASHBOARD_HOST=0.0.0.0
+      # - BASE_URL=https://your-public-domain.example
+    # The image cannot be changed while it runs: only the folders below and
+    # /tmp can be written. No Linux capabilities, and no way to gain any.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # The image runs as uid 10001 and carries no client list: put the list
+    # in ./data and set CLIENT_LIST_PATH=data/<file>.xlsx (data/<file>.xlsx.enc
+    # once encrypted with LISTS_KEY, docs/DEPLOY.md section 13). On Linux, give
+    # uid 10001 write access to ./data, ./logs and ./templates (the
+    # dashboard's template editor saves there).
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./assets:/app/assets
+      - ./templates:/app/templates
+    restart: unless-stopped

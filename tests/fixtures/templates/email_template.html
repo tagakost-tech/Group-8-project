@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; font-size: 15px;">
+    <!-- SUPPLECO's own first email (10 Nov 2026), word for word: their text,
+         not ours to correct. templates/email_template_it.html is the Italian
+         one, in the same layout. Each sentence stays on one line, so the
+         plain-text part reads as they wrote it. -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="left">
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; text-align: left; padding: 24px 8px;">
+                    <tr>
+                        <td>
+                            <p style="margin: 0 0 16px 0;">Dears,</p>
+                            <p style="margin: 0 0 16px 0;">My name is {{sender_name}} and I am responsible for  {{sender_title}} at Suppleco.</p>
+                            <p style="margin: 0 0 16px 0;">I am writing to introduce Suppleco as a CDMO and explore a potential partnership with {{organization}}.</p>
+                            <p style="margin: 0 0 16px 0;">We specialize in the development, manufacturing and packaging of Food Supplements, Medical Devices and Foods for Special Medical Purposes, in solid, liquid and semi-solid dosage forms.</p>
+                            <p style="margin: 0 0 16px 0;">Please find attached our Company Profile, which provides a comprehensive overview of our manufacturing capabilities, technologies and certifications.</p>
+                            <p style="margin: 0 0 16px 0;">Without any obligation on your side, I would welcome the opportunity to schedule a brief introductory call to present our company and share some relevant case studies of private label projects developed with other partners in the industry.</p>
+                            <p style="margin: 0 0 16px 0;">I look forward to your response.</p>
+
+                            <p style="margin: 20px 0 4px 0;">Best regards,</p>
+                            <p style="margin: 0;">{{sender_signature}}</p>
+
+                            <p style="margin: 26px 0 0 0; font-size: 11px; color: #9ca3af; line-height: 1.5;">
+                                If this isn't relevant to you, no problem &mdash; you can
+                                <a href="{{unsubscribe_url}}" style="color: #9ca3af; text-decoration: underline;">unsubscribe here</a>.
+                            </p>
+                            {{legal_footer}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    {{tracking_pixel}}
+</body>
+</html>

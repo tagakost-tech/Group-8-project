@@ -1,0 +1,54 @@
+# Secrets are provided at runtime via env_file / -e, never baked into the image.
+# Copies too (.env.bak, .env.old, a .env in a subfolder): COPY . . took them.
+.env
+**/.env*
+
+# The Microsoft sign-in certificate and its private key sign in to SUPPLECO's
+# mailboxes: mounted with data/ at runtime, never baked into an image.
+**/*.pem
+**/*.key
+**/*.pfx
+**/*.p12
+
+# Python caches / virtualenvs
+**/__pycache__/
+**/*.py[co]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local database, held opt-outs, exports, backups and logs (mounted as
+# volumes at runtime)
+data/
+logs/
+# A copy of the database anywhere else in the folder.
+**/*.db
+**/*.db-*
+**/*.sqlite*
+
+# The client and competitor lists hold SUPPLECO's client data: mounted at
+# runtime, never baked into an image. Any folder: a list copied into docs/
+# or a subfolder would otherwise go into the image too.
+**/*.xlsx
+**/*.xlsx.*
+
+# Nothing the app reads at runtime. The Company Profile PDF is mounted with
+# assets/; the meeting PDFs and Word files under docs/ are for people.
+# benchmark/ stays: `main.py ai-benchmark` reads its cases in the container.
+docs/
+tests/
+scripts/
+conftest.py
+pytest.ini
+requirements-dev.txt
+**/*.pdf
+**/*.docx
+**/*.pptx
+**/*.md
+
+# Dev-only / VCS / agent tooling
+.git/
+.gitignore
+.claude/
+.agents/

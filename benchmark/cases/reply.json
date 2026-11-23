@@ -1,0 +1,1246 @@
+{
+  "question": "reply",
+  "description": "Does a prospect's reply show genuine interest? Asked through AIGenerator.classify_reply_intent, in the agent only about replies its wording rules could not decide; a YES raises an interest alert. Every company, person and address here is invented, and every domain ends in .example. The replies are written as real ones look: short, with greetings, signatures and the odd typo, mostly in Italian and English, then German, French and Spanish, and a few in Dutch, Polish, Portuguese, Swedish and Greek. Each is worded so the wording rules leave it to the AI, as the agent would, and --check shows none is settled by them. None is one the agent's inbox files away before that judgement, as it does an auto-reply whose subject says so ('Automatic reply', 'Fuori sede') and a delivery failure: the out-of-office replies here come back as 'Re:' with the original subject, as those that reach the AI do. Several clear NO replies ask a question, so that asking something is not by itself interest. Some pairs share the same polite opening and then turn once to buying and once to a decline, so the opening alone decides nothing.",
+  "cases": [
+    {
+      "id": "rep-interested-01",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno, che quantità minime fate per le capsule di magnesio? Grazie, Marta",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for minimum quantities for a product: a buying signal."
+    },
+    {
+      "id": "rep-interested-02",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Could we have a short call next Tuesday? We are reviewing suppliers for our protein line.\n\nOn 10 Nov, SUPPLECO wrote:\n> Dear team,",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Proposes a call while reviewing suppliers; the quoted email below is not read."
+    },
+    {
+      "id": "rep-interested-03",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hi Paolo,\n\ntiming is good actually - we're planning a vegan omega-3 softgel for Q2. What volumes do you usually start at, and do you handle the packaging too?\n\nCheers\nHannah Rowe\nHead of Product, Thistleby Wellness Ltd\nwww.thistleby-wellness.example",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Names a planned product and asks about starting volumes and packaging: a buyer scoping a project."
+    },
+    {
+      "id": "rep-interested-04",
+      "language": "it",
+      "category": "interested",
+      "subject": "R: Produzione integratori per conto terzi",
+      "body": "Salve,\nci mandate la scheda tecnica delle vostre gummies alla vitamina D? Stiamo valutando un nuovo fornitore per la linea bambini.\n\nCordiali saluti\nGiulia Ferrandi\nFarmacia Ferrandi Snc\nTel. 0521 000 0000",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for a product data sheet while choosing a new supplier."
+    },
+    {
+      "id": "rep-interested-05",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Guten Tag Herr Rossi,\n\nkönnten Sie uns Ihre Konditionen für Kollagenpulver in Sticks nennen? Wir planen ca. 20.000 Stück pro Jahr.\n\nMit freundlichen Grüßen\nJonas Brettschneider\nEinkauf | Vitalhain Lindenau GmbH",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for terms on a product with a yearly volume: a request to buy."
+    },
+    {
+      "id": "rep-interested-06",
+      "language": "fr",
+      "category": "interested",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\n\noui, ça peut nous intéresser. Pouvez-vous m'appeler jeudi après-midi ? Je suis joignable au standard.\n\nCordialement,\nClaire Mounier\nLaboratoire Saint-Aurèle",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Says it may interest them and asks to be called on a set day."
+    },
+    {
+      "id": "rep-interested-07",
+      "language": "es",
+      "category": "interested",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Hola,\n¿cuál es el pedido mínimo para cápsulas de cúrcuma con nuestra marca? Somos una tienda online en Valencia.\nGracias,\nLucía Barreda\nHerbolario Lunaclara",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks the minimum order for capsules under their own brand."
+    },
+    {
+      "id": "rep-interested-08",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "hi, roughly what would 5k units of ashwaghanda caps cost us? thx\nTom\n\nSent from my phone",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks what a stated quantity would cost: a price request in other words, with a typo."
+    },
+    {
+      "id": "rep-interested-09",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno dott. Bianchi,\npossiamo sentirci al telefono la settimana prossima? Vorrei capire come lavorate per una linea di tisane funzionali in bustina.\n\nAndrea Colombi\nErbecolle Valsesia\n\nIl giorno mar 11 nov 2026 alle 09:12 SUPPLECO <info@suppleco.example> ha scritto:\n> Gentile Andrea,\n> siamo un produttore di integratori alimentari",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for a phone call to understand how they would make a product line."
+    },
+    {
+      "id": "rep-interested-10",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Good timing. Our current manufacturer has just told us about a six month backlog. Could you take on a melatonin gummy project starting in January?\n\nSarah Pemberton\nOperations, Dunmore & Pike Naturals",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Their supplier is late and they ask whether a project can start soon: a live buying need."
+    },
+    {
+      "id": "rep-interested-11",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Hallo,\nschicken Sie mir bitte Ihre Produktübersicht und die Zertifikate? Wir sind ein Onlineshop für Sporternährung und suchen Ergänzungen für unser Sortiment.\nGruß\nFelix Achterberg\nfelix@kraftkiste-shop.example",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for the product overview and certificates to extend their range."
+    },
+    {
+      "id": "rep-interested-12",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hello,\n\nwe'd be keen to visit your plant when we're in Lombardy in early December. Would the 3rd or the 4th work on your side?\n\nBest regards,\nMaja Lindqvist\nNordskimra Nutrition AB",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Proposes dates to visit the plant: a strong step toward working together."
+    },
+    {
+      "id": "rep-interested-13",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "ciao Luca\nfate anche proteine in polvere con aromi naturali? se si quanto vengono al kg piu o meno?\ngrazie\nMarco - Palestra Ferro&Fuoco Store",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks whether a product is made and what it costs per kilo, written in a hurry."
+    },
+    {
+      "id": "rep-interested-14",
+      "language": "fr",
+      "category": "interested",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour Monsieur,\n\nmerci pour votre message. Nous cherchons justement un partenaire pour des gélules de bisglycinate de magnésium. Quels sont vos délais et vos quantités minimum ?\n\nBien à vous,\nThibault Garnier\nMaison Verveine & Co",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Says they are looking for exactly this and asks lead times and minimum quantities."
+    },
+    {
+      "id": "rep-interested-15",
+      "language": "es",
+      "category": "interested",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Buenos días,\nnos gustaría recibir información sobre la fabricación de colágeno bebible. ¿Podemos agendar una videollamada la semana que viene?\nSaludos,\nIñigo Arrizabalaga\nNutriBidasoa S.L.",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for information on a product and proposes a video call."
+    },
+    {
+      "id": "rep-interested-16",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Can you do probiotics in blister packs under our brand? If yes how many would we have to order at the start\n\nR. Okafor\nGreenquay Pharmacy Group",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks whether their own-brand product can be made and how much they would have to order."
+    },
+    {
+      "id": "rep-interested-17",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno,\nquanto ci costerebbero 10.000 compresse di vitamina C 1000 mg col nostro marchio?\nGrazie\nSilvia Marchetto\nErboristeria Il Melograno Blu",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks what a stated quantity under their own brand would cost: a price request in other words."
+    },
+    {
+      "id": "rep-interested-18",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Good timing. Could you mail over a list of the formats you produce, gummies especially?\n\nKind regards,\nDaniel Fairclough",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks for the formats on offer, naming the one they care about."
+    },
+    {
+      "id": "rep-interested-19",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Sehr geehrte Damen und Herren,\n\nIhr Schreiben kam zur rechten Zeit. Können wir nächste Woche telefonieren? Ich bin am besten vormittags erreichbar.\n\nViele Grüße\nDr. Petra Kühnel\nApotheke am Fuchsenbrunnen",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Says the email came at the right time and asks for a phone call next week."
+    },
+    {
+      "id": "rep-interested-20",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Salve, siamo un'erboristeria con e-commerce e cerchiamo chi ci produca un integratore per il sonno con il nostro marchio. Quando possiamo fissare una call?\nElena Rinaldi\nwww.erbedelpoggio.example",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Says they are looking for a maker of their own product and asks when to hold a call."
+    },
+    {
+      "id": "rep-interested-21",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Guten Tag,\nich habe Ihre Mail an unseren Einkauf weitergeleitet, Frau Okonkwo meldet sich ggf. bei Ihnen. Welche Zertifizierungen hat Ihr Werk eigentlich?\nMfG\nT. Hagedorn",
+      "expected": "YES",
+      "difficulty": "hard",
+      "why": "Passes it to purchasing and asks about certifications: a real question, yet the follow-up is only 'maybe'."
+    },
+    {
+      "id": "rep-interested-22",
+      "language": "fr",
+      "category": "interested",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Pas pour le moment, mais gardez mon contact et envoyez-moi quand même votre plaquette, on ne sait jamais.\n\nNadia Ferrah\nPharmacie des Tilleuls Bleus",
+      "expected": "YES",
+      "difficulty": "hard",
+      "why": "Says not now but asks for the brochure: a salesperson would follow up, a strict reader might not."
+    },
+    {
+      "id": "rep-interested-23",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno, chi è il vostro referente commerciale per il Nord-Est? Nel caso lo giro al nostro ufficio acquisti.\nFabio Zanetti",
+      "expected": "YES",
+      "difficulty": "hard",
+      "why": "Asks for the sales contact to pass on: some interest, though 'nel caso' leaves it open."
+    },
+    {
+      "id": "rep-declined-01",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Thanks, but our production is settled for the next two years.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A polite decline without the stock phrases the wording rules catch."
+    },
+    {
+      "id": "rep-declined-02",
+      "language": "it",
+      "category": "declined",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno,\nproduciamo tutto internamente nel nostro stabilimento di Forlì, quindi non ci servono terzisti.\nBuon lavoro\nRoberto Galassi\nDirettore di produzione - Galassi Nutraceutica",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They make everything in house and need no outside manufacturer."
+    },
+    {
+      "id": "rep-declined-03",
+      "language": "de",
+      "category": "declined",
+      "subject": "AW: Supplement production",
+      "body": "Danke für Ihre Nachricht. Wir sind mit unserem Hersteller sehr zufrieden und planen keinen Wechsel.\n\nFreundliche Grüße\nSabine Wolters",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Happy with their manufacturer and plan no change."
+    },
+    {
+      "id": "rep-declined-04",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "We're fine as we are, thanks.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A plain, short decline."
+    },
+    {
+      "id": "rep-declined-05",
+      "language": "fr",
+      "category": "declined",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\nnous ne faisons que des cosmétiques, les compléments alimentaires ne font pas partie de nos projets.\nBonne journée\nÉmilie Rocheteau - Atelier Lavandine",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Wrong company: they make cosmetics and have no plan for supplements."
+    },
+    {
+      "id": "rep-declined-06",
+      "language": "es",
+      "category": "declined",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Gracias, pero cerramos la tienda a final de año. Un saludo.\nPilar",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "The shop is closing at year end: nothing to buy."
+    },
+    {
+      "id": "rep-declined-07",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Wrong person and frankly wrong company, we make kitchen worktops. Good luck with it though.\n\nGareth\nHollinby Surfaces",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A worktop maker telling the sender it has the wrong company."
+    },
+    {
+      "id": "rep-declined-08",
+      "language": "it",
+      "category": "declined",
+      "subject": "Re: Produzione integratori",
+      "body": "È la terza mail che ricevo da voi in un mese. Il fornitore ce l'abbiamo da vent'anni e non abbiamo nessuna intenzione di cambiarlo.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An annoyed complaint that also says they will not change supplier."
+    },
+    {
+      "id": "rep-declined-09",
+      "language": "it",
+      "category": "declined",
+      "subject": "Re: Produzione integratori",
+      "body": "Grazie della proposta. Per il 2027 i budget sono già chiusi, magari riproviamo verso fine anno prossimo.\nSaluti, Chiara Benedetti",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "No now, maybe late next year: a salesperson could keep it warm, but nothing is wanted today."
+    },
+    {
+      "id": "rep-declined-10",
+      "language": "es",
+      "category": "declined",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Ahora mismo trabajamos con otro fabricante, pero el contrato vence en junio. Escríbame entonces si quiere.\nJavier Ortúzar\nRobledal Cantábrico",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "Declines for now but invites contact in June; some would call that interest."
+    },
+    {
+      "id": "rep-declined-11",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Is this a mass mailing? We get ten of these a week, and every capsule we sell is made in our own plant.\n\nKeith Ormsby",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A question, but an irritated one, and they make everything themselves: no interest."
+    },
+    {
+      "id": "rep-declined-12",
+      "language": "de",
+      "category": "declined",
+      "subject": "AW: Supplement production",
+      "body": "Von welcher Firma kommt diese Mail eigentlich? Ihr Name sagt mir nichts, und wir lassen grundsätzlich nichts extern herstellen.\n\nGruß\nM. Pfisterer",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks who the sender is, then says they never have anything made outside: a decline."
+    },
+    {
+      "id": "rep-removal-01",
+      "language": "it",
+      "category": "removal",
+      "subject": "Re: Produzione integratori",
+      "body": "Vi prego di togliere questo indirizzo dalle vostre liste.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks to be taken off the lists: never interest."
+    },
+    {
+      "id": "rep-removal-02",
+      "language": "en",
+      "category": "removal",
+      "subject": "Re: Supplement production",
+      "body": "Please take this address off whatever list you got it from. Thank you.\n\nM. Ashdown\nOffice Manager",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks for the address to be taken off the list."
+    },
+    {
+      "id": "rep-removal-03",
+      "language": "de",
+      "category": "removal",
+      "subject": "AW: Supplement production",
+      "body": "Bitte senden Sie an diese Adresse keine Werbung mehr. Danke.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks that no more advertising be sent to this address."
+    },
+    {
+      "id": "rep-removal-04",
+      "language": "en",
+      "category": "removal",
+      "subject": "Re: Supplement production",
+      "body": "Please drop me from your mailings.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A one-line request to be dropped from the mailings."
+    },
+    {
+      "id": "rep-removal-05",
+      "language": "es",
+      "category": "removal",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Por favor, no vuelvan a escribir a esta dirección.\nGracias",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks them never to write to this address again."
+    },
+    {
+      "id": "rep-autoreply-01",
+      "language": "de",
+      "category": "auto_reply",
+      "subject": "Re: Supplement production",
+      "body": "Ich bin bis zum 24. November nicht im Büro. In dringenden Fällen wenden Sie sich an info@kraeutergarbe.example.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An out-of-office message, written by no one."
+    },
+    {
+      "id": "rep-autoreply-02",
+      "language": "en",
+      "category": "auto_reply",
+      "subject": "Re: Supplement production",
+      "body": "Thank you for your email. I am on annual leave until Monday 1 December with limited access to email. For anything urgent please contact orders@fernhollow-naturals.example.\n\nKind regards,\nPriya Lal",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An out-of-office reply pointing elsewhere; nobody read the email."
+    },
+    {
+      "id": "rep-autoreply-03",
+      "language": "it",
+      "category": "auto_reply",
+      "subject": "Re: Produzione integratori",
+      "body": "Gentile Cliente,\nla sua richiesta è stata registrata con il numero di ticket #48213. Un nostro operatore la ricontatterà entro 48 ore lavorative.\n\nServizio Clienti Vitalseme Ossola\nQuesto messaggio è generato automaticamente, si prega di non rispondere.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A ticket-system acknowledgement that promises a callback no person decided on."
+    },
+    {
+      "id": "rep-autoreply-04",
+      "language": "fr",
+      "category": "auto_reply",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\nje suis absente du bureau jusqu'au 2 décembre inclus. Votre message ne sera pas transféré.\nCordialement,\nAgathe Brévan",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An out-of-office message; the email was not even forwarded."
+    },
+    {
+      "id": "rep-autoreply-05",
+      "language": "en",
+      "category": "auto_reply",
+      "subject": "[Ticket #20931] Re: Supplement production",
+      "body": "Hello,\n\nThis is an automated message to confirm we have received your request. A member of our support team will get back to you as soon as possible. Please do not reply to this email.\n\nOakmere Health Customer Care\nhttps://help.oakmere-health.example",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A helpdesk auto-acknowledgement; 'get back to you' is the system's, not a buyer's."
+    },
+    {
+      "id": "rep-neutral-01",
+      "language": "en",
+      "category": "neutral",
+      "subject": "Re: Supplement production",
+      "body": "I have passed your email to our purchasing manager.",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "Forwarded internally: no interest shown yet, though a reader could hope for it."
+    },
+    {
+      "id": "rep-neutral-02",
+      "language": "it",
+      "category": "neutral",
+      "subject": "Re: Produzione integratori",
+      "body": "Ricevuto, grazie.\n\nInviato da iPhone",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A bare acknowledgement that asks for nothing."
+    },
+    {
+      "id": "rep-neutral-03",
+      "language": "en",
+      "category": "neutral",
+      "subject": "Re: Supplement production",
+      "body": "This mailbox is not checked any more. Please use contact@quillbrook-foods.example for all enquiries.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Points to another inbox and says nothing about the offer."
+    },
+    {
+      "id": "rep-neutral-04",
+      "language": "de",
+      "category": "neutral",
+      "subject": "AW: Supplement production",
+      "body": "Herr Weber ist seit Oktober nicht mehr bei uns im Unternehmen.\n\nMit freundlichen Grüßen\nSekretariat\nBergsalm Vital GmbH",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Says the addressee has left the company; no interest from anyone."
+    },
+    {
+      "id": "rep-neutral-05",
+      "language": "es",
+      "category": "neutral",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Le respondo desde la cuenta general de la tienda: el responsable de compras está de baja hasta enero.\nUn saludo,\nAtención al cliente",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Only says the buyer is away until January; nobody shows interest."
+    },
+    {
+      "id": "rep-neutral-06",
+      "language": "en",
+      "category": "neutral",
+      "subject": "Re: Supplement production",
+      "body": "Thanks Paolo. Out of curiosity, are you the same company that had the stand next to ours at the Bologna fair?\n\nLiam",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "A friendly question about the sender, not about buying; a salesperson might still read an opening in it."
+    },
+    {
+      "id": "rep-neutral-07",
+      "language": "en",
+      "category": "neutral",
+      "subject": "Re: Supplement production",
+      "body": "Hi, I'm not the right person for this, but Dana Whitfield (dana.whitfield@corvane-health.example) looks after new suppliers - copying her in.\n\nRegards\nOwen Carrick",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "Copies the right colleague but shows no interest himself; a useful lead, arguably not interest."
+    },
+    {
+      "id": "rep-neutral-08",
+      "language": "it",
+      "category": "neutral",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno, state assumendo? Sono una tecnologa alimentare con tre anni in controllo qualità e vorrei mandarvi il mio curriculum.\nFrancesca Lodi",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A job seeker asking about vacancies: a question, but nobody wants to buy anything."
+    },
+    {
+      "id": "rep-neutral-09",
+      "language": "fr",
+      "category": "neutral",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour, c'est bien vous qui organisez le salon de Bologne en mars ? Je cherche le plan des stands pour notre visite.\nMerci,\nLéa Castagnet",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Mistakes the sender for a trade-fair organiser and asks for a floor plan: no interest in buying."
+    },
+    {
+      "id": "rep-declined-13",
+      "language": "it",
+      "category": "declined",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno Luca,\ngrazie per la mail e per la presentazione.\nPer i nostri sciroppi ci appoggiamo da anni a un laboratorio di Bergamo e ci troviamo bene, quindi per ora restiamo con loro.\n\nCordiali saluti\nCorrado Pellizzari\nFarmacia San Prospero Nuova",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Same opening as rep-interested-24, then says they stay with the lab they have used for years: a polite decline."
+    },
+    {
+      "id": "rep-interested-24",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno Luca,\ngrazie per la mail e per la presentazione.\nQuanto ci verrebbe a costare un lotto di 3.000 flaconi di sciroppo alla propoli col nostro marchio? E in quanto tempo riuscireste a consegnare?\n\nCordiali saluti\nIlaria Fontanesi\nErboristeria La Rondine Verde - Reggio Emilia",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Same opening as rep-declined-13, then asks what an own-brand batch would cost and how fast it ships: a buyer."
+    },
+    {
+      "id": "rep-interested-25",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hi Paolo,\n\nthanks for reaching out, and for the brochure.\n\nWhat would 2,000 tubs of unflavoured creatine monohydrate run to, roughly? We'd need our own labels on them.\n\nBest,\nCallum Breck\nIronvale Supplements Ltd",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Same opening as rep-declined-14, then asks the rough cost of a stated own-label quantity."
+    },
+    {
+      "id": "rep-removal-06",
+      "language": "it",
+      "category": "removal",
+      "subject": "Re: Produzione integratori",
+      "body": "Basta con queste mail per favore, non è la prima volta che ve lo chiedo.\n\nInviato da Outlook per Android",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks, not for the first time, for the emails to stop: a removal request."
+    },
+    {
+      "id": "rep-interested-26",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Guten Tag Frau Bianchi,\n\nvielen Dank für Ihre E-Mail.\n\nWas würden 5.000 Fläschchen Vitamin-D3-Tropfen mit unserem Etikett kosten? Und wie lange dauert bei Ihnen die erste Produktion?\n\nMit freundlichen Grüßen\nKatrin Eschweiler\nEinkauf, Sonnenhof Vitalwaren GmbH",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Same opening as rep-declined-15, then asks the cost of a stated own-label quantity and the first run's timing."
+    },
+    {
+      "id": "rep-neutral-10",
+      "language": "en",
+      "category": "neutral",
+      "subject": "Re: Supplement production",
+      "body": "Thanks!",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A bare thanks that asks for nothing and commits to nothing."
+    },
+    {
+      "id": "rep-declined-14",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Hi Paolo,\n\nthanks for reaching out, and for the brochure.\n\nWe signed a three-year deal with a plant in Cork last spring, so there's nothing for us here for a good while.\n\nBest,\nAnnika Shaw\nBrightmoor Nutrition",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Same opening as rep-interested-25, then says a three-year contract is signed elsewhere: a decline."
+    },
+    {
+      "id": "rep-interested-27",
+      "language": "fr",
+      "category": "interested",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\n\nmerci pour votre message et votre présentation.\n\nÀ partir de combien de pots pouvez-vous lancer une production de gummies au fer ? Et quels seraient vos tarifs pour 3 000 pots ?\n\nCordialement,\nSolène Duperrier\nLes Jardins d'Ombelle",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Same opening as rep-declined-16, then asks the smallest run and the rates for a stated quantity."
+    },
+    {
+      "id": "rep-autoreply-07",
+      "language": "it",
+      "category": "auto_reply",
+      "subject": "R: Produzione integratori",
+      "body": "Sono fuori ufficio fino al 21 novembre con accesso limitato alla posta. Per urgenze scrivere a ordini@erbalunga-vigezzo.example.\n\nMaria Teresa Gilardi",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An out-of-office message pointing to another address."
+    },
+    {
+      "id": "rep-interested-29",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Morning,\n\nwho do I speak to about a private label electrolyte powder? We have a launch pencilled in for May and our usual guys can't do sticks. Can someone ring me on 07700 000000 this week?\n\nJess\n\nSent from my iPhone",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Has a launch date and a supplier gap, and asks to be phoned this week."
+    },
+    {
+      "id": "rep-declined-18",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Not for us.\n\nSent from my iPhone",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A curt decline sent from a phone."
+    },
+    {
+      "id": "rep-interested-30",
+      "language": "it",
+      "category": "interested",
+      "subject": "R: Produzione integratori per conto terzi",
+      "body": "Salve, ho visto il vostro sito. Fate anche fermenti lattici liofilizzati in bustina? Avremmo un progetto per un gruppo di 6 farmacie, mi chiamate quando potete?\nDott. Stefano Ruggeri\nFarmacie Riunite Valtrebbia",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Describes a project for six pharmacies and asks to be phoned."
+    },
+    {
+      "id": "rep-declined-15",
+      "language": "de",
+      "category": "declined",
+      "subject": "AW: Supplement production",
+      "body": "Guten Tag Frau Bianchi,\n\nvielen Dank für Ihre E-Mail.\n\nUnsere Tropfen füllen wir seit 2019 in der eigenen Anlage ab, einen Lohnhersteller brauchen wir dafür nicht.\n\nMit freundlichen Grüßen\nHolger Brandstätt\nBrandstätt Naturprodukte KG",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Same opening as rep-interested-26, then says they fill their own drops and need no contract maker."
+    },
+    {
+      "id": "rep-interested-34",
+      "language": "pl",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Dzień dobry,\njesteśmy siecią sklepów zielarskich i szukamy producenta kapsułek z ashwagandhą pod naszą marką. Jaka jest minimalna ilość zamówienia i ile to kosztuje?\nPozdrawiam\nAgnieszka Wróblewska\nZielnik Mazowiecki Sp. z o.o.",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Looking for an own-brand maker and asks the minimum order and the cost."
+    },
+    {
+      "id": "rep-removal-07",
+      "language": "en",
+      "category": "removal",
+      "subject": "Re: Supplement production",
+      "body": "Kindly take this mailbox off your distribution list. It is a shared inbox for supplier invoices only.\n\nAccounts Payable\nGlenrock Larder Foods Ltd",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks for the shared mailbox to be taken off the list."
+    },
+    {
+      "id": "rep-interested-31",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "ok, mandatemi le schede tecniche di omega 3 e magnesio. grazie\nDaniela",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "A hurried but clear request for the data sheets of two products."
+    },
+    {
+      "id": "rep-neutral-11",
+      "language": "it",
+      "category": "neutral",
+      "subject": "Re: Produzione integratori",
+      "body": "Gentile Luca,\nl'indirizzo commerciale@torrebianca-nutri.example è stato dismesso, le mail ora vanno a segreteria@torrebianca-nutri.example.\nSaluti\nUfficio IT",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "The IT office says the address was retired and gives a new one; nobody judged the offer."
+    },
+    {
+      "id": "rep-interested-32",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Yes please - can we get on Teams on Thursday at 10 CET? I'll bring our product manager.\n\nRegards\nBen Atwater\nCopperwick Health\n\nOn Tue, 11 Nov 2026 at 09:14, Paolo Rossi <paolo@suppleco.example> wrote:\n> Would a short call next week be useful?",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Accepts the proposed call with a day and hour and brings a colleague."
+    },
+    {
+      "id": "rep-declined-19",
+      "language": "it",
+      "category": "declined",
+      "subject": "Re: Produzione integratori",
+      "body": "Gentili signori,\nogni settimana ci arrivano proposte come la vostra. Noi vendiamo solo prodotti finiti di marchi terzi, col nostro nome non facciamo nulla.\nSaluti\nM. Ferraresi",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A shop that sells only other brands and makes nothing under its own name: no use for a contract maker."
+    },
+    {
+      "id": "rep-interested-28",
+      "language": "es",
+      "category": "interested",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Hola Paolo,\ngracias por escribirnos.\n¿Nos podrías decir cuánto costarían 4.000 sobres de magnesio con nuestra marca? Y si es posible, el plazo de entrega.\nUn saludo,\nMarina Escuder\nHerbodietética Sol de Turia",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Same opening as rep-declined-17, then asks the cost of a stated own-brand quantity and the delivery time."
+    },
+    {
+      "id": "rep-autoreply-08",
+      "language": "es",
+      "category": "auto_reply",
+      "subject": "Respuesta automática: Fabricación de complementos alimenticios",
+      "body": "Gracias por su mensaje. Nuestro horario de atención es de lunes a viernes de 9 a 14 h. Le contestaremos lo antes posible.\n\nFarmacia Lavanda Azul",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An automatic acknowledgement with opening hours; the promise to answer is the system's."
+    },
+    {
+      "id": "rep-interested-33",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Hallo Herr Rossi,\nwir suchen gerade einen Hersteller für vegane Kapseln mit Eisen und Vitamin C. Haben Sie nächste Woche Zeit für ein Telefonat? Am besten Dienstag.\nBeste Grüße\nLena Vogtmann\nGrünwipfel Naturkost",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Looking for a maker of a named product and proposes a phone call on a day."
+    },
+    {
+      "id": "rep-declined-20",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Is this meant for someone else? We're a two-person bakery in Leeds, we don't sell supplements and never will.\n\nRuth",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A question, but only to say it reached a bakery that will never sell supplements: wrong company."
+    },
+    {
+      "id": "rep-interested-35",
+      "language": "nl",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Goedemiddag,\nkunnen jullie collageen shots in flesjes van 25 ml maken? Wij denken aan zo'n 10.000 stuks per jaar. Graag een belafspraak volgende week.\nMet vriendelijke groet,\nSanne de Waard\nVitaalhuis Noordkade B.V.",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Asks whether a product can be made, gives a yearly volume and asks for a phone appointment."
+    },
+    {
+      "id": "rep-declined-16",
+      "language": "fr",
+      "category": "declined",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\n\nmerci pour votre message et votre présentation.\n\nNous venons de renouveler pour trois ans le contrat avec notre façonnier actuel, nous ne changerons donc rien d'ici là.\n\nCordialement,\nBenoît Larrieu\nPharmacie du Vieux Moulin Blanc",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Same opening as rep-interested-27, then says the current maker's contract was just renewed for three years."
+    },
+    {
+      "id": "rep-removal-08",
+      "language": "fr",
+      "category": "removal",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Merci de ne plus écrire à cette adresse, c'est une boîte réservée à la facturation.\nService comptabilité",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks that this billing address not be written to again."
+    },
+    {
+      "id": "rep-interested-36",
+      "language": "pt",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Bom dia,\ntrabalhamos com farmácias no Porto e procuramos quem produza gomas de vitamina C com a nossa marca. Podemos marcar uma videochamada na próxima semana?\nCumprimentos,\nRicardo Bastos\nFarmavida Ribeira Alta, Lda.",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Looking for an own-brand maker and proposes a video call next week."
+    },
+    {
+      "id": "rep-neutral-12",
+      "language": "fr",
+      "category": "neutral",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\nje suis stagiaire à l'accueil et je n'ai pas accès aux décisions d'achat. Je ne sais pas à qui transmettre votre mail, désolée.\nCamille",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An intern who cannot decide and does not know whom to pass it to: nobody shows interest."
+    },
+    {
+      "id": "rep-interested-37",
+      "language": "el",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Καλησπέρα σας,\nείμαστε αλυσίδα φαρμακείων στη Θεσσαλονίκη. Θα μπορούσατε να μας στείλετε τις τιμές σας για κάψουλες μαγνησίου με δική μας ετικέτα;\nΜε εκτίμηση,\nΔήμητρα Καλογεροπούλου\nΦαρμακεία Αγιόκλημα",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "A pharmacy chain asks for the rates of own-label magnesium capsules."
+    },
+    {
+      "id": "rep-declined-26",
+      "language": "el",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Καλημέρα σας,\nπαράγουμε όλα τα συμπληρώματά μας στο δικό μας εργοστάσιο στη Λάρισα, οπότε δεν χρειαζόμαστε εξωτερικό παραγωγό.\nΝίκος Παπαθανασίου",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They make all their supplements in their own plant and need no outside maker."
+    },
+    {
+      "id": "rep-interested-38",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Paolo - good timing. Our gummy supplier has gone bust and we've got two SKUs out of stock. Ring me today if you can, number below.\n\nNiamh Doyle\nDirector, Saltmarsh Botanicals\n+44 20 0000 0000",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Their supplier failed and they want a call today; no question mark, still urgent buying need."
+    },
+    {
+      "id": "rep-declined-21",
+      "language": "de",
+      "category": "declined",
+      "subject": "AW: Supplement production",
+      "body": "Danke, aber wir haben uns gerade für einen Hersteller in Polen entschieden. Die Verträge sind unterschrieben.\nGruß aus Kassel\nAndreas Möllering\n\nVon: Paolo Rossi <paolo@suppleco.example>\nGesendet: Dienstag, 11. November 2026 09:14\n> Sehr geehrte Damen und Herren,",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They just signed with another manufacturer; the quoted email below is ours."
+    },
+    {
+      "id": "rep-interested-39",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "buongiorno, siamo una startup di integratori per sportivi e ci servirebbe un terzista per un pre workout in polvere. potremmo fissare un incontro da voi a fine mese? grazie mille\nGiacomo Varesi\nFuoriGiri Nutrition srl",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Needs a contract maker for a product and asks for a meeting at the plant."
+    },
+    {
+      "id": "rep-removal-09",
+      "language": "es",
+      "category": "removal",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Por favor, quiten esta dirección de su lista de envíos. Gracias.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks for the address to be taken off the mailing list."
+    },
+    {
+      "id": "rep-interested-40",
+      "language": "fr",
+      "category": "interested",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\npourriez-vous me faire parvenir vos certificats (ISO 22000, bio) et la liste des formes galéniques que vous proposez ? Nous préparons un appel d'offres pour notre gamme minceur.\nBien cordialement,\nMathilde Arnaud-Vey\nResponsable achats, Laboratoires Hirondelle Blanche",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "A buyer preparing a tender asks for certificates and the formats on offer."
+    },
+    {
+      "id": "rep-neutral-13",
+      "language": "de",
+      "category": "neutral",
+      "subject": "AW: Supplement production",
+      "body": "Danke für die Info. Schönes Wochenende!\nGrüße\nUte",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A friendly thanks that asks for nothing."
+    },
+    {
+      "id": "rep-declined-17",
+      "language": "es",
+      "category": "declined",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Hola Paolo,\ngracias por escribirnos.\nLo fabricamos todo nosotros en nuestra planta de Lleida, así que no necesitamos a nadie de fuera.\nUn saludo,\nOriol Castellví\nNutricions Castellví",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Same opening as rep-interested-28, then says they make everything in their own plant."
+    },
+    {
+      "id": "rep-interested-41",
+      "language": "es",
+      "category": "interested",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Me encaja. ¿Me llamas mañana por la mañana? 600 00 00 00\nCarlos",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Very short, but says it fits and asks to be phoned tomorrow."
+    },
+    {
+      "id": "rep-autoreply-10",
+      "language": "en",
+      "category": "auto_reply",
+      "subject": "[Request received] Re: Supplement production",
+      "body": "Hi there,\n\nThanks for contacting Marlbeck Nutrition! Your request (#55120) has been received and is being reviewed by our sales team. You can expect a reply within 2 business days.\n\nWant faster answers? Visit our help centre: https://support.marlbeck-nutrition.example\n\nThis is an automated email.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A helpdesk acknowledgement; 'reviewed by our sales team' and the question are the system's words."
+    },
+    {
+      "id": "rep-interested-42",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Sehr geehrter Herr Rossi,\nunser Geschäftsführer möchte bei seinem Italienbesuch im Januar Ihr Werk besichtigen. Passt Ihnen die Woche ab dem 12.?\nFreundliche Grüße\nAssistenz der Geschäftsführung\nAlpenmoos Vital AG",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "The managing director wants to visit the plant and a week is proposed."
+    },
+    {
+      "id": "rep-declined-22",
+      "language": "nl",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Beste Paolo,\nbedankt voor je bericht. Wij maken al onze supplementen zelf in Zwolle en dat blijft zo.\nGroet,\nJoost Verhagen\nVerhagen Natuurproducten",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They make all their supplements themselves and will keep doing so."
+    },
+    {
+      "id": "rep-interested-43",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hi,\nare you able to do liquid iron sachets? Our pharmacist customers keep asking for them. If so could you put together rough costs for 3 sizes of run (5k, 10k, 25k)?\nThanks\nPriya Raman\nCategory Buyer | Wellcroft Pharmacies",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "A category buyer asks whether a product is made and for costs at three run sizes."
+    },
+    {
+      "id": "rep-neutral-14",
+      "language": "en",
+      "category": "neutral",
+      "subject": "Re: Supplement production",
+      "body": "Hi Paolo, thanks for your note. While I have you - we run a B2B marketplace for nutraceutical suppliers. Would SUPPLECO like a featured listing? First month free.\n\nMartin Keane\nGrowth Lead, Brambleyard Supply Hub",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A counter-pitch: they want to sell a listing, not buy anything."
+    },
+    {
+      "id": "rep-interested-44",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Va bene, sentiamoci giovedì alle 15. Vi lascio il mio cellulare: 333 000 0000\nPaola Strada\nFarmacia Strada - Novara\n\nIl giorno 12 nov 2026, alle ore 10:02, Luca Bianchi <luca@suppleco.example> ha scritto:\n> Possiamo sentirci al telefono questa settimana?",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Accepts the phone call with a day and hour and leaves a mobile number."
+    },
+    {
+      "id": "rep-declined-23",
+      "language": "es",
+      "category": "declined",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Es la cuarta vez que nos escriben este mes y siempre lo mismo. Ya tenemos proveedor desde hace años y estamos contentos.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An annoyed reply: they have had a supplier for years and are happy with it."
+    },
+    {
+      "id": "rep-interested-45",
+      "language": "sv",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hej Paolo,\nvi letar efter en tillverkare av D-vitamin i sprayform till vår egen serie. Vilka volymer brukar ni börja på, och kan vi ses på mässan i Bologna i mars?\nVänliga hälsningar\nEbba Lindgren\nNordkust Hälsa AB",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Looking for a maker for their own range, asks starting volumes and proposes meeting at a fair."
+    },
+    {
+      "id": "rep-removal-10",
+      "language": "pt",
+      "category": "removal",
+      "subject": "Re: Supplement production",
+      "body": "Bom dia, peço que deixem de enviar e-mails para este endereço. Obrigado.",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks them to stop sending emails to this address."
+    },
+    {
+      "id": "rep-interested-46",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hello Paolo, I don't handle suppliers myself, but our product director Laura Pinsent is hunting for a gummy manufacturer right now. Please write to her at laura.pinsent@pellowgarth-health.example - I've told her to expect you.\n\nTom Ashby\nPellow & Garth Health Stores",
+      "expected": "YES",
+      "difficulty": "hard",
+      "why": "Names a colleague who is looking for exactly this right now and asks the sender to write to her, though the writer shows no interest himself."
+    },
+    {
+      "id": "rep-declined-24",
+      "language": "pl",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Dzień dobry, dziękuję za wiadomość, ale nie planujemy współpracy z zewnętrznym producentem. Pozdrawiam, Tomasz Zielonka",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "A polite decline: they plan no work with an outside manufacturer."
+    },
+    {
+      "id": "rep-interested-47",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Gentile dott. Rossi,\nsono la titolare di tre parafarmacie in Brianza. Vorrei capire se con 1.000 pezzi si può già partire con un integratore per capelli e unghie a marchio nostro, o se il minimo è più alto.\nResto in attesa\nRoberta Galbiati",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "An owner asks whether her own-brand product can start at a stated quantity: a buying question."
+    },
+    {
+      "id": "rep-autoreply-11",
+      "language": "sv",
+      "category": "auto_reply",
+      "subject": "Autosvar: Supplement production",
+      "body": "Hej! Jag är föräldraledig till och med mars 2027. Kontakta gärna min kollega Elin på inkop@sjoglimt-halsa.example.\nHälsningar\nFrida",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An automatic parental-leave notice pointing to a colleague."
+    },
+    {
+      "id": "rep-interested-48",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Klingt spannend. Rufen Sie mich morgen an? 0170 0000000\nT. Krüger",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Short, but says it sounds exciting and asks to be phoned tomorrow."
+    },
+    {
+      "id": "rep-neutral-15",
+      "language": "es",
+      "category": "neutral",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Hola, ¿esto es por la factura pendiente del pedido de octubre? No encuentro ninguna referencia.\nSaludos\nContabilidad - Dietéticas Albor",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Accounts mistakes the email for an invoice reminder: a question, but no interest."
+    },
+    {
+      "id": "rep-interested-49",
+      "language": "fr",
+      "category": "interested",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour Monsieur Rossi,\nquelques questions avant d'aller plus loin :\n- faites-vous des comprimés effervescents ?\n- quel volume minimum par référence ?\n- délai pour un premier lot ?\nMerci d'avance,\nJulien Pradel\nPharmacies Pradel & Fils",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Lists a buyer's questions on format, minimum volume and first-lot timing."
+    },
+    {
+      "id": "rep-removal-11",
+      "language": "de",
+      "category": "removal",
+      "subject": "AW: Supplement production",
+      "body": "Bitte nehmen Sie diese Adresse aus Ihrem Verteiler. Wir möchten solche Mails nicht erhalten.\nMfG\nR. Lindqvist-Hahn",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks for the address to be taken off the mailing list."
+    },
+    {
+      "id": "rep-interested-50",
+      "language": "pt",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Obrigado pelo contacto. Não é para este ano, mas qual seria a quantidade mínima para cápsulas de cúrcuma? Só para termos uma referência para 2028.\nAna Pires",
+      "expected": "YES",
+      "difficulty": "hard",
+      "why": "Asks the minimum quantity, but 'just for reference' for 2028: a salesperson would note it, a strict reader might not."
+    },
+    {
+      "id": "rep-declined-25",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Interesting timing - we're being bought by a bigger group, so every supplier decision is frozen until the new owners settle in. Maybe try again in spring?\n\nGemma Hartley\nOakhaven Naturals",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "Nothing can be decided now, but they invite a try in spring; some would keep it as a warm lead."
+    },
+    {
+      "id": "rep-neutral-16",
+      "language": "de",
+      "category": "neutral",
+      "subject": "AW: Supplement production",
+      "body": "Danke, ich habe Ihre Unterlagen abgelegt. Wir schreiben unsere Lohnherstellung einmal im Jahr aus, das nächste Mal im Herbst 2027.\nViele Grüße\nBirgit Ostendorf\nQualitätsmanagement, Mühlbach Vital GmbH",
+      "expected": "NO",
+      "difficulty": "hard",
+      "why": "Files the email and names next year's tender: no interest today, yet a salesperson could diary the tender."
+    },
+    {
+      "id": "rep-interested-51",
+      "language": "sv",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hej,\nvi har en tillverkare idag. Har ni förresten ISO 22000-certifiering?\nMvh\nOskar Berg\nFjällvind Kosttillskott",
+      "expected": "YES",
+      "difficulty": "hard",
+      "why": "Has a maker yet asks about certification, which buyers ask when comparing; it may also be idle curiosity."
+    },
+    {
+      "id": "rep-declined-27",
+      "language": "it",
+      "category": "declined",
+      "subject": "Re: Produzione integratori",
+      "body": "Buongiorno,\nabbiamo appena firmato un accordo di tre anni con un laboratorio di Verona per tutta la nostra linea, quindi per ora restiamo con loro.\nCordiali saluti\nValentina Corradini\nNutribosco Srl",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They just signed three years with another lab for their whole line: a decline."
+    },
+    {
+      "id": "rep-declined-28",
+      "language": "en",
+      "category": "declined",
+      "subject": "Re: Supplement production",
+      "body": "Hi Paolo,\n\nappreciate the note, but we've had the same manufacturer in Ghent for eight years and they look after us well. We won't be switching.\n\nAll the best,\nRhys Penhallow\nFoxglen Nutrition",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They already have a supplier they are happy with and say they will not switch."
+    },
+    {
+      "id": "rep-declined-29",
+      "language": "fr",
+      "category": "declined",
+      "subject": "RE: Fabrication de compléments alimentaires",
+      "body": "Bonjour,\nnous sommes une agence immobilière à Nantes, je crois que votre message s'est trompé de destinataire. Bonne continuation.\nSophie Le Guennec\nAgence Quai des Tanneurs",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Wrong company: an estate agency that has nothing to do with supplements."
+    },
+    {
+      "id": "rep-declined-30",
+      "language": "de",
+      "category": "declined",
+      "subject": "AW: Supplement production",
+      "body": "Guten Tag,\nvielen Dank für Ihre Nachricht. Wir haben unser Sortiment gerade verkleinert und nehmen keine neuen Eigenmarken-Produkte auf.\nFreundliche Grüße\nMarkus Stellbrink\nLindwurm Reformwaren GmbH",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "They have just cut their range and take on no new own-label products: a decline."
+    },
+    {
+      "id": "rep-removal-12",
+      "language": "en",
+      "category": "removal",
+      "subject": "Re: Supplement production",
+      "body": "Could you strike this address from whatever list it's on, please? I'd rather not get any more of these.\n\nH. Treharne",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Asks for the address to be struck from the list and wants no more emails."
+    },
+    {
+      "id": "rep-removal-13",
+      "language": "it",
+      "category": "removal",
+      "subject": "Re: Produzione integratori",
+      "body": "Gentili,\nquesto indirizzo non va usato per proposte commerciali: per favore levatelo dalle vostre liste.\nGrazie\nLorenzo Basile",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "Says the address is not for sales offers and asks for it to be taken off the lists."
+    },
+    {
+      "id": "rep-autoreply-12",
+      "language": "en",
+      "category": "auto_reply",
+      "subject": "Re: Supplement production",
+      "body": "Thank you for your message. I am travelling with limited connectivity and will be back in the office on 8 December. Your email will be read on my return.\n\nTobias Hendry\nPurchasing, Wrenfield Health Ltd",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An out-of-office message; the promise to read it later is the system's."
+    },
+    {
+      "id": "rep-autoreply-13",
+      "language": "es",
+      "category": "auto_reply",
+      "subject": "RE: Fabricación de complementos alimenticios",
+      "body": "Estaré fuera de la oficina hasta el 9 de diciembre sin acceso al correo. Para cualquier asunto urgente, escriba a compras@almendral-salud.example.\nUn saludo,\nNerea Goikoetxea",
+      "expected": "NO",
+      "difficulty": "clear",
+      "why": "An out-of-office message pointing to another address."
+    },
+    {
+      "id": "rep-interested-52",
+      "language": "en",
+      "category": "interested",
+      "subject": "Re: Supplement production",
+      "body": "Hi Paolo,\n\nwe're scoping a magnesium glycinate powder in 300 g pouches for spring. What would 4,000 and 8,000 units cost, and how many weeks from order to delivery?\n\nThanks,\nOlivia Strand\nBuying Manager, Kestrelmoor Health Stores",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "A buyer scoping a product asks the cost at two quantities and the time to delivery."
+    },
+    {
+      "id": "rep-interested-53",
+      "language": "it",
+      "category": "interested",
+      "subject": "Re: Produzione integratori",
+      "body": "Buonasera,\nstiamo pensando a una linea di gocce di vitamina D per bambini con il nostro marchio. Quanto verrebbero 2.500 flaconi, e quando potremmo vederci?\nGrazie\nSara Bertolazzi\nFarmacia Bertolazzi - Lecco",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Plans an own-brand product, asks the cost of a stated quantity and when to meet."
+    },
+    {
+      "id": "rep-interested-54",
+      "language": "de",
+      "category": "interested",
+      "subject": "AW: Supplement production",
+      "body": "Guten Tag Herr Rossi,\nwir möchten nächstes Jahr ein Kollagen-Trinkpulver unter eigenem Namen auf den Markt bringen. Können Sie uns eine Preisindikation für 3.000 Dosen schicken und sagen, ab welcher Menge Sie produzieren?\nMit freundlichen Grüßen\nAnja Ruppert\nProduktmanagement, Kiefernhain Vital GmbH",
+      "expected": "YES",
+      "difficulty": "clear",
+      "why": "Plans an own-name launch and asks a price for a stated quantity and the smallest run."
+    }
+  ]
+}

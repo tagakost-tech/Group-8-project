@@ -1,0 +1,82 @@
+# Environment & secrets
+.env
+# The Microsoft sign-in certificate and its private key.
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Database
+data/*.db
+data/*.db-wal
+data/*.db-shm
+# Opt-outs held while the database was locked: they hold addresses.
+data/spool/
+# Access answers and backups: full copies of personal data; the journal
+# holds the addresses of everyone who objected.
+data/exports/
+data/backups/
+data/journal.jsonl
+# A rewrite's copy of the journal, should a crash leave it behind.
+data/journal.tmp
+
+# The client and competitor lists hold SUPPLECO's client data, also when
+# encrypted (LISTS_KEY): the key is not the only thing between them and a
+# reader once a copy is out. *.xlsx.* also covers the files the agent
+# writes beside an encrypted list: its dated backups
+# (.xlsx.backup-<date>.enc) and a temporary file a crash left behind.
+*.xlsx
+*.xlsx.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# PDF assets (user-provided, not tracked)
+assets/*.pdf
+
+# Logs
+*.log
+logs/
+
+# Test cache
+.pytest_cache/
+
+# Installed agent skills (re-installable tooling via the skills CLI, not app source)
+.claude/
+.agents/
+
+# Third-party reference repo dropped in locally (the awesome-python curated list)
+awesome-python-master/
+
+# Microsoft Office lock files
+~$*
+
+# SUPPLECO client lists: confidential, kept on disk, never committed
+/Suppleco_Elenco_Clienti_*.xlsx
+
+# Review folders marked "internal - not for SUPPLECO", at any depth under
+# docs/review: working notes about the client, never to reach their copy.
+# Words apart by a space, a hyphen or an underscore.
+docs/review/**/*[Nn][Oo][Tt][ _-][Ff][Oo][Rr][ _-][Ee][Kk][Aa][Ll][Aa][Bb]*/

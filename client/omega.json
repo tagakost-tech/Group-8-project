@@ -1,0 +1,1026 @@
+{
+ "_about": "Omega IFS's words for itself, its buyers and its rivals. Value-proposition phrases are taken from the student concept website (Omega website/content/*.json, Esade DBC 2026 Group 8), which restates omegaifs.it and the owner interviews. Course prototype: check with Omega before any real use.",
+ "name": "Omega IFS",
+ "value_proposition": {
+  "en": [
+   "special cold-formed fasteners and precision parts",
+   "made to customer drawings",
+   "wire from 0.5 to 25 mm",
+   "tolerances as tight as a hundredth of a millimetre",
+   "turning a machined part into a cold-formed one",
+   "offers for new parts usually in under 8 hours",
+   "in-house tooling",
+   "100% optical, mechanical and electromagnetic sorting",
+   "IATF 16949, ISO 9001 and ISO 14001 certified",
+   "in cold forming since 1946",
+   "family-owned, made in Italy",
+   "stock in Italy, Germany, the Czech Republic and Mexico"
+  ],
+  "it": [
+   "fastener speciali e particolari di precisione stampati a freddo",
+   "su disegno del cliente",
+   "da filo di diametro compreso tra 0,5 e 25 mm",
+   "tolleranze fino al centesimo di millimetro",
+   "trasformare un particolare tornito in uno stampato a freddo",
+   "offerte su nuovi pezzi di solito in meno di 8 ore",
+   "attrezzature interne",
+   "selezione al 100% ottica, meccanica ed elettromagnetica",
+   "certificati IATF 16949, ISO 9001 e ISO 14001",
+   "nello stampaggio a freddo dal 1946",
+   "azienda familiare, prodotto in Italia",
+   "magazzini in Italia, Germania, Repubblica Ceca e Messico"
+  ],
+  "de": [
+   "kaltumgeformte Sonderverbindungselemente und Präzisionsteile",
+   "nach Ihrer Zeichnung",
+   "aus Draht von 0,5 bis 25 mm",
+   "Toleranzen bis in den Hundertstelmillimeterbereich",
+   "aus einem Drehteil ein Kaltumformteil machen",
+   "Angebote für neue Teile meist in unter 8 Stunden",
+   "eigene Werkzeugfertigung",
+   "100 % optische, mechanische und elektromagnetische Sortierung",
+   "zertifiziert nach IATF 16949, ISO 9001 und ISO 14001",
+   "seit 1946 in der Kaltumformung",
+   "Familienunternehmen, hergestellt in Italien",
+   "Lager in Italien, Deutschland, Tschechien und Mexiko"
+  ]
+ },
+ "buyer_seeds": {
+  "it": [
+   "produttore di serrature per auto",
+   "fornitore automotive Tier 1",
+   "produttore di alzacristalli",
+   "produttore di ferramenta per serramenti",
+   "produttore di cerniere per mobili",
+   "produttore di componenti elettrici",
+   "produttore di elettrodomestici"
+  ],
+  "de": [
+   "Hersteller von Schließsystemen für Fahrzeuge",
+   "Automobilzulieferer Tier 1",
+   "Hersteller von Fensterhebern",
+   "Hersteller von Fensterbeschlägen",
+   "Hersteller von Möbelbeschlägen",
+   "Hersteller elektrischer Komponenten",
+   "Hausgerätehersteller"
+  ],
+  "en": [
+   "automotive door lock manufacturer",
+   "Tier 1 automotive supplier",
+   "window regulator manufacturer",
+   "window hardware manufacturer",
+   "furniture hardware manufacturer",
+   "electrical component manufacturer",
+   "home appliance manufacturer"
+  ]
+ },
+ "phrase_countries": {
+  "it": [
+   "Italy"
+  ],
+  "de": [
+   "Germany",
+   "Austria",
+   "Switzerland"
+  ]
+ },
+ "vertical_seeds": [
+  "automotive door module",
+  "seat mechanism",
+  "furniture fitting",
+  "window fitting",
+  "electrical connector",
+  "circuit breaker",
+  "household appliance",
+  "motorcycle component",
+  "e-bike",
+  "solar mounting system",
+  "heat pump",
+  "agricultural machinery"
+ ],
+ "modifiers": [
+  "manufacturer",
+  "OEM",
+  "producer"
+ ],
+ "supplier_words_pattern": "\\b(?:fasten|screws?\\b|bolts?\\b|rivet|vit[ei]\\b|viteria|bullon|minuteria|stampaggio a freddo|stampati a freddo|cold[- ]?form|cold[- ]?head|schraube|verbindungselement|kaltumform|kaltflie|befestigungstechnik|distribut|grossist|wholesal|großhandel|grosshandel|cerco\\b|looking for|seeking)",
+ "verticals": [
+  "automotive",
+  "automobil",
+  "automotiv",
+  "tier 1",
+  "tier-1",
+  "tier 2",
+  "door lock",
+  "serratur",
+  "schließsystem",
+  "schliesssystem",
+  "schliessystem",
+  "window regulator",
+  "alzacristall",
+  "fensterheber",
+  "door module",
+  "modulo porta",
+  "türmodul",
+  "seat mechanism",
+  "sitzmechani",
+  "furniture",
+  "mobili",
+  "möbel",
+  "moebel",
+  "hinge",
+  "cerniere",
+  "cerniera",
+  "scharnier",
+  "beschlag",
+  "beschläg",
+  "beschlaeg",
+  "ferramenta",
+  "window hardware",
+  "serrament",
+  "fenster",
+  "electrical",
+  "elettric",
+  "elektr",
+  "electronic",
+  "elettronic",
+  "connector",
+  "connettor",
+  "steckverbind",
+  "circuit breaker",
+  "interruttor",
+  "appliance",
+  "elettrodomestic",
+  "hausgerät",
+  "hausgeraet",
+  "motorcycle",
+  "motocicl",
+  "motorrad",
+  "eyewear",
+  "occhial",
+  "brille",
+  "e-bike",
+  "ebike",
+  "bicycle",
+  "bicicl",
+  "fahrrad",
+  "solar",
+  "fotovolta",
+  "photovolta",
+  "heat pump",
+  "pompa di calore",
+  "pompe di calore",
+  "wärmepumpe",
+  "waermepumpe",
+  "agricultural machin",
+  "macchine agricol",
+  "landmaschin",
+  "railway",
+  "ferroviar",
+  "schienenfahrzeug",
+  "machinery",
+  "macchinari",
+  "maschinenbau",
+  "aerospace",
+  "aeronautic",
+  "luftfahrt",
+  "defence",
+  "defense",
+  "difesa",
+  "verteidigung"
+ ],
+ "competitor_keywords": [
+  "fastener manufactur",
+  "fasteners manufactur",
+  "manufacturer of fasteners",
+  "fastener distribut",
+  "fasteners distribut",
+  "distributor of fasteners",
+  "screw manufactur",
+  "screws manufactur",
+  "manufacturer of screws",
+  "cold forming compan",
+  "cold heading",
+  "cold-heading",
+  "cold formed fastener",
+  "cold-formed fastener",
+  "minuteria metallica",
+  "produttore di viti",
+  "produzione di viti",
+  "distributore di viteria",
+  "stampaggio a freddo di viti",
+  "schraubenhersteller",
+  "schraubenfabrik",
+  "schraubenwerk",
+  "hersteller von schrauben",
+  "hersteller von verbindungselementen",
+  "verbindungselemente hersteller",
+  "kaltfließpressteile",
+  "kaltfliesspressteile",
+  "befestigungstechnik"
+ ],
+ "competitor_self_description_keywords": [
+  "viteria",
+  "bulloneria"
+ ],
+ "competitor_core_stems": [
+  "\\bfastener",
+  "\\bvit[ei]\\b",
+  "\\bschraube",
+  "\\bverbindungselement",
+  "\\bstampaggio a freddo",
+  "\\bkaltumform"
+ ],
+ "competitor_qualifiers": [
+  "manufacturer",
+  "manufacturers",
+  "manufacturing",
+  "maker",
+  "producer",
+  "produttore",
+  "produttori",
+  "produzione",
+  "hersteller",
+  "herstellung",
+  "fertigung",
+  "distributor",
+  "distributore",
+  "wholesaler",
+  "grossista",
+  "großhandel",
+  "grosshandel"
+ ],
+ "negative_keywords": [
+  "news",
+  "newspaper",
+  "magazine",
+  "press release",
+  "journalism",
+  "media outlet",
+  "classifieds",
+  "job board",
+  "recruitment agency",
+  "forum",
+  "wikipedia",
+  "encyclopedia",
+  "telecommunications",
+  "real estate",
+  "realty",
+  "cryptocurrency",
+  "casino",
+  "gambling",
+  "dating site",
+  "car dealer",
+  "autosalone",
+  "autohaus",
+  "car rental",
+  "noleggio auto",
+  "used cars"
+ ],
+ "rival_label": "fastener maker or distributor",
+ "market_label": "products with metal parts: automotive, hardware, electrical, appliances",
+ "prompts": {
+  "opening_context": "It is reaching out to a company that builds products with small metal parts in them and might buy special cold-formed parts for them.",
+  "relevance_intro": "{name} makes special cold-formed fasteners and precision metal parts to its customers' drawings. Its clients are companies in EUROPE that design and build products with small metal parts in them (car door and window systems, furniture and window hardware, electrical and electronic components, appliances and similar) and could buy those parts from {name}.",
+  "relevance_no": [
+   "it is itself a MAKER or DISTRIBUTOR of screws, bolts, rivets, pins or other fasteners or cold-formed parts: it sells what {name} sells, so it is a competitor, not a buyer;",
+   "it is a news or media site, a job board, a directory, a school, a car dealer or garage, a shop selling to consumers, or a company that does not design or build physical products with metal parts in them."
+  ],
+  "relevance_yes": [
+   "a manufacturer, OEM, or Tier-1 or Tier-2 supplier that builds products or assemblies with metal parts in them, in automotive, furniture or window hardware, electrical or electronics, appliances, bicycles, energy, machinery or a similar industry;",
+   "an engineering or assembly company that buys metal components made to its drawings;",
+   "a company of these kinds whose text does not say where it is based."
+  ],
+  "relevance_judge_note": "Judge by what the company does, not by a word in its name: a company that makes locks, hinges or connectors uses fasteners but does not sell them, so it is a buyer.",
+  "country_context": "an Italian maker of cold-formed metal parts",
+  "strategist_targets": "(manufacturers, OEMs and Tier-1 suppliers that build products with small metal parts: car door and window systems, furniture and window hardware, electrical components, appliances, e-bikes, solar mounting, heat pumps) that might buy special cold-formed parts from {name}",
+  "strategist_verticals": "car door and window systems, furniture and window hardware, electrical and electronic components, household appliances, motorcycles and bicycles, solar mounting, heat pumps, machinery",
+  "strategist_query_rule": "Each query = a product the company BUILDS + \"manufacturer\" (or OEM / Tier 1 supplier) + a European country. Do NOT search for fasteners, screws, bolts, cold forming, viteria, Schrauben or Verbindungselemente, nor for distributors or wholesalers: a search for what {name} sells finds its competitors."
+ },
+ "sectors": [
+  {
+   "id": "automotive_body_closures",
+   "name": "Automotive Tier-1s: door, window and cockpit systems",
+   "type": "aligned",
+   "why_omega_fits": "Omega's largest sector: for over 40 years it has supplied safety parts for car door and window systems (door locking systems, door modules, window regulators, instrument panels). It is IATF 16949 certified and holds stock in Germany and the Czech Republic.",
+   "barriers": [
+    "IATF 16949 already held, so no certification gap",
+    "Shrinking EU vehicle volumes and Tier-1 cost pressure",
+    "New parts are won only at new model launches (sourcing cycles of several years)"
+   ],
+   "buyer_roles": [
+    "Commodity Buyer, mechanical/C-parts",
+    "Strategic Purchasing Manager",
+    "Supplier Quality Engineer",
+    "Product Development Engineer, closures",
+    "Einkäufer (Strategischer Einkauf)",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "automotive Tier-1 supplier",
+     "door latch system manufacturer",
+     "window regulator manufacturer",
+     "door module supplier",
+     "automotive closure systems supplier",
+     "instrument panel manufacturer",
+     "cockpit module supplier",
+     "automotive interior supplier"
+    ],
+    "it": [
+     "fornitore automotive Tier 1",
+     "produttore serrature per autoveicoli",
+     "produttore alzacristalli",
+     "produttore moduli porta auto",
+     "produttore sistemi di chiusura auto",
+     "produttore cruscotti auto",
+     "produttore componenti interni auto"
+    ],
+    "de": [
+     "Automobilzulieferer Tier-1",
+     "Hersteller Türschlösser Kfz",
+     "Fensterheber Hersteller",
+     "Türmodul Hersteller",
+     "Hersteller Schließsysteme Automobil",
+     "Cockpitmodul Hersteller",
+     "Instrumententafel Hersteller",
+     "Hersteller Fahrzeuginnenausstattung"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "CZ",
+    "SK",
+    "PL",
+    "HU",
+    "AT",
+    "ES"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "Germany, Omega's largest market, built 4.151M cars in 2025 (+2%), 40% of them electric.",
+     "source_url": "https://www.vda.de/de/presse/Pressemeldungen/2026/260106_PM_Nationale-PM-Pkw-Produktion-in-Deutschland-in-2025",
+     "date": "2026-01-06"
+    },
+    {
+     "claim": "CLEPA survey: 24% of European automotive suppliers expect losses in 2026, and 40% have raised their non-automotive exposure.",
+     "source_url": "https://www.clepa.eu/pulse-check/one-in-four-european-automotive-suppliers-bracing-for-losses-in-2026-clepa-survey-reveals/",
+     "date": "2026-03-23"
+    },
+    {
+     "claim": "EU car production is about 2.6M units (-19%) below its 2019 level.",
+     "source_url": "https://www.bruegel.org/policy-brief/european-unions-automotive-sector-needs-plan-not-undue-protection",
+     "date": "2026-09-22"
+    }
+   ]
+  },
+  {
+   "id": "furniture_hardware",
+   "name": "Furniture fittings and furniture makers",
+   "type": "aligned",
+   "why_omega_fits": "Working with its customers, Omega has developed parts for the opening and closing mechanisms of furniture, used by leading European manufacturers. Cold forming suits the large series these products need.",
+   "barriers": [
+    "No sector certification required; ISO 9001 normally sufficient (UNVERIFIED per buyer)",
+    "Flat demand tied to housing and kitchen markets",
+    "Strong price pressure from Asian component imports"
+   ],
+   "buyer_roles": [
+    "Purchasing Manager, metal components",
+    "Commodity Buyer",
+    "Product Development Engineer, hinges and runners",
+    "Einkäufer Metallteile",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "furniture fittings manufacturer",
+     "furniture hinge manufacturer",
+     "drawer runner manufacturer",
+     "kitchen furniture manufacturer",
+     "office furniture manufacturer",
+     "furniture lift system manufacturer",
+     "sliding door system manufacturer"
+    ],
+    "it": [
+     "produttore cerniere per mobili",
+     "produttore guide per cassetti",
+     "produttore accessori per mobili",
+     "produttore cucine componibili",
+     "produttore mobili per ufficio",
+     "produttore sistemi scorrevoli per mobili"
+    ],
+    "de": [
+     "Möbelbeschlag Hersteller",
+     "Scharnierhersteller Möbel",
+     "Schubkastenführungen Hersteller",
+     "Küchenmöbelhersteller",
+     "Büromöbelhersteller",
+     "Hersteller Schiebetürsysteme Möbel"
+    ]
+   },
+   "priority_countries": [
+    "AT",
+    "DE",
+    "IT",
+    "PL"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "Blum (AT) turnover rose 2.4% to EUR 2,495M in the financial year ended 30 June 2026.",
+     "source_url": "https://www.blum.com/ie/en/company/press/press-releases-detail_102336.html",
+     "date": "2026-07"
+    },
+    {
+     "claim": "Hettich (DE) turnover was EUR 1.4bn in 2025, down about 2% nominal (flat at constant currency); it expects no quick, broad market recovery in 2026.",
+     "source_url": "https://www.hettich.com/sk-sk/tlac/detail/hettich-group-demonstrates-stability-and-looks-to-the-future",
+     "date": "2026-03-03"
+    }
+   ]
+  },
+  {
+   "id": "window_door_hardware",
+   "name": "Window and door hardware makers",
+   "type": "aligned",
+   "why_omega_fits": "Omega has developed parts for the opening and closing mechanisms of windows together with its customers, used by leading European manufacturers.",
+   "barriers": [
+    "No sector certification required (UNVERIFIED per buyer)",
+    "Demand tied to new-build and renovation, both weak since 2023",
+    "Buyers are concentrated: a handful of hardware groups"
+   ],
+   "buyer_roles": [
+    "Purchasing Manager",
+    "Commodity Buyer, turned and formed parts",
+    "Development Engineer, window hardware",
+    "Einkäufer Beschlagtechnik",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "window hardware manufacturer",
+     "door hardware manufacturer",
+     "window and door manufacturer",
+     "door lock manufacturer",
+     "door closer manufacturer",
+     "roller shutter system manufacturer",
+     "lift and slide door system manufacturer"
+    ],
+    "it": [
+     "produttore accessori per serramenti",
+     "produttore di serrature per porte",
+     "produttore di serramenti",
+     "produttore chiudiporta",
+     "produttore maniglie per finestre",
+     "produttore tapparelle e avvolgibili"
+    ],
+    "de": [
+     "Fensterbeschlag Hersteller",
+     "Türbeschlag Hersteller",
+     "Fensterhersteller",
+     "Türschloss Hersteller",
+     "Türschließer Hersteller",
+     "Hersteller Rollladensysteme",
+     "Hebe-Schiebe-Tür Hersteller"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "AT",
+    "IT",
+    "PL"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "VFF forecasts the German window market to grow 1.9-3.1% in 2026, to 13.28M window units in the base scenario, an upgrade on its October 2025 study.",
+     "source_url": "https://window.de/wp-content/uploads/2026/04/VFF-News_04.26.pdf",
+     "date": "2026-04-28"
+    },
+    {
+     "claim": "Roto Group reported a slight decline in 2025 net turnover, while turnover rose slightly in almost all EU countries.",
+     "source_url": "https://www.windowanddoor.com/news/roto-group-announces-2025-net-turnover",
+     "date": "2026-08-10"
+    }
+   ]
+  },
+  {
+   "id": "electrical_electronics_equipment",
+   "name": "Electrical and electronic equipment (switchgear, connectors, installation devices)",
+   "type": "aligned",
+   "why_omega_fits": "Omega makes precision components for electrical and electronic assemblies, made and checked in the same plant as its automotive parts, from wire 0.5 to 25 mm including brass.",
+   "barriers": [
+    "IEC/UL product approvals sit with the OEM, but parts may need material and plating declarations (RoHS/REACH)",
+    "Large OEMs run formal supplier approval and audits"
+   ],
+   "buyer_roles": [
+    "Commodity Buyer, mechanical parts",
+    "Category Manager, metal components",
+    "Supplier Quality Engineer",
+    "Einkäufer Mechanik",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "switchgear manufacturer",
+     "circuit breaker manufacturer",
+     "electrical connector manufacturer",
+     "terminal block manufacturer",
+     "electrical installation equipment manufacturer",
+     "relay manufacturer",
+     "transformer manufacturer",
+     "electronics manufacturing services provider"
+    ],
+    "it": [
+     "produttore quadri elettrici",
+     "produttore interruttori automatici",
+     "produttore connettori elettrici",
+     "produttore morsettiere",
+     "produttore materiale elettrico",
+     "produttore relè",
+     "produttore trasformatori"
+    ],
+    "de": [
+     "Schaltanlagenhersteller",
+     "Leistungsschalter Hersteller",
+     "Steckverbinder Hersteller",
+     "Reihenklemmen Hersteller",
+     "Elektroinstallationstechnik Hersteller",
+     "Relais Hersteller",
+     "Transformatorenhersteller",
+     "EMS Dienstleister Elektronikfertigung"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "IT",
+    "FR",
+    "CZ",
+    "PL",
+    "ES"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "ENTSO-E's 2026 supply-chain report: TSOs plan 4,238 SF6-free GIS bays, 10,819 AIS circuit breakers and 2,820 new power transformers to 2035, and ask manufacturers to scale capacity.",
+     "source_url": "https://www.entsoe.eu/news/2026/11/03/entso-e-report-sets-out-europe-s-transmission-investment-needs-to-2035/",
+     "date": "2026-11-03"
+    },
+    {
+     "claim": "ABB is investing about USD 200M over three years in European medium-voltage manufacturing, including about USD 100M for a new switchgear plant in Dalmine, Italy.",
+     "source_url": "https://evertiq.com/news/2026-05-21-abb-invests-200m-across-europe-to-accelerate-grid-transformation",
+     "date": "2026-05-21"
+    }
+   ]
+  },
+  {
+   "id": "motorcycles",
+   "name": "Motorcycle and scooter makers and their suppliers",
+   "type": "aligned",
+   "why_omega_fits": "Omega's parts are already used in motorcycles, and it makes stepped pins and axles, bushings and sleeves, and special threaded studs to customer drawings.",
+   "barriers": [
+    "Falling registrations in 2025",
+    "Smaller series than cars; some OEMs ask for IATF-style PPAP (IATF already held)"
+   ],
+   "buyer_roles": [
+    "Purchasing Manager, chassis/engine parts",
+    "Commodity Buyer",
+    "Supplier Quality Engineer",
+    "Einkäufer",
+    "Buyer Componenti Meccanici"
+   ],
+   "search_keywords": {
+    "en": [
+     "motorcycle manufacturer",
+     "scooter manufacturer",
+     "motorcycle component supplier",
+     "motorcycle brake system manufacturer",
+     "motorcycle suspension manufacturer",
+     "powersports vehicle manufacturer"
+    ],
+    "it": [
+     "costruttore di motocicli",
+     "produttore di scooter",
+     "fornitore componenti moto",
+     "produttore impianti frenanti moto",
+     "produttore sospensioni moto",
+     "produttore veicoli a due ruote"
+    ],
+    "de": [
+     "Motorradhersteller",
+     "Rollerhersteller",
+     "Motorradzulieferer",
+     "Hersteller Motorradbremsen",
+     "Hersteller Motorradfahrwerk",
+     "Zweiradhersteller"
+    ]
+   },
+   "priority_countries": [
+    "IT",
+    "AT",
+    "DE",
+    "ES"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "Motorcycle registrations in the five key European markets fell 12.9% to 1,002,848 in 2025 (Germany -35.7%, Italy -6%), though still above 2019.",
+     "source_url": "https://www.acem.eu/registrations-of-motorcycles-and-mopeds-in-key-european-markets-during-the-year-2025/",
+     "date": "2026-01-27"
+    }
+   ]
+  },
+  {
+   "id": "household_appliances",
+   "name": "Household appliance makers",
+   "type": "aligned",
+   "why_omega_fits": "Omega's parts are already used in household appliances, and cold forming gives large series with little waste and a low cost per part.",
+   "barriers": [
+    "Weak, price-driven market with rising Asian imports",
+    "No sector certification required (UNVERIFIED per buyer)"
+   ],
+   "buyer_roles": [
+    "Commodity Buyer, metal parts",
+    "Purchasing Manager",
+    "Supplier Quality Engineer",
+    "Einkäufer",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "household appliance manufacturer",
+     "washing machine manufacturer",
+     "dishwasher manufacturer",
+     "built-in oven manufacturer",
+     "refrigerator manufacturer",
+     "small domestic appliance manufacturer",
+     "coffee machine manufacturer"
+    ],
+    "it": [
+     "produttore elettrodomestici",
+     "produttore lavatrici",
+     "produttore lavastoviglie",
+     "produttore forni da incasso",
+     "produttore frigoriferi",
+     "produttore piccoli elettrodomestici",
+     "produttore macchine da caffè"
+    ],
+    "de": [
+     "Hausgerätehersteller",
+     "Waschmaschinenhersteller",
+     "Geschirrspülerhersteller",
+     "Einbaubackofen Hersteller",
+     "Kühlschrankhersteller",
+     "Kleingerätehersteller",
+     "Kaffeemaschinenhersteller"
+    ]
+   },
+   "priority_countries": [
+    "IT",
+    "DE",
+    "PL",
+    "SI",
+    "TR"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "APPLiA: European home appliance sales ended 2025 at roughly 170M units, back to 2015 levels; four member states asked the Commission for a sector action plan.",
+     "source_url": "https://eurometal.net/eu-states-call-for-appliances-sector-action-plan/",
+     "date": "2026-09-29"
+    },
+    {
+     "claim": "Italy's appliance replacement bonus added 194,600 unit sales (+8.8%) from Nov 2025 to Apr 2026; over 52% of eligible EU products were made in Italy.",
+     "source_url": "https://en.ilsole24ore.com/art/bonus-household-appliances-7-per-cent-sales-november-2025-AIuzNQPD",
+     "date": "2026-06-02"
+    }
+   ]
+  },
+  {
+   "id": "eyewear",
+   "name": "Eyewear makers",
+   "type": "aligned",
+   "why_omega_fits": "Omega's parts are already used in eyewear; it forms wire from 0.5 mm with tolerances as tight as a hundredth of a millimetre.",
+   "barriers": [
+    "Small parts, small volumes per model; many makers source micro parts locally in the Belluno district",
+    "Cosmetic surface and plating requirements"
+   ],
+   "buyer_roles": [
+    "Purchasing Manager, components",
+    "Product Development Manager",
+    "Responsabile Acquisti Componenti",
+    "Einkäufer"
+   ],
+   "search_keywords": {
+    "en": [
+     "eyewear manufacturer",
+     "spectacle frame manufacturer",
+     "sunglasses manufacturer",
+     "metal eyewear manufacturer",
+     "titanium frame manufacturer",
+     "optical frame contract manufacturer"
+    ],
+    "it": [
+     "produttore occhiali",
+     "produttore montature per occhiali",
+     "produttore occhiali da sole",
+     "produttore occhiali in metallo",
+     "produttore occhiali in titanio",
+     "occhialeria conto terzi"
+    ],
+    "de": [
+     "Brillenhersteller",
+     "Brillenfassungen Hersteller",
+     "Sonnenbrillenhersteller",
+     "Hersteller Metallbrillen",
+     "Hersteller Titanbrillen",
+     "Brillenmanufaktur"
+    ]
+   },
+   "priority_countries": [
+    "IT",
+    "FR",
+    "DE"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "ANFAO pre-estimate: Italian eyewear production was EUR 5.64bn in 2025, stable; exports fell 3.9% but Europe took over 59% of exports and grew 8.1%.",
+     "source_url": "https://www.mido.com/en/wmido/contraction-in-exports-to-the-united-states-slows-the-growth-of-the-italian-eyewear-industry-in-2025",
+     "date": "2026-02"
+    },
+    {
+     "claim": "Italian eyewear exports fell 6.1% to EUR 1.34bn in Q1 2026.",
+     "source_url": "https://www.milanofinanza.it/fashion/occhialeria-italiana-export-attestato-a-1-34-miliardi-di-euro-in-calo-del-6-1-nel-primo-trimestre-202607161217555747",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  {
+   "id": "heat_pumps_hvac",
+   "name": "Heat pump and HVAC equipment makers",
+   "type": "blue_ocean",
+   "why_omega_fits": "Omega already supplies household appliance and electrical parts, works in carbon and stainless steel, aluminium and brass, and sorts finished parts 100%.",
+   "barriers": [
+    "No sector-specific certification found; ISO 9001 likely sufficient (UNVERIFIED)",
+    "Demand swings with national subsidies (2025 declines in France and Poland)",
+    "Outdoor units need corrosion-resistant parts and finishes"
+   ],
+   "buyer_roles": [
+    "Commodity Buyer, mechanical parts",
+    "Strategic Purchasing Manager",
+    "R&D Engineer, heat pump units",
+    "Einkäufer Mechanik",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "heat pump manufacturer",
+     "HVAC equipment manufacturer",
+     "boiler manufacturer",
+     "air handling unit manufacturer",
+     "ventilation system manufacturer",
+     "compressor manufacturer",
+     "air conditioner manufacturer"
+    ],
+    "it": [
+     "produttore pompe di calore",
+     "produttore caldaie",
+     "produttore impianti di climatizzazione",
+     "produttore unità di trattamento aria",
+     "produttore sistemi di ventilazione",
+     "produttore compressori",
+     "produttore condizionatori"
+    ],
+    "de": [
+     "Wärmepumpenhersteller",
+     "Heizungshersteller",
+     "Klimageräte Hersteller",
+     "Lüftungsgerätehersteller",
+     "Kompressorenhersteller",
+     "Hersteller Raumlufttechnik",
+     "Hersteller Heiztechnik"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "IT",
+    "SE",
+    "AT",
+    "CZ",
+    "NL"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "EHPA: heat pump sales in 21 European countries rose 13% to 2.88M in 2025; Germany grew 50% and heat pumps reached half its space-heating market.",
+     "source_url": "https://www.pv-magazine.com/2026/06/22/european-heat-pump-sales-increased-13-last-year/",
+     "date": "2026-06-22"
+    }
+   ]
+  },
+  {
+   "id": "rail_rolling_stock",
+   "name": "Rail rolling stock and rail subsystem makers",
+   "type": "blue_ocean",
+   "why_omega_fits": "Omega's parts go into products where a single defective piece can stop an assembly line; every press monitors its forming force and finished parts are sorted 100%.",
+   "barriers": [
+    "ISO/TS 22163 (IRIS) increasingly expected of rail suppliers",
+    "First-article inspection and long qualification cycles",
+    "Smaller series than automotive, which weakens the cold-forming cost advantage"
+   ],
+   "buyer_roles": [
+    "Commodity Buyer, mechanical parts",
+    "Supplier Development Engineer",
+    "Purchasing Manager, rail subsystems",
+    "Einkäufer Schienenfahrzeugtechnik",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "rolling stock manufacturer",
+     "railway door system manufacturer",
+     "train interior supplier",
+     "railway brake system manufacturer",
+     "bogie manufacturer",
+     "pantograph manufacturer",
+     "rail signalling equipment manufacturer",
+     "tram manufacturer"
+    ],
+    "it": [
+     "costruttore materiale rotabile",
+     "produttore porte per treni",
+     "produttore interni ferroviari",
+     "produttore sistemi frenanti ferroviari",
+     "produttore carrelli ferroviari",
+     "produttore componenti ferroviari",
+     "produttore apparati di segnalamento ferroviario"
+    ],
+    "de": [
+     "Schienenfahrzeughersteller",
+     "Hersteller Türsysteme Schienenfahrzeuge",
+     "Hersteller Bahninnenausstattung",
+     "Hersteller Bremssysteme Schienenfahrzeuge",
+     "Drehgestell Hersteller",
+     "Stromabnehmer Hersteller",
+     "Bahnzulieferer",
+     "Straßenbahnhersteller"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "FR",
+    "IT",
+    "ES",
+    "CZ",
+    "PL",
+    "AT",
+    "CH"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "UNIFE World Rail Market Study 2024: global rail supply growth in 2021-2023 was largely driven by Western Europe, up 7.3% a year.",
+     "source_url": "https://unife.org/wp-content/uploads/2024/07/Abstract_UNIFE_World_Rail_Market_Study.pdf",
+     "date": "2024-07"
+    },
+    {
+     "claim": "Europe is now the world's largest regional railway market at EUR 77.7bn, growing above average on network renewal (SCI Verkehr data).",
+     "source_url": "https://www.railjournal.com/analysis/europe-becomes-the-worlds-largest-railway-market/",
+     "date": "2026-09 (approx., published around InnoTrans; exact day UNVERIFIED)"
+    }
+   ]
+  },
+  {
+   "id": "ev_charging_hardware",
+   "name": "EV charging hardware and charging connector makers",
+   "type": "blue_ocean",
+   "why_omega_fits": "Omega makes precision components for electrical assemblies in brass and other metals, and plans to offer turned parts in their own right alongside cold-formed ones.",
+   "barriers": [
+    "Connector contacts are often turned and silver-plated; Omega's turned-parts offer is still a plan",
+    "RoHS/REACH declarations for brass and platings",
+    "Fragmented, consolidating maker base; growth may slow after AFIR targets are met"
+   ],
+   "buyer_roles": [
+    "Purchasing Manager, electromechanical parts",
+    "Commodity Buyer",
+    "Hardware Development Engineer",
+    "Einkäufer Elektromechanik",
+    "Responsabile Acquisti"
+   ],
+   "search_keywords": {
+    "en": [
+     "EV charger manufacturer",
+     "wallbox manufacturer",
+     "DC fast charger manufacturer",
+     "charging connector manufacturer",
+     "charging cable manufacturer",
+     "vehicle charging inlet manufacturer",
+     "charging station manufacturer"
+    ],
+    "it": [
+     "produttore colonnine di ricarica",
+     "produttore wallbox",
+     "produttore stazioni di ricarica rapida",
+     "produttore connettori di ricarica",
+     "produttore cavi di ricarica",
+     "produttore infrastrutture di ricarica per veicoli elettrici"
+    ],
+    "de": [
+     "Ladesäulenhersteller",
+     "Wallbox Hersteller",
+     "Schnellladesäulen Hersteller",
+     "Ladestecker Hersteller",
+     "Ladekabel Hersteller",
+     "Hersteller Ladeinfrastruktur",
+     "Ladedosen Hersteller"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "NL",
+    "NO",
+    "ES",
+    "IT",
+    "FR"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "The EU had about 1.1M public charging points at the end of 2025, roughly five times the 2020 number.",
+     "source_url": "https://www.transportenvironment.org/articles/car-charging-afir-targets-where-do-we-stand",
+     "date": "2026-07-20"
+    },
+    {
+     "claim": "T&E: charging infrastructure has far outpaced EV sales in all but one EU country, a sign that charger build-out may slow.",
+     "source_url": "https://www.transportenvironment.org/articles/charging-infrastructure-has-far-outpaced-ev-sales-in-all-but-one-eu-country-analysis",
+     "date": "2026-07"
+    }
+   ]
+  },
+  {
+   "id": "defence_aerospace",
+   "name": "Defence and aerospace systems makers",
+   "type": "blue_ocean",
+   "why_omega_fits": "Omega states it is opening its cold-forming know-how to aerospace and defence supply chains and welcomes supply-chain enquiries, but does not yet hold certifications specific to these sectors.",
+   "barriers": [
+    "EN 9100 (AS9100) required for aerospace; Omega does not hold it",
+    "NATO AQAP 2110 often requested in defence contracts (UNVERIFIED per buyer)",
+    "Export control, security vetting and long qualification",
+    "Diversification already stalled once"
+   ],
+   "buyer_roles": [
+    "Supply Chain Manager",
+    "Commodity Buyer, mechanical parts",
+    "Supplier Quality Manager",
+    "Einkäufer Wehrtechnik",
+    "Responsabile Approvvigionamenti"
+   ],
+   "search_keywords": {
+    "en": [
+     "defence contractor",
+     "armoured vehicle manufacturer",
+     "ammunition manufacturer",
+     "weapon systems manufacturer",
+     "defence electronics manufacturer",
+     "aerospace Tier-2 supplier",
+     "aircraft interior manufacturer",
+     "military optics manufacturer"
+    ],
+    "it": [
+     "azienda della difesa",
+     "produttore veicoli blindati",
+     "produttore munizioni",
+     "produttore sistemi d'arma",
+     "produttore elettronica per la difesa",
+     "fornitore aerospaziale",
+     "produttore interni aeronautici"
+    ],
+    "de": [
+     "Rüstungsunternehmen",
+     "Hersteller gepanzerter Fahrzeuge",
+     "Munitionshersteller",
+     "Waffensystemhersteller",
+     "Wehrtechnik Hersteller",
+     "Verteidigungselektronik Hersteller",
+     "Luftfahrtzulieferer",
+     "Hersteller Flugzeugkabinenausstattung"
+    ]
+   },
+   "priority_countries": [
+    "DE",
+    "IT",
+    "FR",
+    "PL",
+    "SE",
+    "CZ"
+   ],
+   "demand_evidence": [
+    {
+     "claim": "The EU SAFE instrument provides up to EUR 150bn in defence loans; at least 65% of component costs must originate in the EU, Ukraine or eligible EEA/EFTA countries.",
+     "source_url": "https://defence-industry-space.ec.europa.eu/eu-defence-industry/safe-security-action-europe_en",
+     "date": "2025-05 (Council Regulation (EU) 2025/1106); allocations approved Jan-Apr 2026"
+    },
+    {
+     "claim": "Horváth Defense Study 2026: 89% of defence executives call supply-chain resilience a central priority and 94% see supplier capacity-expansion speed as decisive.",
+     "source_url": "https://www.horvath-partners.com/en/press/detail/study-between-billion-euro-orders-and-supply-constraints-suppliers-become-the-bottleneck-in-defense-production",
+     "date": "2026 (exact day UNVERIFIED)"
+    }
+   ]
+  }
+ ],
+ "reply_suggestion": {
+  "en": "<p>Dear {{name_or_team}},</p>\n<p>Thank you for your reply.</p>\n<p>To prepare an offer we need the drawing, the material and the yearly volume. Once we have them, we usually reply with feasibility and a price in under 8 hours.</p>\n<p>[Answer anything else they asked here.]</p>\n<p>Best regards,<br>{{sender_signature}}</p>\n{{legal_footer}}",
+  "it": "<p>Gentile {{name_or_team}},</p>\n<p>La ringrazio per la risposta.</p>\n<p>Per preparare un'offerta ci servono il disegno, il materiale e il volume annuo. Ricevuti questi dati, di solito rispondiamo con fattibilità e prezzo in meno di 8 ore.</p>\n<p>[Risponda qui alle altre domande.]</p>\n<p>Cordiali saluti,<br>{{sender_signature}}</p>\n{{legal_footer}}"
+ }
+}
