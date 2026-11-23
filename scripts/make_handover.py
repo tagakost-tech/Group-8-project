@@ -132,6 +132,8 @@ INVENTED_SECRETS = {
     "731db889b98a99090c1dd6b007398a4b3fac118c6d6ceeca24a5f6ecf9520119",
     "d9c0725107da43a326f687023fd5f4530a42fab73438656cf5ba8876691d2a01",
     "8997e89e107430a6358772e3c63f2d05f3d15c02a6f0cad553bc052adda6df9f",
+    # scripts/run_demo.py: the invented demo login, printed in its docstring
+    "5bbf45b96aa04c6fcdf013317c351bafcb8c097804434e8141f4c9038e2c9bd9",
 }
 EMAIL = re.compile(r"[A-Za-z0-9._%+'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # Shorter names match ordinary words (scan_private.py uses the same floor).

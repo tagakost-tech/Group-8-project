@@ -79,7 +79,7 @@ def test_each_text_previews_with_the_real_sender_and_no_placeholder(
                     status=200, content_type="application/json", body="{}"
                 ),
             )
-            page.goto(live)
+            page.goto(live + "/classic")
             open_tab(page, "tab-template")
             text = _preview_text(page, name)
             assert "{{" not in text

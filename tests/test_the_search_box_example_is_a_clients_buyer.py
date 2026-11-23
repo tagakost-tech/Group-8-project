@@ -17,7 +17,7 @@ def _placeholder(tmp_path):
     client = main.create_dashboard_app(
         _browser_dashboard_settings(tmp_path)
     ).test_client()
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/classic").get_data(as_text=True)
     found = re.search(r'id="newQuery"\s+placeholder="([^"]*)"', html)
     assert found, "the search box has no placeholder"
     return found.group(1)

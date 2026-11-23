@@ -41,7 +41,7 @@ def _answer_locally(route):
 def _labels(page, dashboard) -> dict:
     page.route(re.compile(r"^https?://(?!127\.0\.0\.1[:/])"), _answer_locally)
     page.route("**/api/deliverability", lambda route: route.abort())
-    page.goto(dashboard)
+    page.goto(dashboard + "/classic")
     open_tab(page, "tab-insights")
     page.wait_for_selector("#configForm .config-row", timeout=15000)
     return page.eval_on_selector_all(

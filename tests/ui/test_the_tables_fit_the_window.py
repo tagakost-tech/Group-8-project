@@ -113,7 +113,7 @@ def _emails_page(browser, base_url, width, height):
             status=200, content_type="application/json", body=EMAILS
         ),
     )
-    page.goto(base_url)
+    page.goto(base_url + "/classic")
     open_tab(page, "tab-emails")
     page.wait_for_selector("#emailsTable tbody tr td .status-badge", timeout=8000)
     return page

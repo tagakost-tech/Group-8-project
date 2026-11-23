@@ -100,7 +100,7 @@ def _emails_page(browser, url):
     page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
     _stub(page, "**/api/deliverability", {})
     _stub(page, "**/api/emails*", EMAILS)
-    page.goto(url)
+    page.goto(url + "/classic")
     open_tab(page, "tab-emails")
     page.wait_for_selector("#emailsTable tbody .status-badge", timeout=15000)
     return page
@@ -188,7 +188,7 @@ def test_contact_badges_for_existing_statuses_are_unchanged(live):
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
             _stub(page, "**/api/deliverability", {})
             _stub(page, "**/api/contacts*", contacts)
-            page.goto(live)
+            page.goto(live + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsTable tbody .status-badge", timeout=15000)
             for c in contacts:

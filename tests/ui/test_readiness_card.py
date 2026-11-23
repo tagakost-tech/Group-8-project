@@ -99,7 +99,7 @@ def _page(browser, url, readiness=None):
             )
 
         page.route("**/api/readiness", fulfil)
-    page.goto(url)
+    page.goto(url + "/classic")
     page.wait_for_selector("#readinessChecks tr", timeout=15000)
     return page
 
@@ -298,7 +298,7 @@ def test_the_poll_asks_at_most_once_a_minute(live):
                     status=200, content_type="application/json", body="{}"
                 ),
             )
-            page.goto(live)
+            page.goto(live + "/classic")
             page.wait_for_selector("#readinessChecks tr", timeout=15000)
             assert len(calls) == 1
             page.clock.run_for(46_000)  # three idle polls
@@ -339,7 +339,7 @@ def test_a_failed_check_is_shown_as_an_error_not_as_ready(live):
                     body=json.dumps({"error": "Could not run the checks just now"}),
                 ),
             )
-            page.goto(live)
+            page.goto(live + "/classic")
             page.wait_for_selector("#readinessCard .is-error", timeout=15000)
             assert "Could not run the checks" in page.inner_text("#readinessCard")
             assert "can go out" not in page.inner_text("#readinessHeadline")
@@ -373,7 +373,7 @@ def test_a_failed_check_never_turns_the_sidebar_green(live):
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
             page.route("**/api/readiness", fulfil)
-            page.goto(live)
+            page.goto(live + "/classic")
             page.wait_for_function(
                 "() => document.querySelector('.sidebar-footer span').textContent"
                 ".includes('Live sending blocked')",
@@ -401,7 +401,7 @@ def test_a_check_that_never_answered_says_so_in_the_sidebar(live):
                     body=json.dumps({"error": "Could not run the checks"}),
                 ),
             )
-            page.goto(live)
+            page.goto(live + "/classic")
             page.wait_for_selector("#readinessCard .is-error", timeout=15000)
             label, dot = _sidebar_settles(page)
             assert "System Online" not in label and "Agent running" not in label

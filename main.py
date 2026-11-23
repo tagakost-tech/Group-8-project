@@ -2839,6 +2839,10 @@ def create_dashboard_app(settings: Settings):
     # ── Dashboard Page ──
     @app.route("/")
     def index():
+        return render_template("app.html")
+
+    @app.route("/classic")
+    def classic():
         return render_template("dashboard.html")
 
     # ── API: Stats ──
@@ -2877,6 +2881,7 @@ def create_dashboard_app(settings: Settings):
                 contact["fit_score"] = fit["total"]
                 contact["sector"] = fit["sector"]
                 contact["company_type"] = fit["company_type"]
+                contact["carbon_pressure"] = fit["carbon_pressure"]
             contact["language_locked"] = contact["id"] in sent
             # An erased contact's address is a token, which would read "en".
             if contact.get("status") == "erased":
@@ -4392,6 +4397,195 @@ def create_dashboard_app(settings: Settings):
                 else None,
             }
         )
+
+    def _number(args, name, default=None, lo=0.0, hi=1e9):
+        raw = args.get(name)
+        if raw in (None, ""):
+            return default
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{name} must be a number") from None
+        if not lo <= value <= hi:
+            raise ValueError(f"{name} must be between {lo:g} and {hi:g}")
+        return value
+
+    @app.route("/api/carbon/cbam")
+    def api_carbon_cbam():
+        """The competitor's price with CBAM added, against Omega's, 2026-2034."""
+        from modules.cbam import compare
+
+        try:
+            mass = _number(request.args, "mass_g", None, 0.01, 50000)
+            competitor = _number(request.args, "competitor", None, 0, 1e7)
+            omega = _number(request.args, "omega", None, 0, 1e7)
+            price = _number(request.args, "price", None, 0, 2000)
+            embedded = _number(request.args, "embedded", None, 0, 50)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        if mass is None or competitor is None or omega is None:
+            return jsonify({"error": "mass_g, competitor and omega are needed."}), 400
+        return jsonify(
+            compare(mass, competitor, omega, certificate_eur_per_t=price, embedded_t_per_t=embedded)
+        )
+
+    @app.route("/api/carbon/summary")
+    def api_carbon_summary():
+        """The headline for Today: lots measured, approved, and CO2 avoided."""
+        from modules import carbon_passport as cp
+
+        lots = cp.listing(db)
+        avoided_kg = 0.0
+        for lot in lots:
+            fp = lot["footprint"]
+            avoided_kg += (fp["china_default_g_co2"] - fp["per_part_g_co2"]) * lot["good_parts"] / 1000
+        approved = [lot for lot in lots if lot["status"] == "approved"]
+        ratios = [lot["footprint"]["times_lower"] for lot in lots if lot["footprint"]["times_lower"]]
+        return jsonify(
+            {
+                "lots": len(lots),
+                "approved": len(approved),
+                "drafts": len(lots) - len(approved),
+                "avoided_t_co2": round(avoided_kg / 1000, 1),
+                "median_times_lower": sorted(ratios)[len(ratios) // 2] if ratios else None,
+            }
+        )
+
+    @app.route("/api/carbon/paragraph")
+    def api_carbon_paragraph():
+        """A paragraph a reviewer may add to a draft, built only from passports
+        a person approved: no approved lot, no claim."""
+        from modules import carbon_passport as cp
+
+        approved = [lot for lot in cp.listing(db) if lot["status"] == "approved"]
+        if not approved:
+            return jsonify({"paragraph": None, "why": "No approved passport yet: approve one in Carbon first."})
+        ratios = sorted(lot["footprint"]["times_lower"] for lot in approved)
+        grams = sorted(lot["footprint"]["per_part_g_co2"] for lot in approved)
+        mid = len(ratios) // 2
+        lang = "it" if request.args.get("lang") == "it" else "en"
+        if lang == "it":
+            text = (
+                f"Formiamo a freddo da acciaio italiano da forno elettrico: i nostri ultimi {len(approved)} lotti "
+                f"misurati sono a circa {grams[mid]:g} g di CO2 per pezzo, {ratios[mid]:g} volte meno del valore "
+                "UE di riferimento per lo stesso pezzo importato dalla Cina. Possiamo darvi un passaporto "
+                "carbonio per ogni lotto, utile per i vostri dati Scope 3."
+            )
+        else:
+            text = (
+                f"We cold-form from Italian electric-arc steel: our last {len(approved)} measured lots came to about "
+                f"{grams[mid]:g} g of CO2 per part, {ratios[mid]:g} times less than the EU default for the same "
+                "part imported from China. Each lot can ship with a carbon passport for your Scope 3 reporting."
+            )
+        return jsonify({"paragraph": text, "lots": len(approved)})
+
+    @app.route("/api/carbon/lots", methods=["GET", "POST"])
+    def api_carbon_lots():
+        """GET lists the lots with their footprints; POST records a new lot
+        as a draft passport, which a person approves before it leaves."""
+        from modules import carbon_passport as cp
+
+        if request.method == "GET":
+            return jsonify(cp.listing(db))
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Content-Type: application/json required"}), 415
+        if not _reviewer():
+            return jsonify({"error": "A lot needs a named person to record it."}), 403
+        try:
+            lot = {
+                "lot_code": str(data.get("lot_code") or "").strip()[:40],
+                "part_name": str(data.get("part_name") or "").strip()[:120],
+                "customer": str(data.get("customer") or "").strip()[:120] or None,
+                "steel_mill": str(data.get("steel_mill") or "").strip()[:120] or None,
+                "steel_route": "bf_bof" if data.get("steel_route") == "bf_bof" else "eaf_scrap",
+                "part_mass_g": _number(data, "part_mass_g", None, 0.01, 50000),
+                "mill_t_co2_per_t": _number(data, "mill_t_co2_per_t", None, 0, 10),
+                "wire_kg": _number(data, "wire_kg", None, 0.001, 1e7),
+                "good_parts": int(_number(data, "good_parts", 0, 1, 1e9) or 0),
+                "energy_kwh": _number(data, "energy_kwh", 0.0, 0, 1e8),
+            }
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        missing = [k for k in ("lot_code", "part_name", "part_mass_g", "wire_kg", "good_parts") if not lot[k]]
+        if missing:
+            return jsonify({"error": "Missing: " + ", ".join(missing)}), 400
+        try:
+            lot_id = cp.add(db, **lot)
+        except sqlite3.IntegrityError:
+            return jsonify({"error": "That lot code is already recorded."}), 409
+        db.log_activity("PASSPORT_DRAFTED", f"carbon passport {lot_id} drafted by {_reviewer()}", status="success")
+        return jsonify(cp.get(db, lot_id)), 201
+
+    @app.route("/api/carbon/lots/<int:lot_id>")
+    def api_carbon_lot(lot_id):
+        from modules import carbon_passport as cp
+
+        lot = cp.get(db, lot_id)
+        if lot is None:
+            return jsonify({"error": "No such lot."}), 404
+        return jsonify(lot)
+
+    @app.route("/api/carbon/lots/<int:lot_id>/approve", methods=["POST"])
+    def api_carbon_lot_approve(lot_id):
+        from modules import carbon_passport as cp
+
+        if _json_body() is None:
+            return jsonify({"error": "Content-Type: application/json required"}), 415
+        if cp.get(db, lot_id) is None:
+            return jsonify({"error": "No such lot."}), 404
+        try:
+            return jsonify(cp.approve(db, lot_id, _reviewer()))
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 409
+
+    @app.route("/api/carbon/lots/<int:lot_id>/passport.<fmt>")
+    def api_carbon_passport(lot_id, fmt):
+        """The passport a customer receives: only once a person approved it."""
+        from flask import Response
+
+        from modules import carbon_passport as cp
+
+        lot = cp.get(db, lot_id)
+        if lot is None:
+            return jsonify({"error": "No such lot."}), 404
+        if lot["status"] != "approved":
+            return jsonify({"error": "Approve the passport before it is downloaded."}), 409
+        name = re.sub(r"[^A-Za-z0-9_-]+", "-", lot["lot_code"])
+        if fmt == "pdf":
+            return Response(
+                cp.passport_pdf(lot),
+                mimetype="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="passport-{name}.pdf"'},
+            )
+        if fmt == "json":
+            return Response(
+                cp.pcf_json(lot),
+                mimetype="application/json",
+                headers={"Content-Disposition": f'attachment; filename="pcf-{name}.json"'},
+            )
+        return jsonify({"error": "pdf or json"}), 404
+
+    @app.route("/api/memory/similar", methods=["POST"])
+    def api_memory_similar():
+        """Past jobs and approved quotes nearest a part: to inform, not decide."""
+        from modules.job_memory import similar
+        from modules.quoting import asdict
+
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Content-Type: application/json required"}), 415
+        try:
+            part = asdict(_part_from(data.get("part") or {}))
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        return jsonify(similar(part, str(data.get("description") or "")[:300], db=db))
+
+    @app.route("/api/memory/search")
+    def api_memory_search():
+        from modules.job_memory import search
+
+        return jsonify(search(str(request.args.get("q") or "")[:200], db=db))
 
     @app.route("/api/review/summary")
     def api_review_summary():

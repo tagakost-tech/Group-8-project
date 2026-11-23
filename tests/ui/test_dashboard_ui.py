@@ -93,7 +93,7 @@ def test_insights_tab_renders(live_dashboard):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
             open_tab(page, "tab-insights")
             page.wait_for_selector("#tab-insights.active", timeout=5000)
@@ -118,7 +118,7 @@ def test_tab_navigation(live_dashboard):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
             for tab in [
                 "tab-contacts",
@@ -143,7 +143,7 @@ def test_sidebar_is_operable_by_keyboard(live_dashboard):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
 
             first = page.locator(".nav-links li[aria-selected='true']")
@@ -174,7 +174,7 @@ def test_the_tablist_is_a_single_tab_stop(live_dashboard):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
             stops = page.eval_on_selector_all(
                 ".nav-links li", "els => els.map(e => e.tabIndex)"
@@ -190,7 +190,7 @@ def test_icon_only_buttons_have_accessible_names(live_dashboard):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
             unnamed = page.eval_on_selector_all(
                 ".btn-icon",
@@ -222,7 +222,7 @@ def test_an_empty_table_says_it_is_empty(live_dashboard):
                     status=200, content_type="application/json", body="[]"
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsTable .empty-state", timeout=5000)
             assert "No contacts" in _state_text(page, "contactsTable")
@@ -237,7 +237,7 @@ def test_a_failed_fetch_is_distinguishable_from_an_empty_table(live_dashboard):
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
             page.route("**/api/contacts*", lambda route: route.abort())
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsTable .empty-state.is-error", timeout=5000)
             assert "Could not load" in _state_text(page, "contactsTable")
@@ -262,7 +262,7 @@ def test_a_filter_matching_nothing_explains_itself(live_dashboard):
                     status=200, content_type="application/json", body=ONE_CONTACT
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsTable tbody tr td", timeout=5000)
 
@@ -327,7 +327,7 @@ def test_the_activity_feed_renders_and_is_ordered_oldest_first(live_dashboard):
                     status=200, content_type="application/json", body=ACTIVITY_ROWS
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_selector(".act-row", timeout=8000)
 
             actions = page.eval_on_selector_all(
@@ -355,7 +355,7 @@ def test_an_empty_activity_feed_says_so(live_dashboard):
                     status=200, content_type="application/json", body="[]"
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_selector("#activityFeed .empty-state", timeout=8000)
             assert "No activity yet" in page.inner_text("#activityFeed")
         finally:
@@ -383,7 +383,7 @@ def test_the_retry_queue_is_visible_and_flags_exhausted_sends(live_dashboard):
                     ),
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-insights")
             page.wait_for_selector("#retryStats .mini-stat", timeout=8000)
 
@@ -416,7 +416,7 @@ def test_a_quiet_retry_queue_does_not_raise_an_alarm(live_dashboard):
                     ),
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-insights")
             page.wait_for_selector("#retryStats .mini-stat", timeout=8000)
             assert not page.query_selector("#retryStats .num-bad")
@@ -468,7 +468,7 @@ def test_the_learning_snapshot_is_visible(live_dashboard):
                     ),
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-insights")
             page.wait_for_selector("#learningPanel .rank-row", timeout=8000)
 
@@ -516,7 +516,7 @@ def test_the_blocklist_recheck_button_shows_per_list_results(live_dashboard):
                     ),
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-insights")
             page.wait_for_selector("#recheckBlacklist", timeout=8000)
             page.click("#recheckBlacklist")
@@ -660,7 +660,7 @@ def _contacts_page(browser, live_dashboard, body=CONTACTS):
         )
 
     page.route("**/api/contacts/*/why", why_route)
-    page.goto(live_dashboard)
+    page.goto(live_dashboard + "/classic")
     open_tab(page, "tab-contacts")
     page.wait_for_selector("#contactsTable tbody tr td", timeout=8000)
     return page
@@ -1019,7 +1019,7 @@ def test_card_headers_stay_inside_their_card(live_dashboard):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
             probe = """() => [...document.querySelectorAll('.glass-card')]
                 .map(c => {
@@ -1045,7 +1045,7 @@ def test_the_page_never_scrolls_sideways(live_dashboard, width, height):
         browser = _browser(p)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN, viewport={"width": width, "height": height})
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             page.wait_for_load_state("networkidle")
             # The Overview's Ready to send card, from the real route: its
             # details carry long file paths.
@@ -1082,7 +1082,7 @@ def test_the_actions_column_fits_without_clipping(live_dashboard):
                     status=200, content_type="application/json", body=CONTACTS
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsTable tbody tr td", timeout=8000)
             clipped = page.evaluate(
@@ -1154,7 +1154,7 @@ def test_the_status_chip_shows_the_true_total_not_the_page_count(live_dashboard)
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
             _counts_page(page)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector(".filter-chip[data-status='pending']", timeout=8000)
 
@@ -1200,7 +1200,7 @@ def test_clicking_a_status_chip_asks_the_server(live_dashboard):
                 )
 
             page.route("**/api/contacts*", contacts_route)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector(".filter-chip[data-status='pending']", timeout=8000)
             requested.clear()
@@ -1227,7 +1227,7 @@ def test_the_table_says_it_is_showing_one_page(live_dashboard):
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
             _counts_page(page)
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsPageNote", timeout=8000)
             # The note needs BOTH fetches: rows from /api/contacts and the
@@ -1274,7 +1274,7 @@ def test_a_complete_page_is_not_described_as_partial(live_dashboard):
                     body=json.dumps(small),
                 ),
             )
-            page.goto(live_dashboard)
+            page.goto(live_dashboard + "/classic")
             open_tab(page, "tab-contacts")
             page.wait_for_selector("#contactsPageNote", timeout=8000)
             _wait_until(

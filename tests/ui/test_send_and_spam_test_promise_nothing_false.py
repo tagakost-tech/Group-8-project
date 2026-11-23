@@ -51,7 +51,7 @@ def _open_tab(browser, url, tab):
             status=200, content_type="application/json", body="{}"
         ),
     )
-    page.goto(url)
+    page.goto(url + "/classic")
     open_tab(page, tab)
     page.wait_for_selector(f"#{tab}.active", timeout=5000)
     return page
@@ -199,7 +199,7 @@ def test_the_dry_run_shows_the_language_and_the_attachment(live, width):
                     body=json.dumps({"ok": True, "message": PREVIEW}),
                 ),
             )
-            page.goto(url)
+            page.goto(url + "/classic")
             if width < 900:
                 page.click("#menuToggle")
                 page.wait_for_timeout(320)

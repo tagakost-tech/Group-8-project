@@ -99,7 +99,7 @@ def test_deliverability_guard_matches_the_agent(tmp_path, settings_factory):
 
 def test_index_page_renders(tmp_path, settings_factory):
     client = _client(tmp_path, settings_factory)
-    resp = client.get("/")
+    resp = client.get("/classic")
     assert resp.status_code == 200
     assert b"Outreach" in resp.data
 

@@ -46,7 +46,7 @@ def _watched(browser, live, **kw):
     context.add_init_script(_WATCH)
     page = context.new_page()
     page.on("dialog", lambda d: d.dismiss())
-    page.goto(live)
+    page.goto(live + "/classic")
     page.wait_for_load_state("networkidle")
     return page
 

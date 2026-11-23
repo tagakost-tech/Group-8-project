@@ -61,7 +61,7 @@ def test_the_readme_records_the_same_hashes_and_the_licences():
 
 def test_the_page_asks_for_these_files_and_the_app_serves_them(settings_factory):
     client = main.create_dashboard_app(settings_factory()).test_client()
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/classic").get_data(as_text=True)
     for name in ("chartjs/chart.umd.js", "fontawesome/css/all.min.css"):
         assert f'"/static/vendor/{name}"' in html, name
     for name, sha256 in VENDORED.items():

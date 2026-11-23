@@ -101,7 +101,7 @@ def _page(browser, url, requests):
     _stub(page, "**/api/deliverability", {})
     _stub(page, "**/api/readiness", READINESS)
     _stub(page, "**/api/data-requests", requests)
-    page.goto(url)
+    page.goto(url + "/classic")
     page.wait_for_selector("#privacyChecks tr", timeout=15000)
     return page
 
@@ -170,7 +170,7 @@ def test_the_real_routes_render_the_card(live):
         try:
             page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
             _stub(page, "**/api/deliverability", {})
-            page.goto(live)
+            page.goto(live + "/classic")
             page.wait_for_selector("#privacyChecks tr", timeout=15000)
             page.wait_for_function(
                 "() => document.getElementById('dsrTable').textContent.length > 0",

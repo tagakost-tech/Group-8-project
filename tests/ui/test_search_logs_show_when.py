@@ -70,7 +70,7 @@ def open_search_logs(page, dashboard, narrow=False):
             status=200, content_type="application/json", body=json.dumps(SEARCHES)
         ),
     )
-    page.goto(dashboard)
+    page.goto(dashboard + "/classic")
     page.wait_for_load_state("networkidle")
     if narrow:
         page.click("#menuToggle")

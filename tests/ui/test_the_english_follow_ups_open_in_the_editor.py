@@ -65,7 +65,7 @@ def _open(browser, url):
             status=200, content_type="application/json", body="{}"
         ),
     )
-    page.goto(url)
+    page.goto(url + "/classic")
     open_tab(page, "tab-template")
     page.wait_for_function(
         "() => document.getElementById('templateEditor').value.length > 0",

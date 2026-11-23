@@ -159,7 +159,7 @@ def test_a_request_over_the_limit_gets_a_clear_413(client, copy_of_templates):
 def test_the_largest_real_body_still_fits(client, copy_of_templates):
     """A template save is the largest body the dashboard takes; a template
     a hundred times the size of the largest shipped one still saves."""
-    largest = max(p.stat().st_size for p in REAL_TEMPLATES.glob("*.html") if "dash" not in p.name)
+    largest = max(p.stat().st_size for p in REAL_TEMPLATES.glob("*.html") if "dash" not in p.name and p.name != "app.html")
     assert main.MAX_REQUEST_BYTES >= 100 * largest
     content = (copy_of_templates / "email_template.html").read_text(encoding="utf-8")
     content += "<!-- " + "padding " * ((main.MAX_REQUEST_BYTES - 4096) // 8) + "-->"
@@ -222,7 +222,7 @@ def _csp(resp):
 
 
 def test_the_policy_is_strict(client):
-    csp = _csp(client.get("/"))
+    csp = _csp(client.get("/classic"))
     assert csp["default-src"] == ["'self'"]
     assert csp["object-src"] == ["'none'"]
     assert csp["base-uri"] == ["'none'"]
@@ -247,7 +247,7 @@ def test_the_page_loads_nothing_from_another_server(client):
     """Scripts and stylesheets come from the dashboard itself (links the
     operator clicks are not loaded); see
     tests/test_the_dashboard_serves_its_own_libraries.py."""
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/classic").get_data(as_text=True)
     scripts = re.findall(r'<script[^>]*src="([^"]+)"', html)
     styles = re.findall(r'<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"', html)
     assert scripts == ["/static/vendor/chartjs/chart.umd.js", "/static/js/dashboard.js"]
@@ -273,7 +273,7 @@ def test_the_page_has_no_inline_script():
 
 
 def test_the_template_preview_is_sandboxed(client):
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/classic").get_data(as_text=True)
     frame = re.search(r'<iframe[^>]*id="templatePreview"[^>]*>', html, flags=re.DOTALL)
     assert frame, "no preview frame"
     sandbox = re.search(r'sandbox="([^"]*)"', frame.group(0))

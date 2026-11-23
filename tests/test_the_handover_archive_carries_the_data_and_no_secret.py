@@ -648,7 +648,7 @@ def test_the_opener_runs_alone_on_a_computer_with_no_agent(install, tmp_path):
         " doctor=lambda folder: 0)\n"
     )
     done = subprocess.run(
-        [sys.executable, "-I", "-c", code],
+        [sys.executable, "-E", "-P", "-c", code],  # -I would also hide the user site-packages
         capture_output=True,
         text=True,
         cwd=alone,

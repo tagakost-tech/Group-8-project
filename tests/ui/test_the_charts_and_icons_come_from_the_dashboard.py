@@ -31,7 +31,7 @@ _CANVASES = [
 
 def _page(browser, live):
     page = browser.new_page(http_credentials=TEST_DASHBOARD_LOGIN)
-    page.goto(live)
+    page.goto(live + "/classic")
     page.wait_for_load_state("networkidle")
     return page
 

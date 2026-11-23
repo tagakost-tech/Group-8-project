@@ -843,6 +843,7 @@ class Database:
 
     def _init_db(self):
         """Create all tables on first run, and apply schema migrations for V2."""
+        from modules.carbon_passport import SCHEMA_SQL as LOTS_SCHEMA_SQL
         from modules.quoting import SCHEMA_SQL as QUOTES_SCHEMA_SQL
         from modules.review_queue import SCHEMA_SQL as REVIEW_SCHEMA_SQL
 
@@ -850,6 +851,7 @@ class Database:
             conn.executescript(SCHEMA_SQL)
             conn.executescript(REVIEW_SCHEMA_SQL)
             conn.executescript(QUOTES_SCHEMA_SQL)
+            conn.executescript(LOTS_SCHEMA_SQL)
 
             # V2 Schema Migrations - add columns if they don't exist
             # Wrap each in a try/except because ALTER TABLE ADD COLUMN

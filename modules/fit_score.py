@@ -228,7 +228,62 @@ def assess(contact: dict) -> dict:
         "sector": sector.get("name") if sector else None,
         "company_type": kind,
         "certifications_needed": certs,
+        "carbon_pressure": carbon_pressure(text, kind, sector, country),
     }
+
+
+EU = frozenset(
+    "AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE".split()  # noqa: SIM905
+)
+_CLIMATE_WORDS = (
+    "csrd",
+    "scope 3",
+    "net zero",
+    "net-zero",
+    "sbti",
+    "science based",
+    "carbon footprint",
+    "carbon neutral",
+    "decarbon",
+    "low-carbon",
+    "co2",
+    "climate",
+    "sustainab",
+    "esg",
+)
+_SOURCING_WORDS = (
+    "import",
+    "asia",
+    "china",
+    "chinese",
+    "global sourcing",
+    "low-cost countr",
+)
+
+
+def carbon_pressure(text: str, kind: str, sector: dict | None, country: str) -> dict:
+    """Why a buyer may care about a low-carbon supplier: not scored, shown.
+
+    CBAM charges EU importers of fasteners; CSRD makes large EU companies
+    report their suppliers' emissions; carmakers pass that down to Tier-1s."""
+    low = text.lower()
+    reasons = []
+    if country in EU:
+        reasons.append("in the EU: CBAM applies to its fastener imports")
+    if kind in ("OEM", "Tier-1") and country in EU:
+        reasons.append(
+            "a large EU buyer: likely to report suppliers' emissions (CSRD, Scope 3)"
+        )
+    if sector and "automot" in (sector.get("id", "") + sector.get("name", "")).lower():
+        reasons.append(
+            "automotive: carmakers ask suppliers for a carbon footprint per part"
+        )
+    if any(w in low for w in _CLIMATE_WORDS):
+        reasons.append("its own page talks about climate targets")
+    if any(w in low for w in _SOURCING_WORDS):
+        reasons.append("mentions sourcing from Asia")
+    level = "high" if len(reasons) >= 3 else "some" if reasons else "none"
+    return {"level": level, "reasons": reasons}
 
 
 def band(total: int) -> str:

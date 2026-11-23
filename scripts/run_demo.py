@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT))
 
 DEMO_DB = ROOT / "data" / "demo.db"
 DEMO_CLIENTS = ROOT / "data" / "demo_clients.xlsx"
-PORT = 5077
+PORT = 5078
 
 # Invented companies. The domains are .example, which cannot receive mail.
 COMPANIES = [
@@ -171,7 +171,34 @@ def seed(settings) -> int:
             }
         ]
     )
+    seed_lots(agent.db)
     return len(agent.review_queue.pending())
+
+
+# Invented lots: mills, customers and counts are made up for the demo.
+LOTS = [
+    ("L-26-0388", "2026-10-06 07:40:00", "Stepped pin with collar", "Schließtechnik Nord GmbH", 11.9,
+     "Acciaieria Lombarda (invented)", "eaf_scrap", 0.62, 1250, 102000, 310, "maria"),
+    ("L-26-0402", "2026-10-15 08:10:00", "Threaded stud M6", "Ferramenta Lago S.r.l.", 9.4,
+     "Acciaieria Lombarda (invented)", "eaf_scrap", 0.62, 980, 101500, 240, "maria"),
+    ("L-26-0417", "2026-11-02 08:00:00", "Hinge axle 5x46", "Ferramenta Lago S.r.l.", 7.1,
+     "Brescia EAF mill (invented)", "eaf_scrap", 0.58, 760, 104200, 205, None),
+    ("L-26-0431", "2026-11-12 09:20:00", "Rivet pin 5x20", "VoltaSwitch B.V.", 3.4,
+     None, "eaf_scrap", None, 360, 103000, 95, None),
+]
+
+
+def seed_lots(db) -> None:
+    from modules import carbon_passport as cp
+
+    for code, at, part, customer, mass, mill, route, factor, wire, good, kwh, reviewer in LOTS:
+        lot_id = cp.add(
+            db, lot_code=code, created_at=at, part_name=part, customer=customer, part_mass_g=mass,
+            steel_mill=mill, steel_route=route, mill_t_co2_per_t=factor, wire_kg=wire,
+            good_parts=good, energy_kwh=kwh,
+        )
+        if reviewer:
+            cp.approve(db, lot_id, reviewer)
 
 
 def main():

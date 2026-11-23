@@ -84,7 +84,7 @@ def test_the_poll_asks_for_the_charts_at_most_once_a_minute(live):
             def count(path):
                 return asked.count(path)
 
-            page.goto(live)
+            page.goto(live + "/classic")
             page.locator("#statWarmup", has_text="Day 4 (2/14)").wait_for(timeout=15000)
             assert page.inner_text("#statOpens") == "3"
             assert (count("/api/charts"), count("/api/warmup")) == (1, 1)

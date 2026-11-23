@@ -148,7 +148,7 @@ def test_a_page_written_to_steer_the_ai_is_flagged(tmp_path, settings_factory):
 
 def test_the_review_tab_is_on_the_page(tmp_path, settings_factory):
     client, _db, _item = _setup(tmp_path, settings_factory)
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/classic").get_data(as_text=True)
     assert 'id="tab-review"' in html and 'id="nav-tab-review"' in html
 
 

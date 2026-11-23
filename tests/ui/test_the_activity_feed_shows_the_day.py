@@ -62,7 +62,7 @@ def open_feed(page, dashboard):
             status=200, content_type="application/json", body=json.dumps(ACTIVITY)
         ),
     )
-    page.goto(dashboard)
+    page.goto(dashboard + "/classic")
     page.wait_for_selector("#activityFeed .act-row", timeout=15000)
 
 

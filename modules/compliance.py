@@ -741,6 +741,24 @@ PERSONAL_COLUMNS = {
     # record of human oversight, so the row stays, attached to the token.
     # A quote is about a part, not a person; the company it went to is
     # reached only through contact_id, which erasure leaves as a token.
+    # A lot's carbon passport: parts, steel and energy, about no person.
+    "carbon_lots": {
+        "id": _NONE,
+        "lot_code": _NONE,
+        "created_at": _NONE,
+        "part_name": _NONE,
+        "customer": _NONE,
+        "part_mass_g": _NONE,
+        "steel_mill": _NONE,
+        "steel_route": _NONE,
+        "mill_t_co2_per_t": _NONE,
+        "wire_kg": _NONE,
+        "good_parts": _NONE,
+        "energy_kwh": _NONE,
+        "status": _NONE,
+        "reviewer": _NONE,
+        "decided_at": _NONE,
+    },
     "quotes": {
         "id": _NONE,
         "created_at": _NONE,
