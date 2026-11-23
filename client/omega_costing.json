@@ -1,0 +1,58 @@
+{
+ "_about": "Assumptions for the drawing-to-quote estimate and the carbon comparison. Every figure is an ESTIMATE for the course prototype, to be replaced by Omega's own rates before any real quote. Sources are listed per figure.",
+ "currency": "EUR",
+ "wire_mm": {"min": 0.5, "max": 25, "source": "Omega website: wire from 0.5 to 25 mm"},
+ "materials": {
+  "carbon_steel": {
+   "label": "Carbon steel for cold heading (C10C / 1.0214)",
+   "density_g_cm3": 7.85,
+   "price_eur_kg": 1.15,
+   "kgco2_per_kg": 0.67,
+   "aliases": ["C10C", "C4C", "C15C", "1.0214", "1.0303", "carbon steel", "acciaio al carbonio", "Kohlenstoffstahl", "S235", "10B21", "23MnB4"],
+   "source": "kgCO2/kg: electric-arc steel, typical of Italy (89% EAF, Federacciai via the team research); price: indicative wire-rod price"
+  },
+  "stainless": {
+   "label": "Stainless steel (AISI 304 / 1.4301)",
+   "density_g_cm3": 7.9,
+   "price_eur_kg": 3.4,
+   "kgco2_per_kg": 2.8,
+   "aliases": ["AISI 304", "1.4301", "A2", "AISI 316", "1.4401", "A4", "stainless", "inox", "Edelstahl"],
+   "source": "kgCO2/kg: ISSF global average for austenitic stainless (estimate); price: indicative"
+  },
+  "aluminium": {
+   "label": "Aluminium (6061 / 6082)",
+   "density_g_cm3": 2.7,
+   "price_eur_kg": 3.0,
+   "kgco2_per_kg": 6.7,
+   "aliases": ["6061", "6082", "aluminium", "aluminum", "alluminio", "Aluminium", "AlMgSi"],
+   "source": "kgCO2/kg: European primary aluminium average (estimate); price: indicative"
+  },
+  "brass": {
+   "label": "Brass (CuZn37)",
+   "density_g_cm3": 8.44,
+   "price_eur_kg": 7.5,
+   "kgco2_per_kg": 2.5,
+   "aliases": ["CuZn37", "CuZn39Pb3", "CW508L", "brass", "ottone", "Messing"],
+   "source": "kgCO2/kg: estimate for brass with recycled content; price: indicative"
+  }
+ },
+ "forming": {
+  "yield": 0.97,
+  "parts_per_minute_by_stations": {"1": 220, "2": 180, "3": 150, "4": 120, "5": 100, "6": 85},
+  "machine_eur_per_hour": 65,
+  "tooling_eur_per_station": 1800,
+  "setup_eur": 400,
+  "thread_rolling_eur_per_1000": 4.0,
+  "sorting_eur_per_1000": 2.5,
+  "margin": 0.18,
+  "kwh_per_kg": 0.25,
+  "source": "Indicative rates for a multi-station header in Lombardy; to be replaced by Omega's"
+ },
+ "machining": {
+  "parting_allowance_mm": 2.0,
+  "kwh_per_kg_removed": 1.6,
+  "source": "Turning from bar of the part's largest diameter; energy per kg removed is an estimate"
+ },
+ "electricity_kgco2_per_kwh": 0.25,
+ "electricity_source": "Italian grid average, about 0.25 kgCO2/kWh (ISPRA, estimate)"
+}

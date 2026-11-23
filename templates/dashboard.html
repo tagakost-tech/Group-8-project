@@ -73,6 +73,16 @@
           >
             <i class="fa-solid fa-compass" aria-hidden="true"></i> Markets
           </li>
+          <li
+            role="tab"
+            id="nav-tab-quotes"
+            data-target="tab-quotes"
+            aria-controls="tab-quotes"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <i class="fa-solid fa-file-invoice" aria-hidden="true"></i> Quotes
+          </li>
         </ul>
         <button
           type="button"
@@ -477,6 +487,7 @@
                 <button type="button" id="rvApprove" class="btn-success">Approve</button>
                 <button type="button" id="rvReject" class="btn-danger">Reject</button>
                 <button type="button" id="rvReopen" class="btn-secondary" hidden>Reopen to edit</button>
+                <button type="button" id="rvQuote" class="btn-secondary" hidden>Make a quote</button>
               </footer>
               <p id="rvMsg" class="sheet-msg" role="status"></p>
             </article>
@@ -512,6 +523,102 @@
               company it finds still comes back here for a person to judge.
             </p>
             <ul id="strategyList" class="strategy-list"></ul>
+          </section>
+        </section>
+
+        <!-- TAB: QUOTES - from a drawing to a quote a person approves -->
+        <section
+          id="tab-quotes"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="nav-tab-quotes"
+          tabindex="0"
+        >
+          <header class="desk-head">
+            <div>
+              <h2 class="desk-title">Quotes</h2>
+              <p class="desk-lede">
+                Drop in a buyer's drawing. The agent reads the sizes, checks the
+                part can be cold-formed, estimates the price and the CO2 saved
+                against machining. Correct anything it read wrong, then approve.
+              </p>
+            </div>
+          </header>
+          <div class="quote-desk">
+            <form id="quoteForm" class="glass-card quote-input" autocomplete="off">
+              <div class="q-upload">
+                <label for="quoteFile" class="btn-secondary btn-sm">
+                  <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> Read a drawing (PDF)
+                </label>
+                <input id="quoteFile" type="file" accept="application/pdf" class="visually-hidden" />
+                <a href="/api/quotes/sample" id="quoteSample" class="link-btn">Try the sample drawing</a>
+              </div>
+              <p id="quoteRead" class="field-note" role="status"></p>
+              <ul id="quoteNotes" class="quote-notes"></ul>
+              <fieldset>
+                <legend>The part</legend>
+                <label class="q-field"><span>Overall length</span><input id="q_length" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Shank diameter</span><input id="q_shank_d" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Head diameter</span><input id="q_head_d" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Head height</span><input id="q_head_h" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Collar diameter</span><input id="q_collar_d" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Collar height</span><input id="q_collar_h" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Thread</span><input id="q_thread" type="text" placeholder="M6x1" /><em></em></label>
+                <label class="q-field"><span>Thread length</span><input id="q_thread_len" type="number" min="0" step="0.1" inputmode="decimal" /><em>mm</em></label>
+                <label class="q-field"><span>Material</span>
+                  <select id="q_material">
+                    <option value="carbon_steel">Carbon steel (C10C)</option>
+                    <option value="stainless">Stainless (AISI 304)</option>
+                    <option value="aluminium">Aluminium (6061)</option>
+                    <option value="brass">Brass (CuZn37)</option>
+                  </select><em></em></label>
+                <label class="q-field"><span>Tightest tolerance</span><input id="q_tolerance_mm" type="number" min="0" step="0.005" inputmode="decimal" /><em>± mm</em></label>
+                <label class="q-field"><span>Parts a year</span><input id="q_annual_volume" type="number" min="0" step="1000" inputmode="decimal" /><em>pcs</em></label>
+              </fieldset>
+            </form>
+
+            <article class="sheet quote-result" aria-live="polite">
+              <header class="sheet-head">
+                <div>
+                  <h3 id="qVerdict">Enter a part or read a drawing</h3>
+                  <p id="qStations" class="sheet-stage"></p>
+                </div>
+              </header>
+              <table class="title-block" aria-label="How the agent judged the part">
+                <tbody id="qReasons"></tbody>
+              </table>
+              <div class="quote-figures">
+                <div class="metric"><span class="metric-v" id="qPrice">–</span><span class="metric-k">price per 1,000 parts</span></div>
+                <div class="metric"><span class="metric-v" id="qTooling">–</span><span class="metric-k">one-off tooling</span></div>
+                <div class="metric"><span class="metric-v" id="qSaving">–</span><span class="metric-k">less CO2 than machining</span></div>
+                <div class="metric"><span class="metric-v" id="qYear">–</span><span class="metric-k">kg CO2 saved a year</span></div>
+              </div>
+              <div class="carbon-compare" id="qCarbon"></div>
+              <p class="field-note" id="qAssumptions"></p>
+              <footer class="sheet-actions">
+                <label for="q_email" class="visually-hidden">Lead's email</label>
+                <input id="q_email" type="email" placeholder="Lead's email (optional)" autocomplete="off" />
+                <select id="q_language" aria-label="Quote language">
+                  <option value="en">English</option>
+                  <option value="it">Italian</option>
+                </select>
+                <button type="button" id="qApprove" class="btn-success">Approve quote</button>
+              </footer>
+              <div id="qApproved" class="quote-approved" hidden>
+                <p class="field-note">Approved. The text that goes to the buyer:</p>
+                <blockquote id="qText"></blockquote>
+                <button type="button" id="qToAnswer" class="btn-primary btn-sm" hidden>Add it to their answer in Review</button>
+              </div>
+            </article>
+          </div>
+          <section class="glass-card" aria-labelledby="qListTitle">
+            <div class="card-header"><h3 id="qListTitle">Recent quotes</h3></div>
+            <div class="table-responsive">
+              <table class="modern-table" id="quoteTable">
+                <thead><tr><th scope="col">When</th><th scope="col">Company</th><th scope="col">Drawing</th><th scope="col">Per 1,000</th><th scope="col">CO2 saved</th><th scope="col">Approved by</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </section>
         </section>
 
@@ -1089,6 +1196,7 @@
         <li><strong>It drafts.</strong> It writes a first email in Italian or English from Omega's own words. When it knows too little to personalise, it uses Omega's standard email.</li>
         <li><strong>You decide.</strong> Nothing is sent until a person approves it in Review, and what is sent is exactly what was approved.</li>
         <li><strong>It sends carefully.</strong> A few emails a day at first, office hours only, and it pauses if too many bounce.</li>
+        <li><strong>It quotes.</strong> When a buyer sends a drawing, Quotes reads the sizes, checks the part can be cold-formed, estimates the price and the CO2 saved against machining. The estimator corrects and approves; the rates are estimates until Omega sets its own.</li>
         <li><strong>It learns from you.</strong> Sectors whose companies you reject are searched less.</li>
       </ol>
       <h3>How your data is protected</h3>

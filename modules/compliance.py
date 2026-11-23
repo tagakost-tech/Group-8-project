@@ -739,6 +739,21 @@ PERSONAL_COLUMNS = {
     },
     # A proposal's text names the person; the decision about it is the
     # record of human oversight, so the row stays, attached to the token.
+    # A quote is about a part, not a person; the company it went to is
+    # reached only through contact_id, which erasure leaves as a token.
+    "quotes": {
+        "id": _NONE,
+        "created_at": _NONE,
+        "contact_id": _PSEUDO,
+        "drawing_name": "cleared",
+        "part": _NONE,
+        "estimate": _NONE,
+        "language": _NONE,
+        "status": _NONE,
+        "quote_text": "cleared",
+        "reviewer": _NONE,
+        "decided_at": _NONE,
+    },
     "review_queue": {
         "id": _NONE,
         "created_at": _PSEUDO,

@@ -211,6 +211,18 @@ def anonymise_contact_rows(
         if n:
             note(f"Redacted the address from {n} retry record(s)")
 
+    # A quote sent to them: the part stays (it is about a part), the file
+    # name and the text addressed to them go.
+    if contact_ids and _table_exists(db, "quotes"):
+        placeholders = ",".join("?" for _ in contact_ids)
+        n = db.conn.execute(
+            f"""UPDATE quotes SET drawing_name = NULL, quote_text = NULL
+                WHERE contact_id IN ({placeholders})""",
+            tuple(contact_ids),
+        ).rowcount
+        if n:
+            note(f"Cleared {n} quote(s) sent to them")
+
     # Proposals written about them, and the person's decision on each. The
     # text goes; the decision stays, as the record of human oversight, and an
     # undecided or unsent proposal can never be sent.

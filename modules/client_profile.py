@@ -101,6 +101,9 @@ class ClientProfile:
         }
         self.sectors: list = list(data.get("sectors", []))
         self.reply_suggestions: dict = dict(data.get("reply_suggestion", {}))
+        # Descriptions of the kinds of company that buy from the client today,
+        # for the lookalike score (modules/lookalike.py). Optional.
+        self.best_customers: list = list(data.get("best_customers", []))
 
     def value_proposition(self, language: str = "en") -> str:
         """The client's value proposition as it wrote it, in the language asked

@@ -55,6 +55,8 @@ Thumbs.db
 
 # PDF assets (user-provided, not tracked)
 assets/*.pdf
+# The invented demo drawing for drawing-to-quote (scripts/make_sample_drawing.py)
+!assets/sample-drawing-stepped-pin.pdf
 
 # Logs
 *.log

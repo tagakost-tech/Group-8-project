@@ -1022,5 +1022,18 @@
  "reply_suggestion": {
   "en": "<p>Dear {{name_or_team}},</p>\n<p>Thank you for your reply.</p>\n<p>To prepare an offer we need the drawing, the material and the yearly volume. Once we have them, we usually reply with feasibility and a price in under 8 hours.</p>\n<p>[Answer anything else they asked here.]</p>\n<p>Best regards,<br>{{sender_signature}}</p>\n{{legal_footer}}",
   "it": "<p>Gentile {{name_or_team}},</p>\n<p>La ringrazio per la risposta.</p>\n<p>Per preparare un'offerta ci servono il disegno, il materiale e il volume annuo. Ricevuti questi dati, di solito rispondiamo con fattibilità e prezzo in meno di 8 ore.</p>\n<p>[Risponda qui alle altre domande.]</p>\n<p>Cordiali saluti,<br>{{sender_signature}}</p>\n{{legal_footer}}"
- }
+ },
+ "best_customers": [
+  "Tier-1 automotive supplier of door locks, latches and door modules for car makers",
+  "Hersteller von Fahrzeugschließsystemen und Türmodulen, Automobilzulieferer",
+  "Maker of window regulators and door systems for passenger cars",
+  "Produttore di alzacristalli e sistemi porta per auto",
+  "Supplier of instrument panel and cockpit mechanisms for the automotive industry",
+  "Manufacturer of hinges, drawer runners and opening mechanisms for furniture",
+  "Hersteller von Möbelbeschlägen, Scharnieren und Auszugssystemen",
+  "Produttore di ferramenta per finestre e serramenti, meccanismi di apertura",
+  "Manufacturer of electrical switchgear components, connectors and terminals",
+  "Maker of household appliances with metal hinges and mechanisms",
+  "Motorcycle component manufacturer"
+ ]
 }

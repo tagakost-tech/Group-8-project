@@ -3962,6 +3962,12 @@ def create_dashboard_app(settings: Settings):
                 shown.setdefault(key, contact.get(key))
         shown["flags"] = _review_flags(item)
         ev = item.get("evidence") or {}
+        if "lookalike" not in shown:
+            from modules.lookalike import Lookalike
+
+            shown["lookalike"] = Lookalike.from_db(db).score(
+                [" ".join(str(x or "") for x in (ev.get("organization"), ev.get("found_on_their_site")))]
+            )[0]
         shown["fit"] = assess_fit(
             {
                 "organization": ev.get("organization") or shown.get("organization"),
@@ -4063,6 +4069,19 @@ def create_dashboard_app(settings: Settings):
         except sqlite3.Error:
             logger.exception("Could not read the review queue")
             return jsonify({"error": "Could not read the review queue."}), 500
+        from modules.lookalike import Lookalike
+
+        likeness = Lookalike.from_db(db).score(
+            [
+                " ".join(
+                    str(x or "")
+                    for x in ((i.get("evidence") or {}).get("organization"), (i.get("evidence") or {}).get("found_on_their_site"))
+                )
+                for i in items
+            ]
+        )
+        for i, like in zip(items, likeness):
+            i["lookalike"] = like
         return jsonify(
             {
                 "view": view,
@@ -4230,6 +4249,149 @@ def create_dashboard_app(settings: Settings):
             reply_intent.NOT_INTERESTED: "not interested",
         }.get(reply_intent.classify(subject, body), "unclear")
         return jsonify({"label": label, "applied": "An answer waits in Review."})
+
+    # ── API: Quotes - from a drawing to a quote a person approves ──
+    def _part_from(data: dict):
+        from modules.quoting import Part
+
+        fields = Part.__dataclass_fields__
+        values = {}
+        for name, f in fields.items():
+            if name == "notes" or name not in data:
+                continue
+            raw = data[name]
+            try:
+                if f.type in ("float", float):
+                    values[name] = max(0.0, float(raw or 0))
+                elif f.type in ("int", int):
+                    values[name] = max(0, int(float(raw or 0)))
+                else:
+                    values[name] = str(raw or "")[:40]
+            except (TypeError, ValueError):
+                raise ValueError(f"{name} must be a number") from None
+        return Part(**values)
+
+    @app.route("/api/quotes/sample")
+    def api_quote_sample():
+        """The invented demo drawing (scripts/make_sample_drawing.py)."""
+        from flask import send_file
+
+        path = PROJECT_ROOT / "assets" / "sample-drawing-stepped-pin.pdf"
+        if not path.is_file():
+            return jsonify({"error": "No sample drawing: run scripts/make_sample_drawing.py"}), 404
+        return send_file(path, mimetype="application/pdf", download_name="sample-drawing.pdf")
+
+    @app.route("/api/quotes/read", methods=["POST"])
+    def api_quote_read():
+        """Read a drawing (a CAD PDF) into a part the estimator checks."""
+        from modules.quoting import asdict, estimate, read_drawing_pdf
+
+        upload = request.files.get("drawing")
+        if upload is None or not upload.filename:
+            return jsonify({"error": "Choose a drawing (PDF) first."}), 400
+        data = upload.read()
+        if not data.startswith(b"%PDF"):
+            return jsonify({"error": "That file is not a PDF drawing."}), 400
+        try:
+            part = read_drawing_pdf(data)
+        except Exception:
+            logger.exception("Could not read the drawing")
+            return jsonify({"error": "The drawing could not be read; enter the sizes by hand."}), 400
+        return jsonify({"part": asdict(part), "estimate": estimate(part), "drawing_name": upload.filename[:120]})
+
+    @app.route("/api/quotes/estimate", methods=["POST"])
+    def api_quote_estimate():
+        from modules.quoting import estimate
+
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Content-Type: application/json required"}), 415
+        try:
+            part = _part_from(data.get("part") or {})
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        return jsonify({"estimate": estimate(part)})
+
+    @app.route("/api/quotes", methods=["GET", "POST"])
+    def api_quotes():
+        """GET lists recent quotes; POST approves one: a named person, the
+        exact text that will go, and the figures it rests on, stored."""
+        import json as _json
+
+        from modules import clock
+        from modules.quoting import asdict, estimate, quote_text
+
+        if request.method == "GET":
+            rows = db.conn.execute(
+                """SELECT q.id, q.created_at, q.status, q.reviewer, q.drawing_name,
+                          q.estimate, c.organization, c.email
+                   FROM quotes q LEFT JOIN contacts c ON c.id = q.contact_id
+                   ORDER BY q.id DESC LIMIT 30"""
+            ).fetchall()
+            out = []
+            for r in rows:
+                est = _json.loads(r["estimate"])
+                out.append(
+                    {
+                        "id": r["id"], "created_at": r["created_at"], "status": r["status"],
+                        "reviewer": r["reviewer"], "drawing": r["drawing_name"],
+                        "company": r["organization"], "email": r["email"],
+                        "per_1000_eur": (est.get("cost") or {}).get("per_1000_eur"),
+                        "saving_pct": (est.get("carbon") or {}).get("saving_pct"),
+                        "verdict": est["formability"]["verdict"],
+                    }
+                )
+            return jsonify(out)
+
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Content-Type: application/json required"}), 415
+        if not _reviewer():
+            return jsonify({"error": "An approved quote needs a named reviewer."}), 403
+        try:
+            part = _part_from(data.get("part") or {})
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        est = estimate(part)
+        if not est["cost"]:
+            return jsonify({"error": "This part cannot be quoted: " + "; ".join(est["formability"]["reasons"])}), 400
+        language = "it" if data.get("language") == "it" else "en"
+        email = (data.get("email") or "").strip().lower()
+        contact = db.get_contact_by_email(email) if email else None
+        if email and not contact:
+            return jsonify({"error": "That address is not a company in the leads."}), 400
+        text = quote_text(est, language)
+        with db._transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO quotes (created_at, contact_id, drawing_name, part, estimate,
+                                       language, status, quote_text, reviewer, decided_at)
+                   VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?)""",
+                (
+                    clock.db_now(), contact["id"] if contact else None,
+                    str(data.get("drawing_name") or "")[:120] or None,
+                    _json.dumps(asdict(part)), _json.dumps(est), language, text,
+                    _reviewer(), clock.db_now(),
+                ),
+            )
+            quote_id = cur.lastrowid
+        db.log_activity(
+            "QUOTE_APPROVED",
+            f"quote {quote_id} approved by {_reviewer()}"
+            + (f" for contact {contact['id']}" if contact else ""),
+            status="success",
+        )
+        reply_item = (
+            _review_queue().item_for(contact["id"], "reply") if contact else None
+        )
+        return jsonify(
+            {
+                "id": quote_id,
+                "quote_text": text,
+                "reply_item_id": reply_item["id"]
+                if reply_item and reply_item["status"] == "pending"
+                else None,
+            }
+        )
 
     @app.route("/api/review/summary")
     def api_review_summary():
