@@ -82,3 +82,4 @@ awesome-python-master/
 # docs/review: working notes about the client, never to reach their copy.
 # Words apart by a space, a hyphen or an underscore.
 docs/review/**/*[Nn][Oo][Tt][ _-][Ff][Oo][Rr][ _-][Ss][Uu][Pp][Pp][Ll][Ee][Cc][Oo]*/
+.vercel
