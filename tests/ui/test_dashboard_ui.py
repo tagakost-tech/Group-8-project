@@ -14,7 +14,7 @@ import pytest
 
 # Skip the whole module if Playwright isn't installed.
 pytest.importorskip("playwright.sync_api")
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 from conftest import _THIS_MACHINE, TEST_DASHBOARD_LOGIN, browser_reached, open_tab
 
@@ -853,8 +853,11 @@ def test_row_detail_shows_why_a_contact_was_discarded(live_dashboard):
             btn.click()
             page.wait_for_selector(".detail-row", timeout=5000)
 
-            detail = page.inner_text(".detail-row")
-            assert "Score 12 below threshold 50" in detail
+            # The row opens saying "Loading..." and fills when the answer
+            # comes: wait for the text rather than reading the first frame.
+            expect(page.locator(".detail-row")).to_contain_text(
+                "Score 12 below threshold 50"
+            )
             assert btn.get_attribute("aria-expanded") == "true"
 
             btn.click()
