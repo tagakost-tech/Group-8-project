@@ -177,6 +177,10 @@ def _pytest(m: Mutation, repo: Path) -> subprocess.CompletedProcess[str] | None:
                 *(["-m", m.marker] if m.marker else []),
             ],
             cwd=repo,
+            # No bytecode cache: a mutation of the same size made within the
+            # same second as the unmutated run left the .pyc looking fresh, so
+            # the old code ran and the mutation read SURVIVED (seen on Linux).
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
             capture_output=True,
             text=True,
             encoding="utf-8",

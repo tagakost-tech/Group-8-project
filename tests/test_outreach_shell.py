@@ -169,6 +169,9 @@ def test_a_reviewer_decides_on_proposals_but_cannot_control_the_agent(
         ("/api/send-manual", {"email": "x@y.example"}),
         ("/api/config", {}),
         ("/api/leads/import", {"csv": "email\na@b.example\n", "channel": "referral"}),
+        (f"/api/contacts/{cid}/action", {"action": "send_now"}),
+        (f"/api/contacts/{cid}/action", {"action": "unblock"}),
+        (f"/api/contacts/{cid}/language", {"language": "it"}),
     ]:
         r = client.post(path, json=body, headers=maria)
         assert r.status_code == 403, path

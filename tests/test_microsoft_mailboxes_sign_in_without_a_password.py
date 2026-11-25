@@ -83,6 +83,9 @@ def _pem(folder, *, key=None, certificate=None, passphrase="", name="agent.pem")
         )
         + certificate.public_bytes(serialization.Encoding.PEM)
     )
+    # As a real key file is kept: on POSIX the sign-in refuses one that other
+    # accounts can read, and a fresh file takes the umask (often 644).
+    path.chmod(0o600)
     return path
 
 

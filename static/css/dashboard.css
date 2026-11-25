@@ -1893,6 +1893,16 @@ p {
   .dsr-table td:last-child {
     white-space: normal;
   }
+  /* Fixed layout keeps the table inside its card whatever the font: with
+     Linux's wider default fonts the auto layout still ran a few pixels over. */
+  .modern-table.dsr-table {
+    table-layout: fixed;
+  }
+  .modern-table.dsr-table th,
+  .modern-table.dsr-table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .lead-quote {

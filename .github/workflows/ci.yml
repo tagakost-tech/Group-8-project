@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.15"
-      - run: pip install ruff
+      - run: pip install ruff==0.16.1
       - run: ruff check .
 
   tests:
@@ -40,6 +40,8 @@ jobs:
             requirements.txt
             requirements-dev.txt
       - run: pip install -r requirements.txt -r requirements-dev.txt
+      # The network-guard tests launch Chromium to prove a browser is guarded.
+      - run: python -m playwright install --with-deps chromium
       - name: Unit and integration tests
         run: python -m pytest -n auto -p no:cacheprovider
 

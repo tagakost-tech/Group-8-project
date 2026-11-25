@@ -2871,25 +2871,23 @@ def create_dashboard_app(settings: Settings):
             )
         return resp
 
-    # Writes that send email, start or stop the agent, or change what it does
-    # and to whom: the administrator's. A reviewer decides on proposals.
-    _ADMIN_ONLY_WRITES = (
-        "/api/config",
-        "/api/template",
-        "/api/agent/start",
-        "/api/agent/stop",
-        "/api/send-manual",
-        "/api/queries/add",
-        "/api/strategy/queue",
-        "/api/autonomy",
-        "/api/leads/import",
+    # A reviewer decides on proposals and records where a conversation ended
+    # up; every other write (sending, starting or stopping the agent, a
+    # contact's actions, settings, imports) is the administrator's. Deny by
+    # default, so a new route is admin-only until it is listed here.
+    _REVIEWER_WRITES = re.compile(
+        r"^/(login|logout)$"
+        r"|^/api/review/(paste-reply|\d+/(open|approve|reject|reopen))$"
+        r"|^/api/contacts/\d+/outcome$"
     )
 
     @app.before_request
     def _require_admin_for_control():
         if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
             return None
-        if request.path not in _ADMIN_ONLY_WRITES:
+        if any(request.path.startswith(p) for p in _AUTH_EXEMPT_PREFIXES):
+            return None
+        if _REVIEWER_WRITES.match(request.path):
             return None
         if hmac.compare_digest(
             _reviewer().encode("utf-8"), settings.dashboard_username.encode("utf-8")
