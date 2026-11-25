@@ -1057,7 +1057,7 @@ class LoopOrchestrator:
                     # Before anything else this iteration: pick up config the
                     # operator changed from the dashboard since the last pass.
                     self.agent._apply_runtime_overrides()
-                    # And the client / competitor spreadsheets SUPPLECO edits by hand.
+                    # And the client / competitor spreadsheets the client edits by hand.
                     self.agent.refresh_lists_if_changed()
                     # And any send a stopped process left 'preparing', before
                     # this pass can reach its contact. A dry run settles nothing.

@@ -197,17 +197,17 @@ def test_a_run_that_looked_up_no_package_is_an_error_not_a_clean_result(
 
 
 def test_the_update_procedure_never_upgrades_the_shared_python():
-    """DEPLOY section 14 updated "the copy" with `py -3.11 -m pip`, which on
+    """DEPLOY section 14 updated "the copy" with `py -3.15 -m pip`, which on
     an install without its own virtual environment (section 1) upgrades the
     one Python the live install runs on: the update happened in place, and
     swapping the folders back undid nothing."""
     deploy = (main.PROJECT_ROOT / "docs" / "DEPLOY.md").read_text("utf-8")
     section = deploy.split("## 14.", 1)[1].split("\n## ", 1)[0]
     update = section.split("### Updating", 1)[1]
-    assert "py -3.11 -m venv .venv" in update
+    assert "py -3.15 -m venv .venv" in update
     for line in update.splitlines():
-        assert "py -3.11 -m pip" not in line, line
-        assert "py -3.11 -m pytest" not in line, line
+        assert "py -3.15 -m pip" not in line, line
+        assert "py -3.15 -m pytest" not in line, line
     assert ".venv\\Scripts\\python.exe -m pip install" in update
 
 

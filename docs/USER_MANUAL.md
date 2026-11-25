@@ -77,7 +77,7 @@ Ready to send", the Ready to send card (section 4.1) says why.
 
 ## 4. The dashboard, tab by tab
 
-The main app is now at `/` (screens Today, Review, Quotes, Carbon, Leads,
+The main app is now at `/` (screens Today, Review, Leads,
 Markets); the full dashboard this section describes is at `/classic`
 (**Classic dashboard** at the foot of the app's sidebar).
 

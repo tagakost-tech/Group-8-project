@@ -20,12 +20,12 @@ deterministic work to scripts, not LLM loops**), the answer for this system is:
 > 2–3 genuinely cognitive roles — and only once a working model key exists.
 
 Turning the deterministic workers into LLM agents would trade cheap, fast,
-**testable** (about 5,000 tests in the default `py -3.11 -m pytest` run, plus
+**testable** (about 5,000 tests in the default `py -3.15 -m pytest` run, plus
 about 130 browser tests under `-m ui`) function calls for costly, slow,
 non‑deterministic model calls - and those only work while the company's own
 model server is up (an OpenAI-compatible server such as Ollama on Omega IFS's
 own machine or private network, via `LLM_PROVIDER=openai_compatible`; no
-cloud AI service is supported; `py -3.11 main.py doctor` reports the server).
+cloud AI service is supported; `py -3.15 main.py doctor` reports the server).
 
 ## The org chart
 
@@ -110,8 +110,8 @@ flowchart TD
 | **Copywriter**          | `ai_generator.generate_opening_line`, `ai_generator.generate_email_body`                             | **Cognitive (LLM)** | Tailored openers (`ai_personalization_enabled`) and whole AI-written bodies (`ai_humanize_emails`), only in a template that asks for `{{opening_line}}` or `{{body}}`; the shipped templates, Omega IFS's fixed text in Italian and English, ask for neither. Both fall back to hand-written copy |
 | **Analyst**             | `ai_generator.classify_relevance` + reply triage                                                     | **Cognitive (LLM)** | Nuanced target/no-target — wired (`ai_relevance_enabled`); reply-draft suggestions still to build                                                                                                                                                     |
 
-The dashboard: the main app is now at `/` (screens Today, Review, Quotes,
-Carbon, Leads, Markets); the full dashboard these docs describe is at
+The dashboard: the main app is now at `/` (screens Today, Review,
+Leads, Markets); the full dashboard these docs describe is at
 `/classic`.
 
 ## Escalation plan (the framework's L0→L3)
@@ -149,6 +149,6 @@ Carbon, Leads, Markets); the full dashboard these docs describe is at
   chat-completions call to `LLM_BASE_URL` with `LLM_MODEL` (DEPLOY.md
   section 11), and only to an address on this machine or the private
   network. `LLM_PROVIDER` is read in any case, and a value other than blank
-  or `openai_compatible` stops start-up (no cloud AI service is supported). `py -3.11 main.py doctor` reports whether
+  or `openai_compatible` stops start-up (no cloud AI service is supported). `py -3.15 main.py doctor` reports whether
   the configured provider is set up and names its model; for a server of the
   company's own it also asks the server whether it lists that model.

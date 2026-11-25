@@ -14,7 +14,7 @@ import re
 # Bare "free" is deliberately absent. It fires on ordinary polite English and
 # on this industry's own product language: the shipped followup_1.html was
 # flagged for "please feel free to", and "gluten-free", "sugar-free" and
-# "lactose-free" are what SUPPLECO's customers put on their labels. A linter that
+# "lactose-free" are what the client's customers put on their labels. A linter that
 # cries wolf on the opt-out sentence teaches the operator to ignore it, which
 # costs more than the warning was ever worth. The commercial uses of the word
 # are listed explicitly instead.

@@ -276,7 +276,7 @@ COMPETITOR_KEYWORDS = PROFILE.competitor_keywords
 #   a want-ad    "Buscamos un CDMO para fabricar nuestros complementos"
 #
 # The second is the expensive one: that company is asking for exactly what
-# SUPPLECO sells, and it was being discarded as a rival with a reason that reads
+# The client sells, and it was being discarded as a rival with a reason that reads
 # like the filter working.
 #
 # It cannot simply move to name-only matching. A live discovery run found
@@ -299,7 +299,7 @@ COMPETITOR_SELF_DESCRIPTION_KEYWORDS = PROFILE.competitor_self_description_keywo
 # lacks; once it says "siamo" / "we are", the rest is a claim.
 _SEEKING_RE = re.compile(
     r"\b(?:buscamos|buscando|en busca de|necesitamos|"
-    # "cerco" is how SUPPLECO's own keyword list phrases a buyer's need
+    # "cerco" is how the client's own keyword list phrases a buyer's need
     # ("cerco CDMO integratori"); without it that buyer read as a rival.
     r"(?:cerco|sto cercando|stiamo cercando|cerchiamo)(?!\s+di\b)|"
     r"in cerca di|alla ricerca di|"
@@ -317,7 +317,7 @@ _SEEKING_RE = re.compile(
 # above so intervening words can't defeat the match, as in
 # "Private Label Nutraceutical Manufacturer".
 # Stems that, next to a qualifier, mean the company makes what the client
-# makes, for others (SUPPLECO: "manufactur" + "private label").
+# makes, for others (the client: "manufactur" + "private label").
 COMPETITOR_CORE_STEMS = PROFILE.competitor_core_stems
 COMPETITOR_QUALIFIERS = PROFILE.competitor_qualifiers
 
@@ -335,11 +335,11 @@ class RelevanceFilter:
         eu_only: bool = True,
     ):
         """``verticals`` replace the built-in market words, so an operator can
-        narrow the gate (keep "wellness" spas out, say). SUPPLECO's own words for
+        narrow the gate (keep "wellness" spas out, say). The client's own words for
         its buyers are always added: the agent searches for them, and a company
         found by one must not then be rejected for lacking a market signal.
         Each is the whole phrase, so it widens a narrowed list only by the
-        companies SUPPLECO itself named."""
+        companies the client itself named."""
         self.verticals = [
             v.lower().strip()
             for v in dict.fromkeys(
@@ -391,7 +391,7 @@ class RelevanceFilter:
 
         Suppressed when the sentence is a want-ad. "Buscamos un CDMO para
         fabricar nuestros complementos" is a brand asking for exactly what
-        SUPPLECO sells; reading that as a rival throws away the best kind of
+        the client sells; reading that as a rival throws away the best kind of
         lead there is, and logs it as an ordinary competitor rejection so
         nobody looks.
 
@@ -412,7 +412,7 @@ class RelevanceFilter:
         """True if a field matches `pattern` as a CLAIM, not inside a want-ad.
 
         "We are a contract manufacturer" is a claim; "we are looking for a
-        contract manufacturer" is a prospect asking for SUPPLECO. Fields are
+        contract manufacturer" is a prospect asking for the client. Fields are
         checked separately, so a seeking phrase at the end of one cannot reach
         across into the next.
         """
@@ -536,7 +536,7 @@ class RelevanceFilter:
         # contract manufacturer matches every supplement keyword we look for.
         # Without this we email competitors offering to manufacture for them.
         # Every term must be a CLAIM, not part of a want-ad: "Cerchiamo un
-        # contract manufacturer" is a brand asking for exactly what SUPPLECO
+        # contract manufacturer" is a brand asking for exactly what the client
         # sells. Only "cdmo" had this; the other terms binned the best lead
         # there is as a routine competitor rejection.
         #

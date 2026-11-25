@@ -3,6 +3,11 @@
 Vercel's file system is read-only except /tmp, so the demo database is built
 there when a server instance starts. Each instance starts from the same
 invented data; approvals last only as long as that instance runs.
+
+The logins come from the host's environment variables
+OMEGA_DEMO_ADMIN_PASSWORD and OMEGA_DEMO_REVIEWER_PASSWORD. Without both the
+app refuses to start: each serverless instance would otherwise make its own
+random passwords, and nobody could log in.
 """
 
 import os
@@ -25,7 +30,13 @@ work.mkdir(parents=True, exist_ok=True)
 run_demo.DEMO_DB = work / "demo.db"
 run_demo.DEMO_CLIENTS = work / "demo_clients.xlsx"
 
-settings = run_demo.demo_settings()
+admin, reviewer, made = run_demo.demo_passwords()
+if made:
+    raise RuntimeError(
+        "Set OMEGA_DEMO_ADMIN_PASSWORD and OMEGA_DEMO_REVIEWER_PASSWORD "
+        "in the host's environment variables."
+    )
+settings = run_demo.demo_settings((admin, reviewer))
 run_demo.seed(settings)
 
 import main as dashboard

@@ -1,6 +1,6 @@
-"""Pack a stopped install into one encrypted archive for SUPPLECO.
+"""Pack a stopped install into one encrypted archive for the client.
 
-SUPPLECO gets a full copy of the agent: the code, the docs and the manual, and
+the client gets a full copy of the agent: the code, the docs and the manual, and
 its own data - the database (contacts found, their status, opt-outs, bounces,
 blocks, erasure records, sent-email history), the journal, the held opt-outs
 and the client and competitor lists, encrypted as they are. Four things stay
@@ -8,7 +8,7 @@ out (EXCLUDED):
 
   (a) every folder whose name contains "internal", and docs/review: the
       owner's pricing, deal and meeting notes and internal security notes;
-  (b) .env and every variant: the owner's own secrets (SUPPLECO makes its own;
+  (b) .env and every variant: the owner's own secrets (the client makes its own;
       the blank template .env.example goes, and is scanned like the rest);
   (c) .git: its history may hold deleted files;
   (d) working files: logs, caches, virtual environments, old backups and
@@ -35,7 +35,7 @@ Before it encrypts anything it scans every file it packs, and refuses on:
 It prints where, and what kind, never the value.
 
 Usage (from the install folder, with the agent and the dashboard stopped):
-    py -3.11 scripts/make_handover.py <archive file outside the install>
+    py -3.15 scripts/make_handover.py <archive file outside the install>
 
 It asks for a passphrase twice; the passphrase is never stored or printed.
 Beside the archive it writes open_handover.py, the program that opens it on
@@ -326,9 +326,9 @@ def resolve_held_clicks(
 
     A click no recorded link matched is set aside under its token, and a send
     applies it only to the recipient whose token, under the secret of the
-    install that sends, is that token. Under SUPPLECO's new secret none ever is,
+    install that sends, is that token. Under the client's new secret none ever is,
     so the person who said no could be emailed. Held by address, it is applied
-    at SUPPLECO's first start whatever the secret. Returns (resolved, left)."""
+    at the client's first start whatever the secret. Returns (resolved, left)."""
     from modules.optout_spool import spool_optout
     from modules.unsubscribe import UnsubscribeHandler
 
@@ -374,7 +374,7 @@ def _list_names(settings) -> set[str]:
         except Exception as e:  # noqa: BLE001 - any reason is a refusal, in words
             raise HandoverRefused(
                 f"The {label.lower()} ({setting}) cannot be read: {e}. A list "
-                "SUPPLECO cannot read would stop its sending; fix it first."
+                "the client cannot read would stop its sending; fix it first."
             ) from None
         names |= {
             n.strip().lower() for n in listed if len(n.strip()) >= NAME_MIN_LENGTH
@@ -411,16 +411,16 @@ def _readme(day: str, db_rel: str, lists: list[tuple[str, str]]) -> str:
     listed = "\n".join(f"  - `{setting}`: `{rel}`" for setting, rel in lists) or (
         "  - none were set up"
     )
-    return f"""# For SUPPLECO: your copy of the outreach agent
+    return f"""# For the client: your copy of the outreach agent
 
-Made on {day} by the owner, from the agent as it ran for SUPPLECO.
+Made on {day} by the owner, from the agent as it ran for the client.
 
 ## What is inside
 
 - The agent: its program, its settings template (`.env.example`), its tests,
   and its documents (`docs/`). Start with `docs/USER_MANUAL.md` (for the
   people who use it) and `docs/DEPLOY.md` (for IT).
-- SUPPLECO's data, as it was when the agent was stopped:
+- the client's data, as it was when the agent was stopped:
   - the database, `{db_rel}`: the contacts found and their status, every
     opt-out, bounce and block, the records of erasures and data requests,
     and the history of the emails sent;
@@ -429,7 +429,7 @@ Made on {day} by the owner, from the agent as it ran for SUPPLECO.
   - the client and competitor lists, encrypted as they were:
 {listed}
 - Not inside: the owner's own settings file (`.env`), keys and certificates,
-  log files, old backups and the owner's working notes. SUPPLECO makes its own
+  log files, old backups and the owner's working notes. The client makes its own
   `.env`, its own Microsoft certificate and its own backups.
 
 The two keys the data needs, `ERASURE_KEY` and `LISTS_KEY`, were in the
@@ -449,17 +449,17 @@ Follow `docs/DEPLOY.md`, section 1, in this folder, with these changes:
 1. Give this folder the permissions IT gives the install folder (only the
    account that runs the agent, and administrators).
 2. Make the agent's own Python environment and install the packages:
-   `py -3.11 -m venv .venv`, then
+   `py -3.15 -m venv .venv`, then
    `.venv\\Scripts\\python.exe -m pip install -r requirements.txt`.
 3. Make `.env` from `.env.example`. Copy the two lines from
    `.env.handover-keys` into it. **Never change `ERASURE_KEY`**: the
    database recognises the people who were erased or said no only with it.
    Keep a copy of both keys apart from this computer, then delete
    `.env.handover-keys`.
-4. Fill in the rest of `.env` with SUPPLECO's own values (`docs/SETTINGS.md`):
+4. Fill in the rest of `.env` with the client's own values (`docs/SETTINGS.md`):
    a new `DASHBOARD_PASSWORD`, a new `UNSUBSCRIBE_SECRET` (links already sent
    keep working: the database records them), the mailbox and, for
-   Microsoft 365, SUPPLECO's own certificate (`docs/DEPLOY.md`, section 12).
+   Microsoft 365, the client's own certificate (`docs/DEPLOY.md`, section 12).
    If the lists' paths above are not those in `.env`, set them.
 
 ## What to do first
@@ -544,7 +544,7 @@ def make_handover(
     if behind:
         raise HandoverRefused(
             f"The database is behind its journal by {behind} line(s). Run "
-            "`py -3.11 main.py replay-journal` first."
+            "`py -3.15 main.py replay-journal` first."
         )
     names = _list_names(settings)
 
@@ -554,12 +554,12 @@ def make_handover(
     except (RuntimeError, sqlite3.Error, OSError) as e:
         raise HandoverRefused(
             f"The backup of the database failed ({e}). Run "
-            "`py -3.11 main.py doctor`, fix what it shows, then run this again."
+            "`py -3.15 main.py doctor`, fix what it shows, then run this again."
         ) from None
     if journal.pending_rewrites(live):
         raise HandoverRefused(
             "An erasure still has files to finish (doctor shows it). Run "
-            "`py -3.11 main.py backup` once more after closing what holds them."
+            "`py -3.15 main.py backup` once more after closing what holds them."
         )
     journal_file = journal.journal_path(live)
     journal_rel = _rel(journal_file, root).as_posix()
@@ -617,14 +617,14 @@ def make_handover(
     if resolved:
         say(
             f"  {resolved} held click(s) on an unsubscribe link matched a contact: "
-            "packed as that address's held opt-out, applied at SUPPLECO's first start."
+            "packed as that address's held opt-out, applied at the client's first start."
         )
     if unresolved:
         say(
             f"  Note: {unresolved} held click(s) on an unsubscribe link match no "
             "link the database recorded and no address it holds. Each is matched "
             "to its recipient only under this install's UNSUBSCRIBE_SECRET, which "
-            "does not travel: under SUPPLECO's new one it is never applied "
+            "does not travel: under the client's new one it is never applied "
             "(docs/DEPLOY.md section 15)."
         )
     now = journal_file.read_bytes() if journal_file.exists() else None
@@ -672,7 +672,7 @@ def make_handover(
     )
     for group, n in excluded.items():
         say(f"  Left out, {EXCLUDED[group]}: {n} file(s)")
-    say("  Send the archive and open_handover.py to SUPPLECO's IT. Give the passphrase")
+    say("  Send the archive and open_handover.py to the client's IT. Give the passphrase")
     say("  by phone, never in the same email or message as the archive.")
     return counts
 
@@ -691,7 +691,7 @@ def main(argv=None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Pack this stopped install into one encrypted archive for SUPPLECO."
+        description="Pack this stopped install into one encrypted archive for the client."
     )
     parser.add_argument(
         "archive", type=Path, help="The archive to write, outside the install"

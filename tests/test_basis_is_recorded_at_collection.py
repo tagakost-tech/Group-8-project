@@ -93,7 +93,9 @@ def test_every_production_call_names_its_channel():
                 assert any(k.arg == "source_channel" for k in node.keywords), (
                     f"{path.name}:{node.lineno} stores a contact without its channel"
                 )
-    assert sorted(calls) == ["ai_proof.py", "dispatch_pipeline.py", "search.py"]
+    assert sorted(calls) == [
+        "ai_proof.py", "dispatch_pipeline.py", "lead_import.py", "search.py"
+    ]
 
 
 def test_the_manual_channels_are_l15s_list():

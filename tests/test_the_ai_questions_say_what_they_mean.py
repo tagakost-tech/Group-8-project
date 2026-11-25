@@ -344,15 +344,17 @@ def test_the_benchmark_describes_the_question_as_it_is_asked():
 
 
 def test_the_docs_name_the_unrelated_businesses_as_the_question_does():
-    """The docstring and the guide shortened the third NO to "nothing to do
-    with supplements", which would make a health-food or wellness company a
-    NO though the question the model receives keeps it."""
-    whole = "nothing to do with supplements, health foods or wellness products"
-    guide = " ".join((ROOT / "docs" / "AGENT_GUIDE.md").read_text("utf-8").split())
+    """The docstring once shortened a NO reason ("nothing to do with
+    supplements"), which would have made a company the question keeps a NO.
+    Now the docstring points at the profile's own list, and the question the
+    model receives carries every reason on it word for word."""
+    from modules.client_profile import PROFILE
+
+    prompt = " ".join(_relevance_prompt().split())
+    for reason in PROFILE.prompts["relevance_no"]:
+        assert " ".join(reason.split()) in prompt, reason
     docstring = " ".join(AIGenerator.classify_relevance.__doc__.split())
-    assert whole in _relevance_prompt()
-    assert whole in guide
-    assert whole in docstring
+    assert "relevance_no" in docstring and "word for word" in docstring
     assert "nobody sees it again" not in docstring
 
 

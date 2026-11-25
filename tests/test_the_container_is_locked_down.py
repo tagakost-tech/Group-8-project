@@ -116,7 +116,7 @@ def test_the_base_image_names_an_exact_version():
     (base,) = re.findall(
         r"^FROM\s+(\S+)", (ROOT / "Dockerfile").read_text(encoding="utf-8"), re.MULTILINE
     )
-    assert re.fullmatch(r"python:3\.11\.\d+-slim-[a-z]+", base), base
+    assert re.fullmatch(r"python:3\.15\.\d+-slim-[a-z]+", base), base
 
 
 def _requirements():

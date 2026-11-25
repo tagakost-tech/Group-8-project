@@ -106,7 +106,7 @@ PERSONAL_DOMAINS = {
 # mail, carrying the evidential weight of a registered letter. It exists for
 # contracts, disputes, filings and dealings with the public administration.
 # Cold outreach sent there is ineffective and conspicuously wrong to an Italian
-# recipient - and SUPPLECO is itself Italian, so its prospects would read it as a
+# recipient - and the client is itself Italian, so its prospects would read it as a
 # company that does not know the conventions. Italy is also the single largest
 # market in the target list, so these addresses are common on exactly the sites
 # the agent scrapes.
@@ -1111,7 +1111,7 @@ class SearchModule:
                     # is here now is the CONTACT page's own description:
                     # "Hier finden Sie das Impressum". Passed downstream, the
                     # vertical gate reads that as the company's business and
-                    # rejects a real supplement manufacturer for "no SUPPLECO
+                    # rejects a real supplement manufacturer for "no the client
                     # vertical signal" - a transient failure deciding a lead,
                     # with a rejection reason that reads like the filter
                     # working. Better to say nothing than to say the wrong

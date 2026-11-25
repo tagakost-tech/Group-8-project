@@ -2636,7 +2636,7 @@ MUTATIONS: list[Mutation] = [
         ["tests/test_dashboard_accepts_an_accented_password.py"],
         "an accented dashboard password crashes every page instead of locking it",
     ),
-    # ── Client / competitor lists re-read when SUPPLECO edits them.
+    # ── Client / competitor lists re-read when the client edits them.
     Mutation(
         "LST1",
         "lists",
@@ -3576,8 +3576,8 @@ MUTATIONS: list[Mutation] = [
         "XPL7",
         "explainer",
         "main.py",
-        '    _AUTH_EXEMPT_PREFIXES = ("/track/", "/unsubscribe/")',
-        '    _AUTH_EXEMPT_PREFIXES = ("/track/", "/unsubscribe/", "/api/contacts/")',
+        '    _AUTH_EXEMPT_PREFIXES = ("/track/", "/unsubscribe/", "/healthz")',
+        '    _AUTH_EXEMPT_PREFIXES = ("/track/", "/unsubscribe/", "/healthz", "/api/contacts/")',
         ["tests/test_contact_why_endpoint.py"],
         "anyone who can reach the dashboard reads a contact's history without logging in",
     ),
@@ -5347,7 +5347,7 @@ MUTATIONS: list[Mutation] = [
         ["tests/test_a_held_opt_out_spends_no_retry.py"],
         "a retry is spent, and exhausted, while its opt-out waits on disk",
     ),
-    # ── The tests keep off SUPPLECO's real client list: the dashboard the
+    # ── The tests keep off the client's real client list: the dashboard the
     # browser tests serve is built outside settings_factory, and its "Mark as
     # client" writes to whatever list it was given.
     Mutation(
@@ -5357,7 +5357,7 @@ MUTATIONS: list[Mutation] = [
         "        client_list_path=str(_invented_client_list(folder)),\n",
         "",
         ["tests/test_the_tests_never_read_the_real_client_list.py"],
-        "the browser tests' dashboard marks clients in SUPPLECO's real list",
+        "the browser tests' dashboard marks clients in the client's real list",
     ),
     # ── No setting exported in the shell reaches a test. pydantic-settings
     # reads the environment as well as .env, and _env_file=None turns off only
@@ -5826,7 +5826,7 @@ MUTATIONS: list[Mutation] = [
         "a surname alone after a title is greeted as a first name: Hi Weber,",
     ),
     # ── Targeting: who the agent looks for, and who it emails first under the
-    #    warm-up cap. SUPPLECO's buyers are supplement brands, not healthcare.
+    #    warm-up cap. The client's buyers are supplement brands, not healthcare.
     Mutation(
         "HLT50",
         "targeting",
@@ -5986,7 +5986,7 @@ MUTATIONS: list[Mutation] = [
     ),
     # ── The CLI says what the product is (F-46). `python main.py --help`, among
     # the first things IT sees, called it a pharmaceutical agent, against the
-    # "not pharma" positioning SUPPLECO uses with counsel.
+    # "not pharma" positioning the client uses with counsel.
     Mutation(
         "HLT72",
         "f-46",
@@ -6049,8 +6049,8 @@ MUTATIONS: list[Mutation] = [
         "the charts are never drawn, even where Chart.js loads",
         marker="ui",
     ),
-    # ── SUPPLECO's first email, in Italian or English (BILINGUAL, 10 Nov 2026).
-    # Italian customers get SUPPLECO's Italian text and everyone else the English,
+    # ── the client's first email, in Italian or English (BILINGUAL, 10 Nov 2026).
+    # Italian customers get the client's Italian text and everyone else the English,
     # each with the Company Profile attached; follow-ups, footer and notice
     # follow the same language rule.
     Mutation(
@@ -6138,7 +6138,7 @@ MUTATIONS: list[Mutation] = [
         '        if "{{sender_title}}" in template and not title and not dry_run:\n',
         "        if False:\n",
         [BIL_REFUSALS],
-        "a first email goes out as 'I am responsible for  at Suppleco'",
+        "a first email goes out as 'I am responsible for  at the client'",
     ),
     Mutation(
         "HLT109",
@@ -6211,7 +6211,7 @@ MUTATIONS: list[Mutation] = [
         "                language=language,\n",
         '                basis=basis or "legitimate_interest",\n',
         [BIL_FOOTER],
-        "an Italian customer reads SUPPLECO's Italian, then an English notice",
+        "an Italian customer reads the client's Italian, then an English notice",
     ),
     Mutation(
         "HLT117",
@@ -6364,7 +6364,7 @@ MUTATIONS: list[Mutation] = [
         "dietary supplements, medical devices and foods for special medical purposes",
         "dietary supplements, cosmetics, and medical devices",
         [BIL_COMPANY_NAME],
-        "the English follow-up says SUPPLECO makes cosmetics again",
+        "the English follow-up says the client makes cosmetics again",
     ),
     Mutation(
         "HLT134",
@@ -6373,7 +6373,7 @@ MUTATIONS: list[Mutation] = [
         "integratori, dispositivi medici e alimenti a fini medici speciali",
         "integratori, cosmetici e dispositivi medici",
         [BIL_COMPANY_NAME],
-        "the Italian follow-up says SUPPLECO makes cosmetics again",
+        "the Italian follow-up says the client makes cosmetics again",
     ),
     # ── PRIV-01: an erasure token is never erased again. `dsr erase` passed
     # the register's token to gdpr_erase: for someone already erased it
@@ -7646,7 +7646,7 @@ MUTATIONS: list[Mutation] = [
         "                    # Before anything else this iteration: pick up config the\n"
         "                    # operator changed from the dashboard since the last pass.\n"
         "                    self.agent._apply_runtime_overrides()\n"
-        "                    # And the client / competitor spreadsheets SUPPLECO edits by hand.\n"
+        "                    # And the client / competitor spreadsheets the client edits by hand.\n"
         "                    self.agent.refresh_lists_if_changed()",
         "                self.agent._apply_runtime_overrides()\n"
         "                self.agent.refresh_lists_if_changed()\n"
@@ -7980,7 +7980,7 @@ MUTATIONS: list[Mutation] = [
         "                    # Before anything else this iteration: pick up config the\n"
         "                    # operator changed from the dashboard since the last pass.\n"
         "                    self.agent._apply_runtime_overrides()\n"
-        "                    # And the client / competitor spreadsheets SUPPLECO edits by hand.\n"
+        "                    # And the client / competitor spreadsheets the client edits by hand.\n"
         "                    self.agent.refresh_lists_if_changed()\n"
         "                    # And any send a stopped process left 'preparing', before\n"
         "                    # this pass can reach its contact. A dry run settles nothing.\n"
@@ -8000,7 +8000,7 @@ MUTATIONS: list[Mutation] = [
         "                    # Before anything else this iteration: pick up config the\n"
         "                    # operator changed from the dashboard since the last pass.\n"
         "                    self.agent._apply_runtime_overrides()\n"
-        "                    # And the client / competitor spreadsheets SUPPLECO edits by hand.\n"
+        "                    # And the client / competitor spreadsheets the client edits by hand.\n"
         "                    self.agent.refresh_lists_if_changed()\n",
         [
             f"{CUT}::test_one_running_agent_holds_a_send_on_one_pass_and_settles_it_on_a_later_one"
@@ -9838,7 +9838,7 @@ MUTATIONS: list[Mutation] = [
         "        return text if text and text.strip() else None\n",
         "        return text\n",
         ["tests/test_template_edits_reach_the_next_send.py"],
-        "an Italian file caught mid-save replaces SUPPLECO's text",
+        "an Italian file caught mid-save replaces the client's text",
     ),
     Mutation(
         "DSH73",
@@ -10658,9 +10658,9 @@ MUTATIONS: list[Mutation] = [
         "the Search Logs table no longer says when each search was run",
         marker="ui",
     ),
-    # ── SUPPLECO's own words (10 Nov 2026 keyword list): its buyer words are
+    # ── the client's own words (10 Nov 2026 keyword list): its buyer words are
     #    the first searches, its supplier words never are, and every prompt
-    #    and follow-up describes SUPPLECO in the words SUPPLECO chose.
+    #    and follow-up describes the client in the words the client chose.
     Mutation(
         "KWD104",
         "suppleco-words",
@@ -10668,7 +10668,7 @@ MUTATIONS: list[Mutation] = [
         "            if lang is not None:\n",
         "            if False:\n",
         [KWD_SEARCH],
-        "SUPPLECO's phrases get a modifier: 'nutraceutical brand brands Germany'",
+        "the client's phrases get a modifier: 'nutraceutical brand brands Germany'",
     ),
     Mutation(
         "KWD106",
@@ -10677,7 +10677,7 @@ MUTATIONS: list[Mutation] = [
         "        first = [\n            c for c in candidates if c[1] in _PHRASE_LANGUAGE and c[0] not in before\n        ]\n",
         "        first = []\n",
         [KWD_SEARCH],
-        "SUPPLECO's own words lose their place before the categories",
+        "the client's own words lose their place before the categories",
     ),
     Mutation(
         "KWD107",
@@ -10686,7 +10686,7 @@ MUTATIONS: list[Mutation] = [
         "        chosen += self._pick(rest, n - len(chosen))\n",
         "",
         [KWD_SEARCH, "tests/test_query_generator.py"],
-        "once SUPPLECO's words are searched, nothing more is",
+        "once the client's words are searched, nothing more is",
     ),
     Mutation(
         "KWD108",
@@ -10722,7 +10722,7 @@ MUTATIONS: list[Mutation] = [
         "The sender describes itself, in its own words, as: {vp}.",
         "The sender is an Italian contract manufacturer / private-label producer of food supplements and nutraceuticals.",
         [KWD_AI],
-        "the opening-line prompt describes SUPPLECO in our words again",
+        "the opening-line prompt describes the client in our words again",
     ),
     Mutation(
         "KWD124",
@@ -10731,7 +10731,7 @@ MUTATIONS: list[Mutation] = [
         "From: {company_name}, which describes itself, in its own words, as: {vp}.",
         "From: {company_name}, an Italian contract manufacturer / private-label producer of food supplements and nutraceuticals.",
         [KWD_AI],
-        "the body prompt describes SUPPLECO in our words again",
+        "the body prompt describes the client in our words again",
     ),
     Mutation(
         "KWD125",
@@ -10740,7 +10740,7 @@ MUTATIONS: list[Mutation] = [
         "- Then in one line say what {company_name} offers, using only words from its own description above.",
         "- Then in one line say we're a supplement/nutraceutical contract manufacturer and could produce or private-label for them.",
         [KWD_AI],
-        "the body prompt has the model describe SUPPLECO in its own words",
+        "the body prompt has the model describe the client in its own words",
     ),
     Mutation(
         "KWD127",
@@ -10749,7 +10749,7 @@ MUTATIONS: list[Mutation] = [
         "A company sent a cold outreach email offering what it does. It describes itself, in its own words, as: {vp}.",
         "A company sent a cold outreach email offering contract manufacturing of food supplements.",
         [KWD_AI],
-        "the reply-intent prompt describes SUPPLECO in our words again",
+        "the reply-intent prompt describes the client in our words again",
     ),
     Mutation(
         "KWD130",
@@ -10758,7 +10758,7 @@ MUTATIONS: list[Mutation] = [
         "with support from formulation to commercialization",
         "handling R&amp;D, formulation, full-scale production, and regulatory compliance under one roof",
         [KWD_FOLLOW],
-        "the English follow-up 1 describes SUPPLECO in our words again",
+        "the English follow-up 1 describes the client in our words again",
     ),
     Mutation(
         "KWD131",
@@ -10767,7 +10767,7 @@ MUTATIONS: list[Mutation] = [
         "con supporto dalla formulazione alla commercializzazione",
         "occupandoci di R&amp;S, formulazione, produzione su larga scala e conformità normativa sotto un unico tetto",
         [KWD_FOLLOW],
-        "the Italian follow-up 1 describes SUPPLECO in our words again",
+        "the Italian follow-up 1 describes the client in our words again",
     ),
     Mutation(
         "KWD132",
@@ -10776,7 +10776,7 @@ MUTATIONS: list[Mutation] = [
         "could provide support from formulation to commercialization",
         "could support your product development and production",
         [KWD_FOLLOW, BIL_FOOTER],
-        "the English follow-up 2 describes SUPPLECO in our words again",
+        "the English follow-up 2 describes the client in our words again",
     ),
     Mutation(
         "KWD133",
@@ -10785,7 +10785,7 @@ MUTATIONS: list[Mutation] = [
         "potrebbe offrirLe supporto dalla formulazione alla commercializzazione",
         "potrebbe supportare lo sviluppo e la produzione dei Suoi prodotti",
         [KWD_FOLLOW, BIL_FOOTER],
-        "the Italian follow-up 2 describes SUPPLECO in our words again",
+        "the Italian follow-up 2 describes the client in our words again",
     ),
     Mutation(
         "KWD134",
@@ -10794,7 +10794,7 @@ MUTATIONS: list[Mutation] = [
         "a specialized CDMO for food supplements, ",
         "",
         [KWD_FOLLOW],
-        "the English follow-up 1 drops what SUPPLECO says it is",
+        "the English follow-up 1 drops what the client says it is",
     ),
     Mutation(
         "KWD135",
@@ -10803,7 +10803,7 @@ MUTATIONS: list[Mutation] = [
         "CDMO specializzata in integratori alimentari, ",
         "",
         [KWD_FOLLOW],
-        "the Italian follow-up 1 drops what SUPPLECO says it is",
+        "the Italian follow-up 1 drops what the client says it is",
     ),
     Mutation(
         "KWD136",
@@ -10848,7 +10848,7 @@ MUTATIONS: list[Mutation] = [
         "[*(verticals or DEFAULT_VERTICALS), *_BUYER_PHRASES]",
         "[*(verticals or DEFAULT_VERTICALS)]",
         [KWD_TARGET],
-        "with a narrowed RELEVANCE_VERTICALS, SUPPLECO's own buyer words are rejected",
+        "with a narrowed RELEVANCE_VERTICALS, the client's own buyer words are rejected",
     ),
     Mutation(
         "KWD141",
@@ -10875,7 +10875,7 @@ MUTATIONS: list[Mutation] = [
         "avoid_terms=avoid,\n                searched_before=before,\n",
         "avoid_terms=avoid,\n",
         [KWD_SEARCH],
-        "a run judges SUPPLECO's phrases new by the last 500 searches only",
+        "a run judges the client's phrases new by the last 500 searches only",
     ),
     # ── Italian companies get the Italian email (COMPANY-LANGUAGE, 12 Nov 2026).
     # A contact's language is the first email's, else the operator's choice,
@@ -11583,7 +11583,7 @@ MUTATIONS: list[Mutation] = [
         '    if company.endswith(".") and "{company}." in parts["notice"]:\n',
         "    if False:\n",
         ["tests/test_the_footer_names_the_company_with_one_full_stop.py"],
-        "the footer reads 'from Suppleco S.r.l.. We hold' with two full stops",
+        "the footer reads 'from the client S.r.l.. We hold' with two full stops",
     ),
     Mutation(
         "FIN180",
@@ -11692,7 +11692,7 @@ MUTATIONS: list[Mutation] = [
             "tests/test_an_own_ai_server_needs_a_safe_address.py",
             "tests/test_the_ai_stays_on_the_private_network.py",
         ],
-        "an AI server at a public address is accepted, and prompts leave SUPPLECO's network",
+        "an AI server at a public address is accepted, and prompts leave the client's network",
     ),
     Mutation(
         "LLM11",
@@ -13847,7 +13847,7 @@ MUTATIONS: list[Mutation] = [
         "docs/review/**/*[Nn][Oo][Tt][ _-][Ff][Oo][Rr][ _-][Ss][Uu][Pp][Pp][Ll][Ee][Cc][Oo]*/\n",
         "",
         ["tests/test_the_container_is_locked_down.py"],
-        "a review folder marked not for SUPPLECO can be committed",
+        "a review folder marked not for the client can be committed",
     ),
     Mutation(
         "SEC53",
@@ -17018,8 +17018,8 @@ MUTATIONS: list[Mutation] = [
         "SEC370",
         "security-hardening",
         "main.py",
-        '            print("  installed. Install it: py -3.11 -m pip install -r requirements.txt")\n            sys.exit(1)\n',
-        '            print("  installed. Install it: py -3.11 -m pip install -r requirements.txt")\n            dev_server = True\n',
+        '            print("  installed. Install it: py -3.15 -m pip install -r requirements.txt")\n            sys.exit(1)\n',
+        '            print("  installed. Install it: py -3.15 -m pip install -r requirements.txt")\n            dev_server = True\n',
         ["tests/test_the_dashboard_runs_on_waitress.py"],
         "without waitress the dashboard falls back to Flask's development server unnoticed",
     ),
@@ -17236,7 +17236,7 @@ MUTATIONS: list[Mutation] = [
         "security-hardening",
         "docs/DEPLOY.md",
         "   `.venv\\Scripts\\python.exe -m pip install --upgrade -r requirements.txt -r requirements-dev.txt`.\n",
-        "   `py -3.11 -m pip install --upgrade -r requirements.txt -r requirements-dev.txt`.\n",
+        "   `py -3.15 -m pip install --upgrade -r requirements.txt -r requirements-dev.txt`.\n",
         ["tests/test_the_security_check_reports_known_vulnerabilities.py"],
         "the update procedure upgrades the Python the live install shares, in place",
     ),
@@ -17247,7 +17247,7 @@ MUTATIONS: list[Mutation] = [
         '    if any("internal" in p for p in folders):\n        return "internal"\n',
         "",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "a folder marked internal goes to SUPPLECO in the handover archive",
+        "a folder marked internal goes to the client in the handover archive",
     ),
     Mutation(
         "SEC396",
@@ -17256,7 +17256,7 @@ MUTATIONS: list[Mutation] = [
         '    if tuple(p.lower() for p in rel.parts[:2]) == ("docs", "review"):\n        return "review"\n',
         "",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "the owner's pricing and deal notes in docs/review go to SUPPLECO",
+        "the owner's pricing and deal notes in docs/review go to the client",
     ),
     Mutation(
         "SEC397",
@@ -17274,7 +17274,7 @@ MUTATIONS: list[Mutation] = [
         '    if ".git" in [p.lower() for p in rel.parts]:\n        return "git"\n',
         "",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "the git history, which may hold deleted files, goes to SUPPLECO",
+        "the git history, which may hold deleted files, goes to the client",
     ),
     Mutation(
         "SEC399",
@@ -17310,7 +17310,7 @@ MUTATIONS: list[Mutation] = [
         "            if needle in content:\n",
         "            if False:\n",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "a password or key of the install, copied into a doc or the code, goes to SUPPLECO",
+        "a password or key of the install, copied into a doc or the code, goes to the client",
     ),
     Mutation(
         "SEC403",
@@ -17319,7 +17319,7 @@ MUTATIONS: list[Mutation] = [
         "        for pattern, what in checks:\n",
         "        for pattern, what in checks[:0]:\n",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "a private key or an API key written into a doc goes to SUPPLECO unseen",
+        "a private key or an API key written into a doc goes to the client unseen",
     ),
     Mutation(
         "SEC404",
@@ -17436,7 +17436,7 @@ MUTATIONS: list[Mutation] = [
         "        if rel.suffix.lower() in SPREADSHEET_SUFFIXES and not rel.is_relative_to(data):\n",
         "        if False:\n",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "a plain client workbook or the owner's own sheet beside the code goes to SUPPLECO unseen",
+        "a plain client workbook or the owner's own sheet beside the code goes to the client unseen",
     ),
     Mutation(
         "SEC417",
@@ -17472,7 +17472,7 @@ MUTATIONS: list[Mutation] = [
         "        address = owners.get(token)\n",
         "        address = None\n",
         ["tests/test_the_handover_archive_carries_the_data_and_no_secret.py"],
-        "a held click the owner's unsubscribe secret ties to an address is never applied under SUPPLECO's new one, and the person who said no is emailed",
+        "a held click the owner's unsubscribe secret ties to an address is never applied under the client's new one, and the person who said no is emailed",
     ),
     # ── Human review: the agent proposes, a person decides.
     Mutation(

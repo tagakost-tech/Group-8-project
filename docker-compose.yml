@@ -1,7 +1,7 @@
 services:
   outreach:
     build: .
-    image: suppleco-outreach-agent
+    image: omega-outreach-agent
     # This machine only. A public unsubscribe page goes through a tunnel or
     # reverse proxy running on this machine (docs/DEPLOY.md, section 3).
     ports:

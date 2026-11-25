@@ -341,28 +341,28 @@ disabled (§6). Without a good `DASHBOARD_PASSWORD`, `doctor` fails.
 ## 9. Running & operating it
 
 ```powershell
-py -3.11 main.py doctor                 # preflight checks: each [FAIL] blocks live sending
-py -3.11 main.py ai-benchmark           # score the AI model on a fixed exam (DEPLOY.md §11)
-py -3.11 main.py ai-proof               # the whole agent with the AI on invented cases; sends nothing
-py -3.11 main.py dashboard              # the web dashboard; its Start runs the agent
-py -3.11 main.py run                    # one discovery/send pass from the CLI
-py -3.11 main.py run --continuous       # the continuous loop from the CLI
-py -3.11 main.py run --dry-run          # a pass that emails no prospect (see Not yet, below)
-py -3.11 main.py status                 # database counts, and the files in place
-py -3.11 main.py add-query "..."        # queue a search for the next run
-py -3.11 main.py gdpr-export <email>    # write the access answer for an address
-py -3.11 main.py gdpr-erase <email>     # erase an address from the database
-py -3.11 main.py dsr list               # requests: list, show, add, export, close, erase
-py -3.11 main.py suppress-domain list   # company blocks: list, or lift <domain> --reason
-py -3.11 main.py retention              # apply the retention periods now (--dry-run counts)
-py -3.11 main.py company-country        # company countries of stored contacts (--ai, --dry-run)
-py -3.11 main.py backup                 # a checked backup of the database
-py -3.11 main.py replay-journal         # after a restore: re-apply the journal (nothing starts until it has run)
-py -3.11 main.py restore-check          # rehearse a restore on a scratch copy
-py -3.11 main.py restore-drill          # prove a backup restores with nothing lost
-py -3.11 main.py lists check            # the lists: encrypted and readable? (encrypt, decrypt)
-py -3.11 main.py security-check         # known vulnerabilities in the installed packages; installs nothing
-py -3.11 -m pytest                      # the test suite (needs requirements-dev.txt)
+py -3.15 main.py doctor                 # preflight checks: each [FAIL] blocks live sending
+py -3.15 main.py ai-benchmark           # score the AI model on a fixed exam (DEPLOY.md §11)
+py -3.15 main.py ai-proof               # the whole agent with the AI on invented cases; sends nothing
+py -3.15 main.py dashboard              # the web dashboard; its Start runs the agent
+py -3.15 main.py run                    # one discovery/send pass from the CLI
+py -3.15 main.py run --continuous       # the continuous loop from the CLI
+py -3.15 main.py run --dry-run          # a pass that emails no prospect (see Not yet, below)
+py -3.15 main.py status                 # database counts, and the files in place
+py -3.15 main.py add-query "..."        # queue a search for the next run
+py -3.15 main.py gdpr-export <email>    # write the access answer for an address
+py -3.15 main.py gdpr-erase <email>     # erase an address from the database
+py -3.15 main.py dsr list               # requests: list, show, add, export, close, erase
+py -3.15 main.py suppress-domain list   # company blocks: list, or lift <domain> --reason
+py -3.15 main.py retention              # apply the retention periods now (--dry-run counts)
+py -3.15 main.py company-country        # company countries of stored contacts (--ai, --dry-run)
+py -3.15 main.py backup                 # a checked backup of the database
+py -3.15 main.py replay-journal         # after a restore: re-apply the journal (nothing starts until it has run)
+py -3.15 main.py restore-check          # rehearse a restore on a scratch copy
+py -3.15 main.py restore-drill          # prove a backup restores with nothing lost
+py -3.15 main.py lists check            # the lists: encrypted and readable? (encrypt, decrypt)
+py -3.15 main.py security-check         # known vulnerabilities in the installed packages; installs nothing
+py -3.15 -m pytest                      # the test suite (needs requirements-dev.txt)
 ```
 
 `--help` after any command shows its options; `DEPLOY.md` covers installing,
@@ -535,7 +535,7 @@ checks, for the fixes it lists, that each fix's tests fail on the code before
 it, and `scripts/mutation_audit.py` breaks the key guards on purpose and checks
 that a test fails each time; a test that already fails on the unbroken code is
 reported as BASELINE-FAIL, not as a catch. Name what to run: a group, a
-mutation id or a file (`py -3.11 scripts/mutation_audit.py main.py SEC30`;
+mutation id or a file (`py -3.15 scripts/mutation_audit.py main.py SEC30`;
 with no name it runs every mutation, for hours). `--workers 4` runs them in
 four copies of the project side by side, with the same report. A name that
 matches nothing, or an option it does not know, stops the run; `--help`

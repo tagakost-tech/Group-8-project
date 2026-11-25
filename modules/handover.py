@@ -1,8 +1,8 @@
-"""The handover archive: the agent and SUPPLECO's data in one encrypted file.
+"""The handover archive: the agent and the client's data in one encrypted file.
 
 scripts/make_handover.py packs a stopped install into it on the owner's
-computer; `main.py handover-restore <archive>` unpacks it on SUPPLECO's
-(docs/DEPLOY.md, "Handing the agent and its data to SUPPLECO").
+computer; `main.py handover-restore <archive>` unpacks it on the client's
+(docs/DEPLOY.md, "Handing the agent and its data to the client").
 
 The archive is a zip, encrypted whole with AES-256-GCM under a key made from
 a passphrase by scrypt (the `cryptography` package). GCM is authenticated: a
@@ -34,7 +34,7 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-MAGIC = b"SUPPLECO-HANDOVER-1\n"
+MAGIC = b"the client-HANDOVER-1\n"
 SALT_BYTES = 16
 NONCE_BYTES = 12
 # scrypt's cost as a power of two: 2**17 uses 128 MB and about a third of a
@@ -56,7 +56,7 @@ CARRIED_KEYS = ("ERASURE_KEY", "LISTS_KEY")
 FORMAT = 1
 
 KEYS_FILE = ".env.handover-keys"
-README = "README_FOR_SUPPLECO.md"
+README = "README_FOR_the client.md"
 # The agent_state key modules.database records the erasure key's fingerprint
 # under (ERASURE_KEY_FINGERPRINT there).
 FINGERPRINT_STATE = "erasure_key_fingerprint"
@@ -218,7 +218,7 @@ def _what_is_in_the_way(folder: Path) -> str | None:
 
 
 def default_folder(archive: Path) -> Path:
-    name = archive.name.split(".")[0] or "suppleco-agent"
+    name = archive.name.split(".")[0] or "omega-outreach-agent"
     return archive.resolve().parent / name
 
 
@@ -350,7 +350,7 @@ def restore(
     out("  The erasure key in the archive fits the database.")
     out(f"  ERASURE_KEY and LISTS_KEY are in {keys_file}")
     out("  (only this account can read that file; the keys are not shown here).")
-    out("  Next, as README_FOR_SUPPLECO.md in the new folder says:")
+    out("  Next, as README_FOR_the client.md in the new folder says:")
     out("    1. Make the new .env from .env.example and copy the lines from")
     out(f"       {KEYS_FILE} into it.")
     out("    2. Keep a copy of both keys apart from this computer. Never change")
@@ -366,7 +366,7 @@ def restore(
 
 
 def _main(argv=None) -> int:
-    """Run as a file alone: `py -3.11 open_handover.py <archive> [--into F]`."""
+    """Run as a file alone: `py -3.15 open_handover.py <archive> [--into F]`."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Open the owner's handover archive.")

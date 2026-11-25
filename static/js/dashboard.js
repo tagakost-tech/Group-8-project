@@ -122,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (targetId === "tab-review" || targetId === "tab-markets") loadReview();
     if (targetId === "tab-overview") loadResults();
-    if (targetId === "tab-quotes") loadQuotes();
     // A canvas in a hidden tab has no size, so its chart must be re-measured
     // once the tab is shown or the marks land outside the visible area.
     if (targetId === "tab-overview" && window.__resizeOverviewCharts) {
@@ -1898,6 +1897,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ],
           ["SPF", yn(s.spf)],
           ["DMARC", yn(s.dmarc)],
+          ["DKIM", '<span id="dkimMark"><span class="muted">checking…</span></span>'],
           ...(s.dns_note
             ? [["", '<span class="muted">' + escapeHtml(s.dns_note) + "</span>"]]
             : []),
@@ -1993,6 +1993,18 @@ document.addEventListener("DOMContentLoaded", () => {
             )
             .join("") +
           "</table>";
+        // Asked apart, so its lookups never hold up the rest of the panel.
+        fetch("/api/deliverability/dkim")
+          .then((r) => r.json())
+          .then((k) => {
+            const mark = document.getElementById("dkimMark");
+            if (!mark) return;
+            mark.innerHTML =
+              yn(k.dkim) +
+              (k.selector ? ' <span class="muted">(selector ' + escapeHtml(k.selector) + ")</span>" : "") +
+              (k.dkim !== true && k.note ? ' <span class="muted">' + escapeHtml(k.note) + "</span>" : "");
+          })
+          .catch(() => {});
       })
       .catch((e) => {
         el.innerHTML = '<p class="muted">Unavailable</p>';
@@ -3517,7 +3529,6 @@ document.addEventListener("DOMContentLoaded", () => {
     $("rvApprove").hidden = !waiting;
     $("rvReject").hidden = !waiting;
     $("rvReopen").hidden = it.status !== "approved";
-    $("rvQuote").hidden = !(it.stage === "reply" && waiting);
     $("rvMsg").textContent = "";
     $("reviewDetail").classList.toggle("is-readonly", !waiting);
     updateReviewPreview();
@@ -3834,149 +3845,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── How it works ──
   $("openHelp").addEventListener("click", () => $("helpDialog").showModal());
-
-  // ── Quotes: from a drawing to a quote a person approves ──
-  const Q_FIELDS = ["length", "shank_d", "head_d", "head_h", "collar_d", "collar_h", "thread", "thread_len", "material", "tolerance_mm", "annual_volume"];
-  const quote = { drawing: "", forItem: null, timer: null };
-
-  function partFromForm() {
-    const part = {};
-    Q_FIELDS.forEach((k) => (part[k] = $(`q_${k}`).value));
-    return part;
-  }
-  function fillForm(part) {
-    Q_FIELDS.forEach((k) => {
-      const v = part[k];
-      $(`q_${k}`).value = v === 0 || v === "0" ? "" : v ?? "";
-    });
-  }
-  const eur = (x) => (x === null || x === undefined ? "–" : `€${Number(x).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-
-  function showEstimate(est) {
-    const f = est.formability;
-    const word = { formable: "Can be cold-formed", "formable with secondary operations": "Can be cold-formed, with extra operations", "not formable": "Cannot be cold-formed", unknown: "Not enough to judge yet" }[f.verdict] || f.verdict;
-    $("qVerdict").textContent = word;
-    $("qVerdict").className = `q-${f.verdict.replace(/\s+/g, "-")}`;
-    $("qStations").textContent = f.stations ? `${f.stations} forming station(s) from ${f.wire_mm} mm wire, ${est.material}, ${est.mass_g} g a part` : "";
-    const rows = [...f.reasons.map((r) => ["Forming", r]), ...f.secondary.map((r) => ["Also needs", r])];
-    if (est.cost) {
-      const b = est.cost.breakdown;
-      rows.push(["Per 1,000", `material ${eur(b.material)}, forming ${eur(b.forming)}, rolling and sorting ${eur(b["rolling and sorting"])}` + (b["tooling spread over a year"] ? `, tooling ${eur(b["tooling spread over a year"])}` : "") + `, margin ${Math.round(b.margin * 100)}%`]);
-    }
-    $("qReasons").innerHTML = rows.map(([k, v]) => `<tr><th scope="row">${escapeHtml(k)}</th><td>${escapeHtml(v)}</td></tr>`).join("");
-    $("qPrice").textContent = est.cost ? eur(est.cost.per_1000_eur) : "–";
-    $("qTooling").textContent = est.cost ? eur(est.cost.tooling_once_eur) : "–";
-    const k = est.carbon;
-    $("qSaving").textContent = k && k.saving_pct !== null ? `${k.saving_pct}%` : "–";
-    $("qYear").textContent = k && k.per_year_kg_co2_saved ? k.per_year_kg_co2_saved.toLocaleString("en") : "–";
-    $("qCarbon").innerHTML = k
-      ? `<div class="cc-row"><span>Cold-formed</span><span class="cc-bar"><span style="width:${Math.max(3, Math.round((k.formed_g_co2_per_part / k.machined_g_co2_per_part) * 100))}%"></span></span><span>${k.formed_g_co2_per_part} g CO2, ${k.material_used_formed_g} g steel</span></div>` +
-        `<div class="cc-row is-machined"><span>Machined from bar</span><span class="cc-bar"><span style="width:100%"></span></span><span>${k.machined_g_co2_per_part} g CO2, ${k.material_used_machined_g} g steel</span></div>`
-      : "";
-    $("qAssumptions").textContent = est.cost ? `Estimate only: ${est.cost.assumptions}; ${k ? k.assumptions : ""}.` : "";
-    $("qApprove").disabled = !est.cost;
-  }
-
-  function estimateNow() {
-    reviewPost("/api/quotes/estimate", { part: partFromForm() }).then(({ ok, data }) => {
-      if (ok) showEstimate(data.estimate);
-    });
-  }
-  $("quoteForm").addEventListener("input", () => {
-    clearTimeout(quote.timer);
-    quote.timer = setTimeout(estimateNow, 250);
-  });
-
-  function readDrawing(blob, name) {
-    const fd = new FormData();
-    fd.append("drawing", blob, name);
-    $("quoteRead").textContent = "Reading the drawing…";
-    fetch("/api/quotes/read", { method: "POST", body: fd })
-      .then((r) => r.json().then((d) => ({ ok: r.ok, d })))
-      .then(({ ok, d }) => {
-        if (!ok) {
-          $("quoteRead").textContent = d.error || "Could not read it.";
-          return;
-        }
-        quote.drawing = d.drawing_name;
-        fillForm(d.part);
-        $("quoteRead").textContent = `Read from ${d.drawing_name}. Check every size against the drawing.`;
-        $("quoteNotes").innerHTML = (d.part.notes || []).map((n) => `<li>${escapeHtml(n)}</li>`).join("");
-        showEstimate(d.estimate);
-        $("qApproved").hidden = true;
-      });
-  }
-  $("quoteFile").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (file) readDrawing(file, file.name);
-    e.target.value = "";
-  });
-  $("quoteSample").addEventListener("click", (e) => {
-    e.preventDefault();
-    fetch("/api/quotes/sample")
-      .then((r) => r.blob())
-      .then((b) => readDrawing(b, "sample-drawing-stepped-pin.pdf"));
-  });
-
-  $("qApprove").addEventListener("click", () => {
-    reviewPost("/api/quotes", {
-      part: partFromForm(),
-      email: $("q_email").value.trim(),
-      language: $("q_language").value,
-      drawing_name: quote.drawing,
-    }).then(({ ok, data }) => {
-      if (!ok) return showToast(data.error || "Refused.", "error");
-      $("qApproved").hidden = false;
-      $("qText").textContent = data.quote_text;
-      quote.forItem = data.reply_item_id;
-      $("qToAnswer").hidden = !data.reply_item_id;
-      showToast("Quote approved.");
-      loadQuotes();
-    });
-  });
-
-  $("qToAnswer").addEventListener("click", () => {
-    const text = $("qText").textContent;
-    const id = quote.forItem;
-    $("nav-tab-review").click();
-    setTimeout(() => {
-      openReview(id);
-      setTimeout(() => {
-        const t = $("rvText");
-        const parts = t.value.split(/\n\s*\n/);
-        parts.splice(Math.max(1, parts.length - 1), 0, text);
-        t.value = parts.join("\n\n");
-        t.dispatchEvent(new Event("input"));
-        $("rvMsg").textContent = "The quote is in the draft. Read it, then approve the answer.";
-      }, 700);
-    }, 700);
-  });
-
-  function loadQuotes() {
-    fetch("/api/quotes")
-      .then((r) => r.json())
-      .then((rows) => {
-        const tbody = document.querySelector("#quoteTable tbody");
-        tbody.innerHTML = rows.length
-          ? rows
-              .map(
-                (q) =>
-                  `<tr><td>${escapeHtml((q.created_at || "").slice(0, 16))}</td><td>${escapeHtml(q.company || "–")}</td><td>${escapeHtml(q.drawing || "–")}</td><td>${escapeHtml(eur(q.per_1000_eur))}</td><td>${q.saving_pct === null || q.saving_pct === undefined ? "–" : escapeHtml(q.saving_pct + "%")}</td><td>${escapeHtml(q.reviewer || "–")}</td></tr>`
-              )
-              .join("")
-          : '<tr><td colspan="6">No quotes yet.</td></tr>';
-      })
-      .catch(() => {});
-  }
-
-  // A reply in Review leads straight to a quote for that company.
-  $("rvQuote").addEventListener("click", () => {
-    const it = review.current;
-    if (!it) return;
-    $("nav-tab-quotes").click();
-    $("q_email").value = it.email || "";
-    $("q_language").value = (it.language || "en") === "it" ? "it" : "en";
-  });
 
   loadReviewSummary();
 

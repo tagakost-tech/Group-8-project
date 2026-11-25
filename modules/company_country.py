@@ -1,6 +1,6 @@
 """Which country a contact's company is in, from what was collected about it.
 
-SUPPLECO writes to Italian companies in Italian, and an Italian company does
+the client writes to Italian companies in Italian, and an Italian company does
 not always write from a .it address: a .com, or a gmail address, is common.
 So the company's country is read from the company itself, deterministic
 evidence first: the country its own website's domain shows, then what the

@@ -78,7 +78,7 @@ def make_backup(db) -> Path:
     if behind:
         logger.error(
             "Not trimming the journal: the database %s. Run "
-            "`py -3.11 main.py replay-journal`; a later backup trims it.",
+            "`py -3.15 main.py replay-journal`; a later backup trims it.",
             behind,
         )
     elif oldest is not None:

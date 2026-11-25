@@ -56,5 +56,3 @@ openpyxl>=3.1,<4.0
 # modules/search.py falls back to httpx if the wheel is unavailable.
 curl_cffi>=0.7,<1.0
 
-# Writes the carbon passport PDF (modules/carbon_passport.py).
-pymupdf>=1.26,<2.0

@@ -967,15 +967,15 @@ class ImapMonitor:
         )
 
     def _failed_authentication(self, msg) -> str:
-        """Why SUPPLECO's receiving server judged this message forged, or "".
+        """Why the client's receiving server judged this message forged, or "".
 
         Read from the TOP-MOST Authentication-Results header only. The
         receiving server adds its header above everything the message
         arrived with, so the first one is its own; any below it may have
         been written by the sender, who can claim anything there. Matching
         the authserv-id to the mailbox's domain was not chosen: Microsoft
-        365, which SUPPLECO uses, writes no authserv-id at all, so a sender's
-        header naming SUPPLECO's domain lower down would then be the one
+        365, which the client uses, writes no authserv-id at all, so a sender's
+        header naming the client's domain lower down would then be the one
         believed. If the receiving server adds none, the top-most may be the
         sender's; a forger gains nothing by that, since a failing verdict
         only makes the agent do less with the forger's own message, and a
@@ -1037,7 +1037,7 @@ class ImapMonitor:
         with it, for a person to see."""
         details = (
             f"{what} from {entry.get('from') or entry.get('email')} failed "
-            f"SUPPLECO's mail server's sender check ({entry['unauthenticated']}); "
+            f"the client's mail server's sender check ({entry['unauthenticated']}); "
             f"{done}"
         )
         details = details.encode("utf-8", "replace").decode("utf-8")

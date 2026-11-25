@@ -2,7 +2,6 @@
 
 Marked ``ui``; run with ``python -m pytest -m ui``."""
 
-import re
 import socket
 import threading
 
@@ -15,7 +14,7 @@ from conftest import TEST_DASHBOARD_LOGIN
 
 pytestmark = pytest.mark.ui
 
-SCREENS = ["today", "review", "quotes", "carbon", "leads", "markets"]
+SCREENS = ["today", "review", "leads", "markets", "setup"]
 
 
 def _free_port():
@@ -28,12 +27,11 @@ def _free_port():
 
 @pytest.fixture
 def shell(tmp_path):
-    """A dashboard with two emails waiting and one draft passport."""
+    """A dashboard with two emails waiting."""
     from werkzeug.serving import make_server
 
     import main
     from conftest import _browser_dashboard_settings
-    from modules import carbon_passport as cp
     from modules.database import Database
     from modules.review_queue import ReviewQueue
 
@@ -61,22 +59,11 @@ def shell(tmp_path):
                 "<p>Dear buyer,</p><p>We make cold-formed parts.</p><p>Best regards,</p>{{legal_footer}}",
             )
         )
-    lot = cp.add(
-        db,
-        lot_code="L-TEST-1",
-        part_name="Stepped pin",
-        part_mass_g=11.9,
-        steel_route="eaf_scrap",
-        mill_t_co2_per_t=0.62,
-        wire_kg=1250,
-        good_parts=102000,
-        energy_kwh=310,
-    )
     port = _free_port()
     server = make_server("127.0.0.1", port, app)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
-        yield {"url": f"http://127.0.0.1:{port}", "db": db, "items": items, "lot": lot}
+        yield {"url": f"http://127.0.0.1:{port}", "db": db, "items": items}
     finally:
         server.shutdown()
 
@@ -162,69 +149,41 @@ def test_a_rejection_needs_a_reason(page, shell):
     assert _status(shell, shell["items"][1]) == "rejected"
 
 
-def test_the_carbon_paragraph_waits_for_an_approved_passport(page, shell):
+def test_an_outcome_set_in_review_reaches_the_funnel_on_today(page, shell):
     page.keyboard.press("2")
     expect(page.locator("#reviewList [data-id]")).to_have_count(2)
     page.keyboard.press("j")
-    page.click("#rvCarbon")
-    expect(page.locator("#toast")).to_contain_text("No approved passport")
-    shell["db"].conn.execute(
-        "UPDATE carbon_lots SET status = 'approved', reviewer = 'x'"
-    )
-    shell["db"].conn.commit()
-    page.click("#rvCarbon")
-    expect(page.locator("#rvText")).to_have_value(
-        re.compile(r"electric-arc steel.*\n\nBest regards", re.DOTALL)
-    )
-
-
-def test_a_quote_from_the_sample_drawing_shows_what_was_made_before(page):
-    page.keyboard.press("3")
-    page.click("#useSample")
-    expect(page.locator("#estimateCard")).to_contain_text("formable")
-    expect(page.locator("#madeBefore li").first).to_contain_text(
-        "Stepped pin with collar"
-    )
-    page.fill("#qImport", "40")
-    expect(page.locator("#qCbamOut table tr")).to_have_count(4)
-
-
-def test_a_passport_is_approved_before_it_can_be_downloaded(page, shell):
-    page.keyboard.press("4")
-    page.click(f"#lotList [data-lot='{shell['lot']}']")
-    expect(page.locator("#lotDetail .figure")).to_contain_text("8.36")
-    expect(page.locator("#lotDetail a:has-text('Passport PDF')")).not_to_have_attribute(
-        "href", re.compile(".")
-    )
-    page.click("#approveLot")
-    pdf = page.locator("#lotDetail a:has-text('Passport PDF')")
-    expect(pdf).to_have_attribute(
-        "href", f"/api/carbon/lots/{shell['lot']}/passport.pdf"
-    )
+    page.select_option("#reviewDetail select[data-outcome]", "meeting")
+    expect(page.locator("#toast")).to_contain_text("Meeting booked")
+    page.keyboard.press("1")
+    expect(page.locator("#todayFunnel")).to_contain_text("Meeting booked")
+    expect(page.locator("#todayTiles")).to_contain_text("Meetings booked")
     assert (
-        shell["db"].conn.execute("SELECT status FROM carbon_lots").fetchone()[0]
-        == "approved"
+        shell["db"].conn.execute("SELECT stage FROM outcomes").fetchone()[0] == "meeting"
     )
 
 
-def test_the_cbam_view_shows_every_year_and_its_sources(page):
-    page.keyboard.press("4")
-    page.click("#carbonViews [data-view=cbam]")
-    expect(page.locator("#cbamTable tbody tr")).to_have_count(9)
-    expect(page.locator("#cbamVerdict")).to_contain_text("2034")
-    page.fill("#cbamForm [name=mass_g]", "250")
-    page.fill("#cbamForm [name=competitor]", "600")
-    page.fill("#cbamForm [name=omega]", "700")
-    expect(page.locator("#cbamVerdict")).to_contain_text("From 2031")
-    expect(page.locator("#cbamChart svg path.import")).to_be_attached()
+def test_a_csv_is_previewed_before_it_is_imported(page, shell, tmp_path):
+    csv = tmp_path / "fair.csv"
+    csv.write_text("company,email\nLock BV,sales@lock.example\nDup,buyer@doors.example\n")
+    page.keyboard.press("3")
+    page.click("#importLeads")
+    page.set_input_files("#csvFile", str(csv))
+    page.click("#sheetOk")
+    expect(page.locator("#csvPreview")).to_contain_text("1 new company")
+    expect(page.locator("#csvPreview")).to_contain_text("already in the leads")
+    assert shell["db"].get_contact_by_email("sales@lock.example") is None
+    page.click("#sheetOk")
+    expect(page.locator("#sheet")).to_be_hidden()
+    expect(page.locator("#leadTable")).to_contain_text("Lock BV")
 
 
 def test_the_palette_finds_a_screen(page):
     page.keyboard.press("Control+k")
     expect(page.locator("#palette")).to_be_visible()
-    page.keyboard.type("cbam")
+    page.keyboard.type("markets")
     page.keyboard.press("Enter")
-    expect(page.locator("#carbonCbam")).to_be_visible()
+    expect(page.locator("#screen-markets")).to_be_visible()
     expect(page.locator("#palette")).to_be_hidden()
 
 

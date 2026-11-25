@@ -131,8 +131,8 @@ def _is_title(word: str) -> bool:
     return "." in word or word.lower() in _TITLES
 
 
-# SUPPLECO's first email says "I am responsible for <title> at Suppleco"; blank,
-# it would go out as "responsible for  at Suppleco".
+# The client's first email says "I am responsible for <title> at the client"; blank,
+# it would go out as "responsible for  at the client".
 _TITLE_MISSING = (
     "SENDER_TITLE is blank, and the first email says what its sender is "
     "responsible for - set SENDER_TITLE in .env"
@@ -449,7 +449,7 @@ class DispatchPipeline:
         # The list screens again. A reload can empty it again later, and that
         # is a new episode, reported again.
         self.agent._guard_logged.pop("client_list", None)
-        # The same for the competitor list, once one is configured: SUPPLECO was
+        # The same for the competitor list, once one is configured: the client was
         # told a company on it is never emailed, and an unreadable list leaves
         # only the keyword guess to catch a rival. Blank path = screen off.
         rivals = getattr(self.agent, "competitor_register", None)
@@ -506,7 +506,7 @@ class DispatchPipeline:
     def profile_problem(self) -> str | None:
         """Why the Company Profile cannot go with a first email, or None.
 
-        SUPPLECO's first email says "Please find attached our Company Profile",
+        the client's first email says "Please find attached our Company Profile",
         so with ATTACH_PROFILE on the PDF is part of the text. Looked for at
         each first email: a file deleted while the agent runs stops the next
         one, and a file put in place is picked up without a restart.
@@ -1145,7 +1145,7 @@ class DispatchPipeline:
         person's: more than three words, or a whole word such as 'Customer'
         or 'Office' (_NOT_A_PERSON). A title is skipped to reach the first
         name, and one word alone after a title is a surname: 'Herr Weber'.
-        An Italian email opens 'Buongiorno,' with no name, as SUPPLECO's own
+        An Italian email opens 'Buongiorno,' with no name, as the client's own
         first email does: a first name before formal Lei text mixes two
         registers."""
         name = (contact.get("name") or "").strip()
@@ -1212,12 +1212,16 @@ class DispatchPipeline:
         self.agent._stats["ai_body_fallback"] = (
             self.agent._stats.get("ai_body_fallback", 0) + 1
         )
+        # The client's own words for what it does, from its profile: a fixed
+        # sentence here once described the previous client's business to
+        # Omega's buyers.
+        from modules.client_profile import PROFILE
+
+        offer = ", ".join(PROFILE.value_proposition_phrases.get("en", [])[:3])
         default = (
             f"I came across {org} and wanted to reach out. We're "
-            f"{self.agent.settings.company_name}, an Italian contract manufacturer of "
-            f"food supplements and nutraceuticals — we develop and private-label "
-            f"vitamins, probiotics, sports nutrition and more for other brands. "
-            f"If outsourcing production is ever on your radar, would you be open "
+            f"{self.agent.settings.company_name}: {offer}. "
+            f"If parts like these are ever on your list, would you be open "
             f"to a short call?"
         )
         return self.agent._body_to_html(default)
@@ -1227,7 +1231,7 @@ class DispatchPipeline:
     def build_opening_line(self, contact: dict) -> str:
         """Return a personalized opening sentence for the email.
 
-        Uses the AI model on SUPPLECO's own server when AI personalization is enabled and configured;
+        Uses the AI model on the client's own server when AI personalization is enabled and configured;
         otherwise falls back to a safe generic opener referencing the org."""
         org = contact.get("organization") or "your organization"
         default = f"I've been following the work at {org} with interest."
@@ -1423,7 +1427,7 @@ class DispatchPipeline:
         nothing to look. A deleted main template counts as such a file; a
         deleted variant is a retired arm.
 
-        SUPPLECO's Italian first email is refreshed the same way, and is never an
+        the client's Italian first email is refreshed the same way, and is never an
         arm. Deleted, Italian recipients get the English one, whole, as when
         the agent starts without it.
         """
@@ -1708,7 +1712,7 @@ class DispatchPipeline:
         italian = language == "it"
 
         # Select the body template + subject (with optional A/B variant). The
-        # A/B variants are English: an Italian recipient gets SUPPLECO's Italian
+        # A/B variants are English: an Italian recipient gets the client's Italian
         # text, under EMAIL_SUBJECT_IT, or under the English subject logic,
         # variants included, while EMAIL_SUBJECT_IT is blank.
         ab_variant = None
@@ -2214,7 +2218,7 @@ class DispatchPipeline:
         # read the whole string.
         if not is_address(email):
             return False, "Please enter one valid email address."
-        # How the contact reached SUPPLECO decides the basis for emailing them
+        # How the contact reached the client decides the basis for emailing them
         # (decision L1.5). A preview contacts nobody and needs none.
         channel = channel or default_source_channel()
         if not dry_run and channel not in MANUAL_CHANNELS:

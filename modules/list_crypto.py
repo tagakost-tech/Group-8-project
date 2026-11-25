@@ -1,6 +1,6 @@
 """The client and competitor lists, encrypted at rest with LISTS_KEY.
 
-The two lists (CLIENT_LIST_PATH, COMPETITOR_LIST_PATH) name SUPPLECO's
+The two lists (CLIENT_LIST_PATH, COMPETITOR_LIST_PATH) name the client's
 customers and rivals. As plain workbooks, any copy of the folder showed
 them: a backup, a shared zip, a synced folder. With LISTS_KEY set, each list
 is kept only encrypted, read into memory only, and written back encrypted.
@@ -30,17 +30,17 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 # The first bytes of every encrypted list. A workbook starts with "PK".
-MAGIC = b"SUPPLECO-ENCRYPTED-LIST-1\n"
+MAGIC = b"the client-ENCRYPTED-LIST-1\n"
 SUFFIX = ".enc"
 _KEY_LABEL = b"suppleco client and competitor lists at rest v1"
 
-ENCRYPT_HINT = 'py -3.11 main.py lists encrypt "{name}"'
+ENCRYPT_HINT = 'py -3.15 main.py lists encrypt "{name}"'
 
 
 class ListRefused(Exception):
     """A list the agent will not read: the reason is in words, and names no
     key. Never an empty list in its place: an empty client list would let
-    the agent email SUPPLECO's customers."""
+    the agent email the client's customers."""
 
 
 def _fernet(key: str) -> Fernet:

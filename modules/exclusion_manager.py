@@ -118,9 +118,9 @@ class ExclusionManager:
         return self.agent._load_register("client", raw)
 
     def load_competitor_register(self) -> bool:
-        """(Re)load SUPPLECO's named-competitor list from COMPETITOR_LIST_PATH.
+        """(Re)load the client's named-competitor list from COMPETITOR_LIST_PATH.
 
-        Blank path = feature off, so this costs nothing until SUPPLECO supplies
+        Blank path = feature off, so this costs nothing until the client supplies
         the names.
         """
         raw = (self.agent.settings.competitor_list_path or "").strip()
@@ -129,7 +129,7 @@ class ExclusionManager:
         return self.agent._load_register("competitor", raw)
 
     def refresh_lists_if_changed(self) -> None:
-        """Re-read the client or competitor list when SUPPLECO has edited it.
+        """Re-read the client or competitor list when the client has edited it.
 
         Both were read once, at startup, so a company added as a client that
         morning could still be cold-emailed all day by a campaign started
@@ -188,7 +188,7 @@ class ExclusionManager:
 
         Complements the keyword gate in modules/relevance.py, which infers
         rivalry from how a company describes itself. That inference missed
-        "CDMO" - the industry's own term for what SUPPLECO is - until a live
+        "CDMO" - the industry's own term for what the client is - until a live
         discovery run found a company using it, and it can only ever catch
         firms that describe themselves at all.
 

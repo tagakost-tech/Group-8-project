@@ -162,7 +162,7 @@ def own_server_host_problem(
         if kind:
             return (
                 f"must point at this machine or the private network, but its "
-                f"host resolves to {kind}. The AI runs only on SUPPLECO's own "
+                f"host resolves to {kind}. The AI runs only on the client's own "
                 "server: use 127.0.0.1, a 10.x, 172.16-31.x or 192.168.x "
                 "address, ::1, an fc00::/7 address, or a name that resolves "
                 "only to those"
@@ -222,7 +222,7 @@ class Settings(BaseSettings):
     )
 
     # The cloud AI providers' settings. The agent asks only the model on
-    # SUPPLECO's own server, so a .env that still holds one is refused rather
+    # The client's own server, so a .env that still holds one is refused rather
     # than leaving a cloud key on the machine.
     RETIRED_SETTINGS: ClassVar[tuple[str, ...]] = (
         "GEMINI_API_KEY",
@@ -237,7 +237,7 @@ class Settings(BaseSettings):
     smtp_password: str = Field(default="", repr=False)
 
     # -- Microsoft 365 sign-in without a password ---------------------------
-    # The app registered in SUPPLECO's Microsoft Entra, and the PEM file holding
+    # The app registered in the client's Microsoft Entra, and the PEM file holding
     # its certificate and private key (docs/DEPLOY.md, "Connect to Microsoft
     # 365 without a password"). Set, every mailbox on smtp.office365.com
     # signs in with a token (OAuth 2.0, XOAUTH2), and no password may be kept
@@ -316,7 +316,7 @@ class Settings(BaseSettings):
     # Registro Imprese in all correspondence, email included), GDPR Art. 14
     # (controller identity at first contact). Blank means UNKNOWN and is never
     # guessed: doctor fails and live sends are refused until these are set.
-    legal_entity_name: str = ""  # e.g. "SUPPLECO S.r.l."
+    legal_entity_name: str = ""  # e.g. "Omega IFS S.r.l."
     legal_registered_office: str = ""  # sede legale, full postal address
     legal_company_registration: str = ""  # "Reg. Imprese di ... n. ... - P.IVA ..."
     legal_share_capital: str = ""  # Cod. Civ. 2250 c.2 (S.p.A. / S.r.l.)
@@ -406,10 +406,10 @@ class Settings(BaseSettings):
 
     # -- Target Criteria --------------------------------------------------
     # Blank, so a run without --query searches what is queued from the
-    # dashboard, then the queries modules/query_generator.py builds: SUPPLECO's
+    # dashboard, then the queries modules/query_generator.py builds: the client's
     # own words for its buyers first, then the supplement categories. The
     # default searched for pharmaceutical distributors and healthcare
-    # providers, which are not SUPPLECO's buyers.
+    # providers, which are not the client's buyers.
     target_queries: str = ""
 
     # -- Email Filtering --------------------------------------------------
@@ -455,12 +455,12 @@ class Settings(BaseSettings):
     # -- Known competitors: never pitch contract manufacturing to a rival -----
     # COMPETITOR_KEYWORDS in modules/relevance.py guesses from how a company
     # describes itself, and a guess always misses some: it missed "CDMO", the
-    # industry's own term for what SUPPLECO is, until a live discovery run found
+    # industry's own term for what the client is, until a live discovery run found
     # a company using it. A list of NAMES is deterministic, and catches the
     # rival whose website says nothing self-incriminating at all.
     #
     # Same file format and matching as the client list. Blank path = off, so
-    # the feature costs nothing until SUPPLECO supplies the names.
+    # the feature costs nothing until the client supplies the names.
     competitor_filter_enabled: bool = True
     competitor_list_path: str = ""
 
@@ -474,11 +474,11 @@ class Settings(BaseSettings):
     # -- Phase 1: Relevance Filter (target-vertical + European gate) ------
     relevance_filter_enabled: bool = False
     relevance_require_vertical: bool = True
-    # SUPPLECO makes FOOD SUPPLEMENTS / NUTRACEUTICALS (incl. sports nutrition
+    # The client makes FOOD SUPPLEMENTS / NUTRACEUTICALS (incl. sports nutrition
     # and beauty-from-within), not pharma / topical cosmetics / medical devices.
     # Blank, the gate reads the built-in vocabulary in modules/relevance.py
     # (DEFAULT_VERTICALS, in the five languages the agent meets). A list here
-    # replaces it, so the operator can narrow the gate; SUPPLECO's own buyer
+    # replaces it, so the operator can narrow the gate; the client's own buyer
     # phrases are always read. The default used to be an English-only list,
     # which rejected every Italian prospect.
     relevance_verticals: str = ""
@@ -628,7 +628,7 @@ class Settings(BaseSettings):
 
     # LLM provider: "openai_compatible", a server speaking the OpenAI chat
     # interface at LLM_BASE_URL on this machine or the private network, such
-    # as Ollama on SUPPLECO's own server; blank for no AI. There is no other.
+    # as Ollama on the client's own server; blank for no AI. There is no other.
     llm_provider: str = ""
 
     # Read only when LLM_PROVIDER is openai_compatible; blank, they are
@@ -767,7 +767,7 @@ class Settings(BaseSettings):
         if provider not in ("", "openai_compatible"):
             raise ValueError(
                 "LLM_PROVIDER must be openai_compatible, for the AI model on "
-                "SUPPLECO's own server, or blank for no AI. Gemini and Groq "
+                "the client's own server, or blank for no AI. Gemini and Groq "
                 "were removed: no outside AI company may receive data"
             )
         return provider
@@ -803,7 +803,7 @@ class Settings(BaseSettings):
             )
             raise ValueError(
                 f"{', '.join(found)} belongs to a cloud AI provider the agent no "
-                "longer has: it asks only the AI model on SUPPLECO's own server. "
+                "longer has: it asks only the AI model on the client's own server. "
                 f"Delete {lines} from .env, then start again.{exported}"
             )
         return data
@@ -1043,7 +1043,7 @@ class Settings(BaseSettings):
         return [p.strip() for p in self.blocked_email_prefixes.split(",") if p.strip()]
 
     def get_relevance_verticals(self) -> list[str]:
-        """Return SUPPLECO target-vertical keywords as a list."""
+        """Return the client target-vertical keywords as a list."""
         return [v.strip() for v in self.relevance_verticals.split(",") if v.strip()]
 
     def get_abs_db_path(self) -> str:
@@ -1105,7 +1105,7 @@ class Settings(BaseSettings):
         name settings, never their values. None when it is not set up.
 
         With it, no password may be kept for a Microsoft 365 mailbox: a stored
-        password is what lets whoever copies it send mail as SUPPLECO."""
+        password is what lets whoever copies it send mail as the client."""
         from modules import microsoft_signin as ms
 
         if not self.microsoft_signin_on():

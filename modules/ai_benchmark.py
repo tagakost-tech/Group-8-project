@@ -134,7 +134,7 @@ class Mark:
         return f"{'at most' if self.at_most else 'at least'} {self.limit:.0%}"
 
 
-# The proposed pass marks, for SUPPLECO to agree; docs/DEPLOY.md section 11
+# The proposed pass marks, for the client to agree; docs/DEPLOY.md section 11
 # says how to change them. "*" is every question.
 PASS_MARKS = {
     ("relevance", "wrongly_removed"): Mark(
@@ -978,7 +978,7 @@ def report(runs: list, scores: list, cases: dict, repeat: int, own: Path | None)
             "verdict reads the share itself."
         ),
         (
-            "- The pass marks are a proposal for SUPPLECO to agree "
+            "- The pass marks are a proposal for the client to agree "
             "(docs/DEPLOY.md section 11). A result holds for this model with this "
             "reasoning setting and this timeout only: run it again after any change."
         ),

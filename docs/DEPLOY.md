@@ -10,7 +10,7 @@ retention, and the AI model on the company's own server, when one is set
 exits 1 while any `[FAIL]` remains, and live sending is refused until then:
 
 ```powershell
-py -3.11 main.py doctor          # add --smtp to also test a live SMTP login
+py -3.15 main.py doctor          # add --smtp to also test a live SMTP login
 ```
 
 With Microsoft sign-in (section 12), `--smtp` also gets a token from
@@ -20,10 +20,10 @@ Section 10 lists what each check needs, and the steps it cannot see.
 
 ## 1. Run locally (no Docker)
 
-On Windows, with Python 3.11 and its `py` launcher:
+On Windows, with Python 3.15 and its `py` launcher:
 
 ```powershell
-py -3.11 -m pip install -r requirements.txt
+py -3.15 -m pip install -r requirements.txt
 copy .env.example .env           # once, for a new install only
 ```
 
@@ -38,14 +38,14 @@ the Company Profile PDF at `PDF_PATH` is optional, needed only with
 every other setting.
 
 ```powershell
-py -3.11 main.py doctor
-py -3.11 main.py dashboard       # http://127.0.0.1:5000
+py -3.15 main.py doctor
+py -3.15 main.py dashboard       # http://127.0.0.1:5000
 ```
 
 Start the agent from the dashboard **Start** button, or from the CLI:
 
 ```powershell
-py -3.11 main.py run --continuous
+py -3.15 main.py run --continuous
 ```
 
 On Windows the agent does not set file permissions itself: `data\` and
@@ -63,7 +63,7 @@ at the dashboard each morning.
 or stops sending is switched on in the settings but cannot be loaded, so the
 agent does not start and nothing is sent. This means the install is broken,
 for example a package went missing in an update. Install the packages again
-(`py -3.11 -m pip install -r requirements.txt`), check that no file of the
+(`py -3.15 -m pip install -r requirements.txt`), check that no file of the
 agent was deleted, and start again. The dashboard's Start and Send buttons
 show the same message. However the start was tried, the refusal is written
 to the log file and listed under the dashboard's Recent Errors as
@@ -119,8 +119,8 @@ docker compose logs -f
   `data/`, owned by uid 10001 and readable by it only (`chmod 600`); the
   agent refuses it otherwise (section 12).
 - The image is built from an exact Python version
-  (`python:3.11.13-slim-bookworm` in the `Dockerfile`). Move it to a newer
-  3.11 release on purpose, for security fixes, and run the tests after. It
+  (`python:3.15.2-slim-bookworm` in the `Dockerfile`). Move it to a newer
+  3.15 release on purpose, for security fixes, and run the tests after. It
   carries no documentation, tests, scripts, spreadsheets, PDFs or Markdown
   files (`.dockerignore`).
 - The dashboard refuses to start without a `DASHBOARD_PASSWORD` of at least
@@ -281,7 +281,7 @@ as Option A or a named tunnel with your own host name.
 
 ## 4. Deliverability checklist (protect your sender reputation)
 
-- **SPF / DKIM / DMARC** on your sending domain. `py -3.11 main.py doctor`
+- **SPF / DKIM / DMARC** on your sending domain. `py -3.15 main.py doctor`
   reports whether SPF and DMARC records exist for your sender domain; it
   does not check DKIM. It uses the same lookup as the dashboard's
   Deliverability panel, so both give the same verdict. Doctor says "SPF record
@@ -355,7 +355,7 @@ The agent, the dashboard and every command except `doctor` refuse to start
 without the key. Create it once, before the first run:
 
 ```powershell
-py -3.11 -c "import secrets; print(secrets.token_urlsafe(48))"
+py -3.15 -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
 Put the output in `.env` as `ERASURE_KEY=...`. It must be at least 32
@@ -448,11 +448,11 @@ PowerShell, with the project's real folder:
 $project = "C:\path\to\Omega Outreach Agent"
 $py = (Get-Command py).Source
 $options = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-$retention = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py retention" -WorkingDirectory $project
+$retention = New-ScheduledTaskAction -Execute $py -Argument "-3.15 main.py retention" -WorkingDirectory $project
 Register-ScheduledTask -TaskName "Omega outreach retention" -Action $retention -Trigger (New-ScheduledTaskTrigger -Daily -At 02:30) -Settings $options
 ```
 
-- `py -3.11 main.py retention --dry-run` first: it counts what a run would
+- `py -3.15 main.py retention --dry-run` first: it counts what a run would
   erase, mask and delete, and changes nothing.
 - A run records itself as the agent's does (`doctor` shows the last run) and
   writes one `RETENTION_APPLIED` line to the activity log, in counts only.
@@ -471,7 +471,7 @@ and finish on battery.
 **The account.** Registered as above, the task runs under your Windows
 account, and only while you are logged on: no password is stored for it.
 For it to run while nobody is logged on, IT registers it with `-User` and
-`-Password` for an account that has Python 3.11 and the requirements
+`-Password` for an account that has Python 3.15 and the requirements
 installed; a Python installed for one user is not there for the others.
 
 **Check it once by hand** after registering it:
@@ -480,7 +480,7 @@ installed; a Python installed for one user is not there for the others.
 Start-ScheduledTask -TaskName "Omega outreach retention"
 Get-ScheduledTaskInfo -TaskName "Omega outreach retention"
 (Get-ScheduledTask -TaskName "Omega outreach retention").Principal.LogonType
-py -3.11 main.py doctor
+py -3.15 main.py doctor
 ```
 
 `LastTaskResult` 0 means the command succeeded, the logon type says how the
@@ -500,9 +500,9 @@ the same settings as section 8:
 $project = "C:\path\to\Omega Outreach Agent"
 $py = (Get-Command py).Source
 $options = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-$backup = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py backup" -WorkingDirectory $project
+$backup = New-ScheduledTaskAction -Execute $py -Argument "-3.15 main.py backup" -WorkingDirectory $project
 Register-ScheduledTask -TaskName "Omega outreach backup" -Action $backup -Trigger (New-ScheduledTaskTrigger -Daily -At 02:00) -Settings $options
-$check = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py restore-check" -WorkingDirectory $project
+$check = New-ScheduledTaskAction -Execute $py -Argument "-3.15 main.py restore-check" -WorkingDirectory $project
 Register-ScheduledTask -TaskName "Omega outreach restore check" -Action $check -Trigger (New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Sunday -At 03:00) -Settings $options
 ```
 
@@ -693,7 +693,7 @@ Schedule it every 13 weeks (about every three months), on a Sunday after the
 backup:
 
 ```powershell
-$drill = New-ScheduledTaskAction -Execute $py -Argument "-3.11 main.py restore-drill" -WorkingDirectory $project
+$drill = New-ScheduledTaskAction -Execute $py -Argument "-3.15 main.py restore-drill" -WorkingDirectory $project
 $quarterly = New-ScheduledTaskTrigger -Weekly -WeeksInterval 13 -DaysOfWeek Sunday -At 04:00
 Register-ScheduledTask -TaskName "Omega outreach restore drill" -Action $drill -Trigger $quarterly -Settings $options
 ```
@@ -739,10 +739,10 @@ Work through this before the first live email. `doctor` shows most of it: a
 | Retention schedule | WARN, "Retention run", until a run in the last two days | IT | The scheduled task of section 8. |
 | Backups | WARN, "Backup", until a backup in the last two days | IT | The scheduled tasks of section 9. |
 | Journal copy | not seen | IT | A second copy of `data\journal.jsonl` on another disk or a share (section 9). |
-| Restore drill | not seen | IT | `py -3.11 main.py restore-drill` once by hand, ending in `Restore drill PASSED`, and the scheduled task every three months (section 9). |
+| Restore drill | not seen | IT | `py -3.15 main.py restore-drill` once by hand, ending in `Restore drill PASSED`, and the scheduled task every three months (section 9). |
 | Incident plan | not seen | Omega, with IT | Read `docs/INCIDENT_PLAYBOOK.md`, fill in who is the operator and the privacy contact, and print it. |
 | Always-on host | not seen | IT | A machine that stays on, and someone who starts the agent again after a reboot (F-39). |
-| Dry run | not seen | Developer, with Omega sales | `py -3.11 main.py run --dry-run`, only once L1.1 is signed and L1.13 answered, as the counsel sheet proposes (L1.9). It emails no prospect, but it searches and stores contacts and, with `IMAP_ENABLED=true`, acts on the inbox and sends lead alerts. |
+| Dry run | not seen | Developer, with Omega sales | `py -3.15 main.py run --dry-run`, only once L1.1 is signed and L1.13 answered, as the counsel sheet proposes (L1.9). It emails no prospect, but it searches and stores contacts and, with `IMAP_ENABLED=true`, acts on the inbox and sends lead alerts. |
 | Inbox placement test | not seen | Developer, with IT | The dashboard's Spam / inbox test card is disabled until counsel's country table. |
 
 `doctor`'s other lines each name what is missing or what to do: a missing
@@ -837,7 +837,7 @@ seconds there (one took 4.2 s in all, of which the server spent 1.9 s;
 doctor's question took 2.5 s against 0.5 s).
 
 The address stops at the API's root: an address ending in `/chat/completions`
-stops start-up. `py -3.11 main.py doctor` then shows a line "AI server" with
+stops start-up. `py -3.15 main.py doctor` then shows a line "AI server" with
 the whole address and the model (as `[SKIP]`, since it only repeats the
 settings; the line "AI generator (optional)" likewise says the server was not
 contacted there), a warning there when the address's path does
@@ -971,7 +971,7 @@ agent's work; the benchmark below is what judges one.
 On a fresh server, in this order; each command below refuses to start
 until the steps before it are done:
 
-1. `py -3.11 -m pip install -r requirements.txt` (section 1).
+1. `py -3.15 -m pip install -r requirements.txt` (section 1).
 2. A `.env` with `ERASURE_KEY` and `UNSUBSCRIBE_SECRET` filled in (section 1
    and section 6): `ai-benchmark` and `ai-proof` both stop with an
    `[ERROR]` line without them, even `ai-benchmark --check`.
@@ -979,10 +979,10 @@ until the steps before it are done:
    (`ollama pull qwen3.5:0.8b`, or the model to be judged).
 4. `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL` and `LLM_MODEL` in
    `.env`, as above.
-5. `py -3.11 main.py doctor`: the lines "AI server reachable" and "AI server
+5. `py -3.15 main.py doctor`: the lines "AI server reachable" and "AI server
    answers" should not warn.
-6. `py -3.11 main.py ai-benchmark --check`, then `--quick`, then the full
-   exam; and `py -3.11 main.py ai-proof` to see the whole agent use the
+6. `py -3.15 main.py ai-benchmark --check`, then `--quick`, then the full
+   exam; and `py -3.15 main.py ai-proof` to see the whole agent use the
    model.
 
 How long the full exam takes is the cases times the askings times the
@@ -997,7 +997,7 @@ long again, and a larger or slower model takes longer in proportion.
 
 ### Choosing a model: the benchmark
 
-`py -3.11 main.py ai-benchmark` says whether the configured model answers the
+`py -3.15 main.py ai-benchmark` says whether the configured model answers the
 agent's three classifier questions (relevance, company country, reply
 interest) well enough on the shipped cases; a pass is needed before a
 switch is turned on, but it is not enough by itself (see "A worked
@@ -1020,13 +1020,13 @@ takes its first cases of each kind from the shipped cases and from the
 company's own alike.
 
 ```powershell
-py -3.11 main.py ai-benchmark --check            # validate the case files; asks no AI
-py -3.11 main.py ai-benchmark --quick            # a fixed small subset, as a first look
-py -3.11 main.py ai-benchmark                    # the full exam, each case asked 3 times
-py -3.11 main.py ai-benchmark --out bench-qwen   # also writes report.md and results.json
-py -3.11 main.py ai-benchmark --models qwen2.5:14b,llama3.1:8b   # own server: compare models
-py -3.11 main.py ai-benchmark --blind reply      # the cases without their answers, to check labels
-py -3.11 main.py ai-benchmark --blind reply --out labels   # the same in a file, and its key apart
+py -3.15 main.py ai-benchmark --check            # validate the case files; asks no AI
+py -3.15 main.py ai-benchmark --quick            # a fixed small subset, as a first look
+py -3.15 main.py ai-benchmark                    # the full exam, each case asked 3 times
+py -3.15 main.py ai-benchmark --out bench-qwen   # also writes report.md and results.json
+py -3.15 main.py ai-benchmark --models qwen2.5:14b,llama3.1:8b   # own server: compare models
+py -3.15 main.py ai-benchmark --blind reply      # the cases without their answers, to check labels
+py -3.15 main.py ai-benchmark --blind reply --out labels   # the same in a file, and its key apart
 ```
 
 `--blind` shows each case as a neutral number (`reply-017`), its language and
@@ -1225,10 +1225,10 @@ question alone), and the relevance rows below are from that run.
 ```powershell
 $env:LLM_PROVIDER="openai_compatible"; $env:LLM_BASE_URL="http://127.0.0.1:11434/v1"
 $env:LLM_MODEL="qwen3.5:4b-q4_K_M"; $env:LLM_TIMEOUT_SECONDS="60"
-py -3.11 main.py ai-benchmark --questions relevance,country,reply --repeat 2 --out bench-qwen-4b
-py -3.11 main.py ai-benchmark --questions relevance --repeat 2 --out bench-qwen-4b-relevance
+py -3.15 main.py ai-benchmark --questions relevance,country,reply --repeat 2 --out bench-qwen-4b
+py -3.15 main.py ai-benchmark --questions relevance --repeat 2 --out bench-qwen-4b-relevance
 $env:LLM_TIMEOUT_SECONDS="180"
-py -3.11 main.py ai-benchmark --questions queries --repeat 2 --out bench-qwen-4b-queries
+py -3.15 main.py ai-benchmark --questions queries --repeat 2 --out bench-qwen-4b-queries
 ```
 
 `qwen3.5:4b-q4_K_M`, 2 hours 14 minutes for the three classifier questions,
@@ -1274,14 +1274,14 @@ as the outside check showed.
 
 ### Seeing the whole agent use the model
 
-The benchmark asks the AI's questions one at a time. `py -3.11 main.py
+The benchmark asks the AI's questions one at a time. `py -3.15 main.py
 ai-proof` shows the agent itself working with the configured model, end to
 end, and sends nothing:
 
 ```powershell
-py -3.11 main.py ai-proof                                 # 12 companies, 8 replies
-py -3.11 main.py ai-proof --companies 4 --replies 2       # a smaller batch
-py -3.11 main.py ai-proof --out proof-qwen                # also writes proof.txt and agent.log
+py -3.15 main.py ai-proof                                 # 12 companies, 8 replies
+py -3.15 main.py ai-proof --companies 4 --replies 2       # a smaller batch
+py -3.15 main.py ai-proof --out proof-qwen                # also writes proof.txt and agent.log
 ```
 
 It builds the agent as `main.py run` does, from `.env`, and takes a few of
@@ -1551,7 +1551,7 @@ agent, change it in Microsoft 365, since copies of `.env` may exist.
 ### Step 9. Check it
 
 ```powershell
-py -3.11 main.py doctor --smtp
+py -3.15 main.py doctor --smtp
 ```
 
 - **Microsoft sign-in**: the settings are usable, and the certificate's end
@@ -1577,7 +1577,7 @@ Put a reminder in IT's calendar for 30 days before the end date `doctor`
 shows. Then: make a new certificate (step 1, to a new file), upload its
 `agent-cert.pem` next to the old one (step 3), replace
 `data\microsoft-signin.pem` with the new file, and run
-`py -3.11 main.py doctor --smtp`. The agent reads the file each time it asks
+`py -3.15 main.py doctor --smtp`. The agent reads the file each time it asks
 for a token, so it uses the new one within the hour; restart it to be sure.
 When `doctor` passes, delete the old certificate in Entra.
 
@@ -1652,7 +1652,7 @@ by the folder's permissions and by disk encryption, as before).
 1. Make the key and put it in `.env`:
 
    ```powershell
-   py -3.11 -c "import secrets; print(secrets.token_urlsafe(48))"
+   py -3.15 -c "import secrets; print(secrets.token_urlsafe(48))"
    ```
 
    `LISTS_KEY=...`, at least 32 characters, or every command refuses to
@@ -1664,7 +1664,7 @@ by the folder's permissions and by disk encryption, as before).
 3. Encrypt each list:
 
    ```powershell
-   py -3.11 main.py lists encrypt "data\clients.xlsx"
+   py -3.15 main.py lists encrypt "data\clients.xlsx"
    ```
 
    It writes `data\clients.xlsx.enc`, checks that it decrypts
@@ -1678,10 +1678,10 @@ by the folder's permissions and by disk encryption, as before).
    also names any dated backups of the plain workbook beside it
    (`<name>.backup-<date>.xlsx`): delete them too. Copies elsewhere (e-mail
    attachments, Downloads, a cloud folder) are not seen; delete them by hand.
-5. Run `py -3.11 main.py lists check`. It shows each list as encrypted, with
+5. Run `py -3.15 main.py lists check`. It shows each list as encrypted, with
    the number of companies it screens, and names any plain copy still beside
    it. It exits 1 while the agent would refuse a list. Then run
-   `py -3.11 main.py doctor`: "Client list file", "Competitor list file" and
+   `py -3.15 main.py doctor`: "Client list file", "Competitor list file" and
    "Lists encrypted" must be `[OK]`.
 
 ### Changing a list by hand
@@ -1690,10 +1690,10 @@ The agent never writes a plain copy, but a person editing the list needs
 one, briefly:
 
 ```powershell
-py -3.11 main.py lists decrypt "data\clients.xlsx.enc" --out "data\clients.xlsx"
+py -3.15 main.py lists decrypt "data\clients.xlsx.enc" --out "data\clients.xlsx"
 # edit it in Excel, save, close Excel
 move "data\clients.xlsx.enc" "data\clients.xlsx.enc.old"
-py -3.11 main.py lists encrypt "data\clients.xlsx" --delete-plain
+py -3.15 main.py lists encrypt "data\clients.xlsx" --delete-plain
 del "data\clients.xlsx.enc.old"
 ```
 
@@ -1730,12 +1730,12 @@ but not one that is already running.
 ### The weekly check (`main.py security-check`)
 
 ```powershell
-py -3.11 main.py security-check
+py -3.15 main.py security-check
 ```
 
 It asks pip-audit which packages installed for the Python that runs it have
 a known vulnerability. Run it with the Python that runs the agent: `py
--3.11` on an install set up as in section 1, and
+-3.15` on an install set up as in section 1, and
 `.venv\Scripts\python.exe` once an update below has given the install its
 own virtual environment. It needs pip-audit installed for that Python
 (`requirements-dev.txt`, which an update below installs) and access to
@@ -1761,7 +1761,7 @@ It exits 1 on an error, so a scheduled task shows that it failed.
    logged on or not".
 2. *Triggers*: weekly, for example Monday 07:00.
 3. *Actions*: Start a program. Program: `py`. Arguments:
-   `-3.11 main.py security-check`. Start in: the install folder. With the
+   `-3.15 main.py security-check`. Start in: the install folder. With the
    install's own virtual environment, Program is
    `C:\Omega\agent\.venv\Scripts\python.exe` (the install folder's) and
    Arguments `main.py security-check`.
@@ -1770,10 +1770,10 @@ It exits 1 on an error, so a scheduled task shows that it failed.
 Or from an administrator command prompt, with the install folder in place
 of `C:\Omega\agent` and the agent's account in place of `<account>`
 (schtasks asks for its password; with the install's own virtual
-environment, put `.venv\Scripts\python.exe` in place of `py -3.11`):
+environment, put `.venv\Scripts\python.exe` in place of `py -3.15`):
 
 ```powershell
-schtasks /Create /TN "Omega security check" /SC WEEKLY /D MON /ST 07:00 /TR "cmd /c cd /d C:\Omega\agent && py -3.11 main.py security-check" /RU <account>
+schtasks /Create /TN "Omega security check" /SC WEEKLY /D MON /ST 07:00 /TR "cmd /c cd /d C:\Omega\agent && py -3.15 main.py security-check" /RU <account>
 ```
 
 Look at the dashboard's Recent Errors on Monday, as for any other error.
@@ -1785,13 +1785,13 @@ breaks would stop the agent reading opt-outs and bounces until someone
 notices. Update a copy, test it, then swap:
 
 1. Stop the agent and the dashboard. Take a backup
-   (`py -3.11 main.py backup`).
+   (`py -3.15 main.py backup`).
 2. Copy the whole install folder, for example `C:\Omega\agent` to
    `C:\Omega\agent-new`, with `.env` and `data\`, but without `.venv` if
    there is one. In the copy, make a new virtual environment:
-   `py -3.11 -m venv .venv`. The copy must have its own packages: an
-   install set up as in section 1 has its packages in the one Python 3.11
-   of this computer, so installing with `py -3.11` "in the copy" would
+   `py -3.15 -m venv .venv`. The copy must have its own packages: an
+   install set up as in section 1 has its packages in the one Python 3.15
+   of this computer, so installing with `py -3.15` "in the copy" would
    upgrade the live install in place.
 3. In the copy, install and update with the copy's own Python:
    `.venv\Scripts\python.exe -m pip install --upgrade pip setuptools`, then
@@ -1809,7 +1809,7 @@ notices. Update a copy, test it, then swap:
 5. Swap: rename the live folder (for example to `agent-old`) and the copy
    to the live name. From now on start everything with the install's own
    Python, `C:\Omega\agent\.venv\Scripts\python.exe main.py ...`, in place
-   of `py -3.11 main.py ...`: the dashboard, the agent and every scheduled
+   of `py -3.15 main.py ...`: the dashboard, the agent and every scheduled
    task, this check included. (It still works after the rename; only
    `.venv\Scripts\activate` and `pip.exe` remember the old folder name, so
    always use `python.exe -m pip`.) Start the dashboard and the agent. Keep
@@ -1864,13 +1864,13 @@ ever printed or written to a log.
 1. Stop the agent and the dashboard, and switch off the scheduled tasks
    (backup, retention, security check) until the archive is made. All of
    them write to the database.
-2. Run `py -3.11 main.py doctor`. "Journal replayed" and "Erasures
+2. Run `py -3.15 main.py doctor`. "Journal replayed" and "Erasures
    finished" must pass, and "Held opt-outs" should read "none".
 3. Run, from the install folder, with the archive's name outside the
    install folder:
 
    ```powershell
-   py -3.11 scripts/make_handover.py D:\handover\omega-agent.handover
+   py -3.15 scripts/make_handover.py D:\handover\omega-agent.handover
    ```
 
    It asks for a passphrase twice: at least 16 characters, for example five
@@ -1916,15 +1916,15 @@ is unknown to yours.
 
 ### Omega IFS's IT: opening the archive
 
-1. On the agent's computer, with Python 3.11, install the one package the
-   opener needs: `py -3.11 -m pip install "cryptography>=50.0,<51.0"`.
+1. On the agent's computer, with Python 3.15, install the one package the
+   opener needs: `py -3.15 -m pip install "cryptography>=50.0,<51.0"`.
 2. Open the archive into a new folder:
 
    ```powershell
-   py -3.11 open_handover.py omega-agent.handover --into C:\Omega\agent
+   py -3.15 open_handover.py omega-agent.handover --into C:\Omega\agent
    ```
 
-   With a copy of the agent already installed, `py -3.11 main.py
+   With a copy of the agent already installed, `py -3.15 main.py
    handover-restore omega-agent.handover --into C:\Omega\agent` does the
    same.
 3. It refuses a folder that already holds a `.env` or a database, or

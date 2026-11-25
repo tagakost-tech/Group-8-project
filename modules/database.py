@@ -843,15 +843,16 @@ class Database:
 
     def _init_db(self):
         """Create all tables on first run, and apply schema migrations for V2."""
-        from modules.carbon_passport import SCHEMA_SQL as LOTS_SCHEMA_SQL
-        from modules.quoting import SCHEMA_SQL as QUOTES_SCHEMA_SQL
+        from modules.outcomes import SCHEMA_SQL as OUTCOMES_SCHEMA_SQL
         from modules.review_queue import SCHEMA_SQL as REVIEW_SCHEMA_SQL
 
         with self._transaction() as conn:
             conn.executescript(SCHEMA_SQL)
             conn.executescript(REVIEW_SCHEMA_SQL)
-            conn.executescript(QUOTES_SCHEMA_SQL)
-            conn.executescript(LOTS_SCHEMA_SQL)
+            conn.executescript(OUTCOMES_SCHEMA_SQL)
+            # Quotes and carbon passports were removed in Nov 2026: drop their
+            # tables so no personal data is left where erasure no longer looks.
+            conn.executescript("DROP TABLE IF EXISTS quotes; DROP TABLE IF EXISTS carbon_lots;")
 
             # V2 Schema Migrations - add columns if they don't exist
             # Wrap each in a try/except because ALTER TABLE ADD COLUMN
@@ -3496,7 +3497,7 @@ class Database:
 
         The free generator's exclusion list is only the last 500 searches, so
         it cannot tell a query searched long ago from one never searched. The
-        query generator puts SUPPLECO's own phrases first only while they are
+        query generator puts the client's own phrases first only while they are
         new; judged by the 500-row window, every phrase came back to the front
         of the queue as soon as it left it, ahead of categories never searched.
         """

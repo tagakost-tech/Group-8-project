@@ -39,6 +39,38 @@ TEST_DASHBOARD_LOGIN = {
     "username": TEST_DASHBOARD_USERNAME,
     "password": TEST_DASHBOARD_PASSWORD,
 }
+
+
+def _send_basic_auth_up_front():
+    """A browser without a session gets the sign-in page, not a Basic
+    challenge, and Chromium sends http_credentials only after a challenge.
+    So a browser test's credentials also go as an Authorization header on
+    every request, as a script's would."""
+    try:
+        from playwright.sync_api._generated import Browser
+    except ImportError:
+        return
+    import base64
+
+    def wrap(original):
+        def opened(self, *args, **kwargs):
+            login = kwargs.get("http_credentials")
+            if login:
+                token = base64.b64encode(
+                    f"{login['username']}:{login['password']}".encode()
+                ).decode()
+                headers = dict(kwargs.get("extra_http_headers") or {})
+                headers.setdefault("Authorization", f"Basic {token}")
+                kwargs["extra_http_headers"] = headers
+            return original(self, *args, **kwargs)
+
+        return opened
+
+    for name in ("new_context", "new_page"):
+        setattr(Browser, name, wrap(getattr(Browser, name)))
+
+
+_send_basic_auth_up_front()
 # The origin Flask's test client requests as (http://localhost/).
 TEST_DASHBOARD_ORIGIN = "http://localhost"
 

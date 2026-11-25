@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # `if not text`, so anything non-empty became the email. A refusal - "I can't
 # help generate unsolicited outreach content" - is non-empty, contains no
 # greeting or sign-off, and so passed the cleanup untouched and was sent to a
-# real prospect over SUPPLECO's name.
+# real prospect over the client's name.
 #
 # Every rejection here falls back to the hand-written template, which is
 # always a safe answer. That asymmetry is deliberate: losing personalisation
@@ -336,7 +336,7 @@ def server_reason(error: httpx.HTTPStatusError) -> str:
 
 
 class AIGenerator:
-    """Asks the AI model on SUPPLECO's own server: an OpenAI-compatible server
+    """Asks the AI model on the client's own server: an OpenAI-compatible server
     (such as Ollama) at an address on this machine or the private network.
     No outside AI company is ever asked."""
 
@@ -819,13 +819,13 @@ Rules:
 
     def classify_relevance(self, contact: dict):
         """
-        Judge whether a contact's company is a plausible SUPPLECO client. The
-        model answers NO only when the page clearly shows a company based
-        outside Europe, a contract manufacturer that makes products for other
-        brands, or a business with nothing to do with supplements, health
-        foods or wellness products; anything else, a small brand making its
-        own products or a page that does not say where the company is, gets
-        YES. It leans to YES because a NO keeps the company out of all
+        Judge whether a contact's company is a plausible client of the
+        business in the client profile. The model answers NO only when the
+        page clearly shows one of the profile's own `relevance_no` reasons,
+        given to it word for word (for Omega IFS: a company outside Europe, a
+        maker or distributor of fasteners, or a business that buys none);
+        anything else, a page that does not say where the company is
+        included, gets YES. It leans to YES because a NO keeps the company out of all
         outreach unless the operator re-queues it by hand, while a YES only
         leaves it where it would be without the AI.
 
@@ -933,7 +933,7 @@ Answer with exactly one word: YES or NO."""
     ) -> list[str]:
         """
         Strategist role: propose the next batch of European discovery queries
-        for SUPPLECO, optionally informed by what has performed well so far.
+        for the client, optionally informed by what has performed well so far.
 
         Returns a list of web-search query strings, or [] when disabled /
         unconfigured / on failure (caller falls back to the free generator).
@@ -962,7 +962,7 @@ Rules:
             for ln in text.split("\n")
             if ln.strip()
         ]
-        # The model is shown SUPPLECO's value proposition, which is made of
+        # The model is shown the client's value proposition, which is made of
         # supplier words; a query that echoes one finds competitors.
         dropped = [ln for ln in lines if ln and names_a_supplier(ln)]
         if dropped:

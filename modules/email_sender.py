@@ -178,6 +178,15 @@ class EmailSender:
         Raises ValueError for a header that holds a line break, raw or once
         its encoded words are decoded.
         """
+        # No address holds an encoded word or a control character. Whether
+        # the library decodes one inside an address it calls invalid, and so
+        # writes a line break, has changed between Python versions; refusing
+        # it here keeps the answer the same on every one.
+        if _NOT_FOR_A_HEADER.search(to_email or ""):
+            raise ValueError(
+                "The To address holds an encoded word or a control character, "
+                "which can become a line break"
+            )
         msg = EmailMessage()
         msg["Subject"] = subject
         msg["To"] = to_email
@@ -270,9 +279,17 @@ class EmailSender:
         ]
         for name, value in msg.items():
             text = str(value)
+            try:
+                folds = [policy.fold(name, value) for policy in written]
+            except MessageError:
+                # Newer Pythons refuse to fold such a header themselves
+                # (HeaderWriteError): the same verdict, reached first.
+                raise ValueError(
+                    f"The {name} header holds a line break the library will not write"
+                ) from None
             if "".join(text.splitlines()) != text or not all(
                 fold.endswith("\r\n") and not _STRAY_LINE_BREAK.search(fold[:-2])
-                for fold in (policy.fold(name, value) for policy in written)
+                for fold in folds
             ):
                 raise ValueError(f"The {name} header holds a line break once parsed")
 

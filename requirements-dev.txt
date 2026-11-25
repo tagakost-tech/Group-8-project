@@ -12,3 +12,6 @@ pyyaml>=6.0,<7.0
 # Checks the installed packages for known vulnerabilities
 # (main.py security-check). Never installs or upgrades anything.
 pip-audit>=2.7,<3.0
+
+# Runs the tests in parallel: python -m pytest -n auto
+pytest-xdist>=3.8,<4.0

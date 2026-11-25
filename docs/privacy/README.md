@@ -30,5 +30,5 @@ Step G18 (built, commit 0bae38f) added a registry in `modules/compliance.py`, `P
 In the owner's copy, run the privacy scan, which fails on email addresses, secrets and client names (`docs/review` is not part of the copy handed to Omega IFS):
 
 ```bash
-py -3.11 docs/review/tools/scan_private.py "<client list.xlsx>" docs/privacy
+py -3.15 docs/review/tools/scan_private.py "<client list.xlsx>" docs/privacy
 ```

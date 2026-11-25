@@ -144,7 +144,7 @@ SOURCE_CHANNELS = {
     "inbound_request": ("an inbound request from the company", "consent"),
     # A business card alone is not consent (L1.5).
     "trade_fair": ("a trade-fair contact", "legitimate_interest"),
-    # Art. 130(4): SUPPLECO's own similar products only, with the right to
+    # Art. 130(4): the client's own similar products only, with the right to
     # object offered at collection and in every email.
     "existing_customer": ("an existing customer", "existing_customer"),
     "referral": ("a referral", "legitimate_interest"),
@@ -262,7 +262,8 @@ def italian_countries(settings) -> set[str]:
 
 # Where a contact's company country came from: its website's domain, the
 # page it was collected from, or the AI's reading of its company.
-COUNTRY_SOURCES = ("website", "page", "ai")
+# "list": a column of a list a person imported (modules/lead_import.py).
+COUNTRY_SOURCES = ("website", "page", "ai", "list")
 LANGUAGE_CHOICES = ("it", "en")
 # Why a contact gets its language: the first email it was sent, the
 # operator's choice, its address, its company's country (named by where that
@@ -394,7 +395,7 @@ def _source_label(contact: dict, language: str = "en") -> str:
 
     The host only: the full URL of a contact page is noise in a footer, and
     the host is what lets the recipient recognise their own website. An
-    address an operator entered says how it reached SUPPLECO instead.
+    address an operator entered says how it reached the client instead.
     """
     host = (
         (urlparse(contact.get("source_url") or "").hostname or "")
@@ -470,7 +471,7 @@ _NOTICE_TEXT = (
     "authority - in Italy, the Garante. Privacy contact: {contact}. Full "
     "notice: {privacy}."
 )
-# The AI is a model on SUPPLECO's own server (version 2): version 1 said "an
+# The AI is a model on the client's own server (version 2): version 1 said "an
 # AI service", which reads as an outside company receiving the data.
 _AI_TEXT = (
     ", and an AI model running on our own server helps us write our emails "
@@ -642,7 +643,7 @@ def render_legal_footer(
         else ""
     )
     # The notice ends its first sentence after the name; a name with a full
-    # stop of its own ("Suppleco S.r.l.") lends it to the sentence, so the
+    # stop of its own ("the client S.r.l.") lends it to the sentence, so the
     # footer reads "S.r.l." and not "S.r.l..". The notice words stay as
     # versioned.
     company = field("legal_entity_name")
@@ -739,38 +740,13 @@ PERSONAL_COLUMNS = {
     },
     # A proposal's text names the person; the decision about it is the
     # record of human oversight, so the row stays, attached to the token.
-    # A quote is about a part, not a person; the company it went to is
+    # Where a conversation ended up, set by a person: about the company,
     # reached only through contact_id, which erasure leaves as a token.
-    # A lot's carbon passport: parts, steel and energy, about no person.
-    "carbon_lots": {
-        "id": _NONE,
-        "lot_code": _NONE,
-        "created_at": _NONE,
-        "part_name": _NONE,
-        "customer": _NONE,
-        "part_mass_g": _NONE,
-        "steel_mill": _NONE,
-        "steel_route": _NONE,
-        "mill_t_co2_per_t": _NONE,
-        "wire_kg": _NONE,
-        "good_parts": _NONE,
-        "energy_kwh": _NONE,
-        "status": _NONE,
-        "reviewer": _NONE,
-        "decided_at": _NONE,
-    },
-    "quotes": {
-        "id": _NONE,
-        "created_at": _NONE,
+    "outcomes": {
         "contact_id": _PSEUDO,
-        "drawing_name": "cleared",
-        "part": _NONE,
-        "estimate": _NONE,
-        "language": _NONE,
-        "status": _NONE,
-        "quote_text": "cleared",
-        "reviewer": _NONE,
-        "decided_at": _NONE,
+        "stage": _NONE,
+        "updated_at": _NONE,
+        "updated_by": _NONE,
     },
     "review_queue": {
         "id": _NONE,

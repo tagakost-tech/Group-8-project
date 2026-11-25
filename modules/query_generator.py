@@ -5,15 +5,15 @@ Autonomous discovery previously depended on an AI model to invent company
 names, and when the model was off or not answering the continuous loop found
 nothing new to do.
 
-This generator produces SUPPLECO-relevant discovery queries deterministically by
+This generator produces the client-relevant discovery queries deterministically by
 combining target-vertical seeds x role modifiers x European countries. The
 existing (free) DuckDuckGo search then turns those queries into real leads. No
 external API, no cost.
 
-The first seeds are SUPPLECO's own words for its buyers, from the keyword list it
-sent on 10 November 2026. The other half of that list describes what SUPPLECO
+The first seeds are the client's own words for its buyers, from the keyword list it
+sent on 10 November 2026. The other half of that list describes what the client
 itself is (contract manufacturing, CDMO, conto terzi...), and a search for those
-words finds SUPPLECO's competitors, so it is never searched.
+words finds the client's competitors, so it is never searched.
 """
 
 import random
@@ -79,7 +79,7 @@ EUROPEAN_COUNTRIES = [
 
 
 class QueryGenerator:
-    """Builds European, SUPPLECO-vertical search queries without any API."""
+    """Builds European, the client-vertical search queries without any API."""
 
     def __init__(self, seeds=None, modifiers=None, countries=None):
         self.seeds = [s for s in (seeds or VERTICAL_SEEDS) if s]
@@ -89,14 +89,14 @@ class QueryGenerator:
     def _queries(self):
         """Every (query, seed, country) this generator can search.
 
-        One of SUPPLECO's own phrases is searched as written plus a country,
+        One of the client's own phrases is searched as written plus a country,
         because it already says what kind of company it is: a modifier would
         make "nutraceutical brand brands Germany". Every other seed is a
         category, which the modifier turns into a kind of company.
 
-        A query is listed once. "nutraceutical" + "company" spells SUPPLECO's
+        A query is listed once. "nutraceutical" + "company" spells the client's
         own "nutraceutical company", and a query listed twice could be picked
-        twice for one batch, once as SUPPLECO's word and once as a category.
+        twice for one batch, once as the client's word and once as a category.
         """
         seen = set()
         for seed in self.seeds:
@@ -116,11 +116,11 @@ class QueryGenerator:
                     yield q, seed, country
 
     def all_variations(self) -> list:
-        """Every query: SUPPLECO's phrases x country, categories x modifier x country."""
+        """Every query: the client's phrases x country, categories x modifier x country."""
         return [q for q, _seed, _country in self._queries()]
 
     def phrase_queries(self) -> list:
-        """The queries built from SUPPLECO's own phrases, which go first while
+        """The queries built from the client's own phrases, which go first while
         they have never been searched."""
         return [q for q, seed, _country in self._queries() if seed in _PHRASE_LANGUAGE]
 
@@ -145,7 +145,7 @@ class QueryGenerator:
         at the minimum weight is still sampled regularly, and the dashboard was
         already telling the operator those terms had been dropped.
 
-        SUPPLECO's own words for its buyers are searched before the categories.
+        the client's own words for its buyers are searched before the categories.
         Putting them first in the seed list would not do it: the sample is
         weighted, and they make up about 8% of the queries, so about 8% of
         searches would have used them.

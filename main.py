@@ -548,7 +548,7 @@ def cmd_handover_restore(args):
     """Unpack the owner's handover archive into a new folder: the agent, its
     database and journal, the lists, and ERASURE_KEY and LISTS_KEY in a file
     only this account can read (modules/handover.py; docs/DEPLOY.md, "Handing
-    the agent and its data to SUPPLECO"). Prints no key and logs nothing."""
+    the agent and its data to the client"). Prints no key and logs nothing."""
     import getpass
 
     from modules.handover import HandoverRefused, restore
@@ -1333,7 +1333,7 @@ def run_doctor_checks(
                     "a Microsoft 365 mailbox signs in with a password. Microsoft "
                     "already refuses passwords for IMAP and turns password SMTP "
                     "off by default at the end of December 2026, and a stored "
-                    "password lets whoever copies it send mail as SUPPLECO. Set "
+                    "password lets whoever copies it send mail as the client. Set "
                     'up Microsoft sign-in (docs/DEPLOY.md, "Connect to '
                     'Microsoft 365 without a password")'
                 )
@@ -1491,6 +1491,12 @@ def run_doctor_checks(
         elif _smtp_credentials()[0]:
             check(f"SPF record ({sender_domain})", _spf)
             check(f"DMARC record ({sender_domain})", _dmarc)
+
+            def _dkim():
+                found, selector = _lookup_dkim(sender_domain)
+                return found, dkim_words(found, selector)
+
+            check(f"DKIM key ({sender_domain})", _dkim)
         else:
             skip(
                 "SPF / DMARC",
@@ -2520,6 +2526,70 @@ def _lookup_auth_records(domain: str) -> tuple:
     return found.get("spf"), found.get("dmarc")
 
 
+# DKIM keys live under a selector the mail provider chooses, and DNS cannot
+# list them, so the usual ones are tried: Microsoft 365, Google Workspace and
+# the common defaults of hosting panels and sending services.
+DKIM_SELECTORS = (
+    "selector1", "selector2", "google", "default", "dkim", "mail", "k1", "s1", "s2",
+)
+
+
+def _lookup_dkim(domain: str) -> tuple:
+    """(found, selector) for the domain's DKIM key: found True with the first
+    selector that answers, False when none of DKIM_SELECTORS has a key, None
+    when the lookups could not be made. Same deadline as SPF and DMARC."""
+    try:
+        import dns.exception
+        import dns.resolver
+    except ImportError:
+        return None, None
+    try:
+        res = dns.resolver.Resolver()
+    except (dns.exception.DNSException, OSError):
+        return None, None
+    res.lifetime = res.timeout = AUTH_RECORDS_DEADLINE_SECONDS
+    answers: dict = {}
+
+    def _try(selector):
+        try:
+            for rr in res.resolve(f"{selector}._domainkey.{domain}", "TXT"):
+                text = b"".join(rr.strings).decode("utf-8", "ignore")
+                if "p=" in text and ("v=DKIM1" in text or "k=rsa" in text or "k=ed25519" in text):
+                    answers[selector] = True
+                    return
+            answers[selector] = False
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+            answers[selector] = False
+        except (dns.exception.DNSException, OSError):
+            pass
+
+    lookups = [
+        threading.Thread(target=_try, args=(sel,), daemon=True) for sel in DKIM_SELECTORS
+    ]
+    deadline = time.monotonic() + AUTH_RECORDS_DEADLINE_SECONDS
+    for t in lookups:
+        t.start()
+    for t in lookups:
+        t.join(max(0.0, deadline - time.monotonic()))
+    for sel in DKIM_SELECTORS:
+        if answers.get(sel):
+            return True, sel
+    if len(answers) == len(DKIM_SELECTORS):
+        return False, None
+    return None, None
+
+
+def dkim_words(found: bool | None, selector: str | None) -> str:
+    if found is None:
+        return "DKIM could not be checked just now"
+    if found:
+        return f"DKIM key found (selector {selector})"
+    return (
+        "no DKIM key found under the usual selectors - ask the mail provider "
+        "which selector it signs with"
+    )
+
+
 def auth_record_words(name: str, found: bool | None) -> str:
     """One record's verdict from _lookup_auth_records, in the words doctor and
     the dashboard both use."""
@@ -2546,7 +2616,15 @@ def create_dashboard_app(settings: Settings):
     app.test_client() without starting a live server."""
     from urllib.parse import urlsplit
 
-    from flask import Flask, Response, jsonify, render_template, request
+    from flask import (
+        Flask,
+        Response,
+        jsonify,
+        redirect,
+        render_template,
+        request,
+        session,
+    )
 
     from modules.rate_limit import RequestLimiter
 
@@ -2590,15 +2668,84 @@ def create_dashboard_app(settings: Settings):
     # Always enforced: the app is not built without a password (above).
     # Recipient-facing endpoints stay public so tracking pixels and unsubscribe
     # links keep working from external inboxes.
-    _AUTH_EXEMPT_PREFIXES = ("/track/", "/unsubscribe/")
+    _AUTH_EXEMPT_PREFIXES = ("/track/", "/unsubscribe/", "/healthz")
     login_failures = RequestLimiter(
         LOGIN_FAILURES_ALLOWED, window=LOGIN_FAILURE_WINDOW_SECONDS
     )
+
+    # ── Sign-in page and sessions ──
+    # People sign in on a page and get a session cookie that lasts a working
+    # day; scripts and the tests may still send HTTP Basic credentials. The
+    # signing key is derived from the passwords themselves, so changing any
+    # password signs everyone out.
+    import hashlib
+    from datetime import timedelta as _session_span
+
+    from flask.sessions import SecureCookieSessionInterface
+
+    class _SessionCookies(SecureCookieSessionInterface):
+        def get_cookie_secure(self, app):
+            # Secure over HTTPS, directly or behind the host's TLS proxy; a
+            # plain-HTTP run on this machine still keeps its session.
+            return request.is_secure or request.headers.get("X-Forwarded-Proto") == "https"
+
+    app.session_interface = _SessionCookies()
+    app.secret_key = hashlib.sha256(
+        "\0".join(
+            (
+                "omega-session",
+                settings.dashboard_password or "",
+                settings.dashboard_reviewers or "",
+                settings.erasure_key or "",
+            )
+        ).encode("utf-8")
+    ).digest()
+    app.config.update(
+        SESSION_COOKIE_NAME="omega_session",
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        PERMANENT_SESSION_LIFETIME=_session_span(hours=8),
+    )
+
+    def _accounts() -> list:
+        return [
+            (settings.dashboard_username, settings.dashboard_password),
+            *settings.reviewer_accounts().items(),
+        ]
+
+    def _fingerprint(name: str, password: str) -> str:
+        return hmac.new(
+            app.secret_key, f"{name}\0{password}".encode(), hashlib.sha256
+        ).hexdigest()
+
+    def _session_user() -> str | None:
+        """The signed-in person, while their session and password still hold."""
+        name, mark = session.get("user"), session.get("fp")
+        if not name or not mark:
+            return None
+        for account, password in _accounts():
+            if account == name and hmac.compare_digest(mark, _fingerprint(account, password)):
+                return account
+        return None
+
+    def _wants_the_page() -> bool:
+        """A person's browser opening a page, as opposed to a script or a
+        fetch: they get the sign-in page instead of the browser's own box."""
+        return (
+            request.method == "GET"
+            and "text/html" in (request.headers.get("Accept") or "")
+            and not request.path.startswith(("/api/", "/static/"))
+        )
+
+    def _safe_next(target: str | None) -> str:
+        return target if target in ("/", "/classic") else "/"
 
     @app.before_request
     def _require_dashboard_auth():
         if any(request.path.startswith(p) for p in _AUTH_EXEMPT_PREFIXES):
             return None  # public endpoints
+        if request.path in ("/login", "/static/app/app.css") or _session_user():
+            return None
         # The connection's own address: no trusted-proxy setting exists, so a
         # header the caller writes, such as X-Forwarded-For, is never read.
         client = request.remote_addr or ""
@@ -2648,6 +2795,11 @@ def create_dashboard_app(settings: Settings):
                         client,
                         LOGIN_FAILURE_WINDOW_SECONDS // 60,
                     )
+            if _wants_the_page():
+                return Response(
+                    render_template("login.html", next=request.path, error=None),
+                    401,
+                )
             return Response(
                 "Authentication required.",
                 401,
@@ -2707,8 +2859,90 @@ def create_dashboard_app(settings: Settings):
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Content-Security-Policy", DASHBOARD_CSP)
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
-        resp.headers.setdefault("Referrer-Policy", "no-referrer")
+        # Nothing to other sites. Within the dashboard the browser keeps the
+        # real Origin on a form post (sign-in, sign-out); under no-referrer it
+        # sends "null", which the cross-origin check refuses.
+        resp.headers.setdefault("Referrer-Policy", "same-origin")
+        # Over HTTPS (directly or behind the host's TLS proxy), browsers are
+        # told to never fall back to plain HTTP, where a password could be read.
+        if request.is_secure or request.headers.get("X-Forwarded-Proto") == "https":
+            resp.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
         return resp
+
+    # Writes that send email, start or stop the agent, or change what it does
+    # and to whom: the administrator's. A reviewer decides on proposals.
+    _ADMIN_ONLY_WRITES = (
+        "/api/config",
+        "/api/template",
+        "/api/agent/start",
+        "/api/agent/stop",
+        "/api/send-manual",
+        "/api/queries/add",
+        "/api/strategy/queue",
+        "/api/autonomy",
+        "/api/leads/import",
+    )
+
+    @app.before_request
+    def _require_admin_for_control():
+        if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+            return None
+        if request.path not in _ADMIN_ONLY_WRITES:
+            return None
+        if hmac.compare_digest(
+            _reviewer().encode("utf-8"), settings.dashboard_username.encode("utf-8")
+        ):
+            return None
+        return jsonify({"error": "Only the administrator can do that."}), 403
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if request.method == "GET":
+            if _session_user():
+                return redirect(_safe_next(request.args.get("next")))
+            return render_template("login.html", next=_safe_next(request.args.get("next")), error=None)
+        client = request.remote_addr or ""
+        target = _safe_next(request.form.get("next"))
+        locked = login_failures.retry_after(client)
+        if locked is not None:
+            return render_template(
+                "login.html", next=target, error="Too many wrong passwords. Try again later."
+            ), 429
+        name = (request.form.get("username") or "").strip()
+        given = (request.form.get("password") or "").encode("utf-8")
+        found = None
+        # Every account is compared, so the time taken does not say which exists.
+        for account, password in _accounts():
+            same = hmac.compare_digest(name.encode("utf-8"), account.encode("utf-8"))
+            same &= hmac.compare_digest(given, password.encode("utf-8"))
+            if same:
+                found = (account, password)
+        if found is None:
+            login_failures.hit(client)
+            return render_template(
+                "login.html", next=target, error="That name and password do not match."
+            ), 401
+        session.clear()
+        session.permanent = True
+        session["user"], session["fp"] = found[0], _fingerprint(*found)
+        logger.info("Dashboard sign-in: %s", found[0])
+        return redirect(target)
+
+    @app.route("/logout", methods=["POST"])
+    def logout():
+        session.clear()
+        return redirect("/login")
+
+    @app.route("/healthz")
+    def healthz():
+        """For the host's health check: no login, no personal data."""
+        try:
+            db.conn.execute("SELECT 1").fetchone()
+        except sqlite3.Error:
+            return jsonify({"status": "error", "database": "unreachable"}), 503
+        return jsonify({"status": "ok"})
 
     def _json_body():
         """Return the parsed JSON body, or None if the request isn't JSON.
@@ -2872,16 +3106,19 @@ def create_dashboard_app(settings: Settings):
         sent = db.first_sent_languages([c["id"] for c in contacts])
         first_missing = italian_first_email_missing(FileHandler())
         followups_missing = italian_followups_missing(FileHandler())
+        from modules.outcomes import stages_by_contact
+
+        outcome_of = stages_by_contact(db)
         # Marked here, from the one definition, so the page needs no copy of
         # the closed statuses, or of the language rule, to drift.
         for contact in contacts:
             contact["closed"] = contact.get("status") in CLOSED_CONTACT_STATUSES
+            contact["outcome"] = outcome_of.get(contact["id"])
             if contact.get("status") != "erased":
                 fit = assess_fit(contact)
                 contact["fit_score"] = fit["total"]
                 contact["sector"] = fit["sector"]
                 contact["company_type"] = fit["company_type"]
-                contact["carbon_pressure"] = fit["carbon_pressure"]
             contact["language_locked"] = contact["id"] in sent
             # An erased contact's address is a token, which would read "en".
             if contact.get("status") == "erased":
@@ -3015,6 +3252,48 @@ def create_dashboard_app(settings: Settings):
                     auth_memory.pop(next(iter(auth_memory)))
                 auth_memory[domain] = (now, spf, dmarc)
         return spf, dmarc, _auth_records_note(spf, dmarc)
+
+    dkim_memory: dict = {}
+
+    def _dkim_record(domain: str, recheck: bool = False) -> tuple:
+        """(found, selector) for the sending domain, remembered like SPF/DMARC."""
+        from modules import clock
+
+        if not domain:
+            return None, None
+        now = clock.now()
+        with auth_memory_lock:
+            held = dkim_memory.get(domain)
+        fresh = held is not None and (
+            (now - held[0]).total_seconds() < AUTH_RECORDS_TTL_SECONDS
+        )
+        if fresh and not recheck:
+            return held[1], held[2]
+        found, selector = _lookup_dkim(domain)
+        with auth_memory_lock:
+            if len(dkim_memory) >= AUTH_RECORDS_MAX_DOMAINS:
+                dkim_memory.pop(next(iter(dkim_memory)))
+            dkim_memory[domain] = (now, found, selector)
+        return found, selector
+
+    @app.route("/api/deliverability/dkim")
+    def api_deliverability_dkim():
+        """The sending domain's DKIM key: asked apart from the panel, so its
+        lookups never hold the SPF and DMARC answer up."""
+        domain = (
+            settings.smtp_username.split("@")[-1]
+            if "@" in settings.smtp_username
+            else ""
+        )
+        found, selector = _dkim_record(domain, recheck=bool(request.args.get("recheck")))
+        return jsonify(
+            {
+                "domain": domain,
+                "dkim": found,
+                "selector": selector,
+                "note": dkim_words(found, selector) if domain else None,
+            }
+        )
 
     @app.route("/api/deliverability")
     def api_deliverability():
@@ -3932,6 +4211,9 @@ def create_dashboard_app(settings: Settings):
     )
 
     def _reviewer() -> str:
+        signed_in = _session_user()
+        if signed_in:
+            return signed_in
         auth = request.authorization
         return (auth.username or "").strip() if auth else ""
 
@@ -3966,6 +4248,10 @@ def create_dashboard_app(settings: Settings):
             for key in ("email", "organization", "lead_score", "lead_tier", "company_country"):
                 shown.setdefault(key, contact.get(key))
         shown["flags"] = _review_flags(item)
+        if item.get("contact_id"):
+            from modules.outcomes import stage_of
+
+            shown["outcome"] = stage_of(db, item["contact_id"])
         ev = item.get("evidence") or {}
         if "lookalike" not in shown:
             from modules.lookalike import Lookalike
@@ -4255,337 +4541,61 @@ def create_dashboard_app(settings: Settings):
         }.get(reply_intent.classify(subject, body), "unclear")
         return jsonify({"label": label, "applied": "An answer waits in Review."})
 
-    # ── API: Quotes - from a drawing to a quote a person approves ──
-    def _part_from(data: dict):
-        from modules.quoting import Part
-
-        fields = Part.__dataclass_fields__
-        values = {}
-        for name, f in fields.items():
-            if name == "notes" or name not in data:
-                continue
-            raw = data[name]
-            try:
-                if f.type in ("float", float):
-                    values[name] = max(0.0, float(raw or 0))
-                elif f.type in ("int", int):
-                    values[name] = max(0, int(float(raw or 0)))
-                else:
-                    values[name] = str(raw or "")[:40]
-            except (TypeError, ValueError):
-                raise ValueError(f"{name} must be a number") from None
-        return Part(**values)
-
-    @app.route("/api/quotes/sample")
-    def api_quote_sample():
-        """The invented demo drawing (scripts/make_sample_drawing.py)."""
-        from flask import send_file
-
-        path = PROJECT_ROOT / "assets" / "sample-drawing-stepped-pin.pdf"
-        if not path.is_file():
-            return jsonify({"error": "No sample drawing: run scripts/make_sample_drawing.py"}), 404
-        return send_file(path, mimetype="application/pdf", download_name="sample-drawing.pdf")
-
-    @app.route("/api/quotes/read", methods=["POST"])
-    def api_quote_read():
-        """Read a drawing (a CAD PDF) into a part the estimator checks."""
-        from modules.quoting import asdict, estimate, read_drawing_pdf
-
-        upload = request.files.get("drawing")
-        if upload is None or not upload.filename:
-            return jsonify({"error": "Choose a drawing (PDF) first."}), 400
-        data = upload.read()
-        if not data.startswith(b"%PDF"):
-            return jsonify({"error": "That file is not a PDF drawing."}), 400
-        try:
-            part = read_drawing_pdf(data)
-        except Exception:
-            logger.exception("Could not read the drawing")
-            return jsonify({"error": "The drawing could not be read; enter the sizes by hand."}), 400
-        return jsonify({"part": asdict(part), "estimate": estimate(part), "drawing_name": upload.filename[:120]})
-
-    @app.route("/api/quotes/estimate", methods=["POST"])
-    def api_quote_estimate():
-        from modules.quoting import estimate
+    # ── API: outcomes - where each conversation ended up ──
+    @app.route("/api/contacts/<int:contact_id>/outcome", methods=["POST"])
+    def api_contact_outcome(contact_id):
+        from modules import outcomes
 
         data = _json_body()
         if data is None:
             return jsonify({"error": "Content-Type: application/json required"}), 415
+        stage = data.get("stage") or None
         try:
-            part = _part_from(data.get("part") or {})
+            outcomes.set_stage(db, contact_id, stage, _reviewer())
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
-        return jsonify({"estimate": estimate(part)})
+        except LookupError as e:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"contact_id": contact_id, "stage": stage})
 
-    @app.route("/api/quotes", methods=["GET", "POST"])
-    def api_quotes():
-        """GET lists recent quotes; POST approves one: a named person, the
-        exact text that will go, and the figures it rests on, stored."""
-        import json as _json
+    @app.route("/api/funnel")
+    def api_funnel():
+        from modules import outcomes
 
-        from modules import clock
-        from modules.quoting import asdict, estimate, quote_text
+        try:
+            return jsonify(outcomes.funnel(db))
+        except sqlite3.Error:
+            logger.exception("Could not count the funnel")
+            return jsonify({"error": "Could not count the funnel."}), 500
 
-        if request.method == "GET":
-            rows = db.conn.execute(
-                """SELECT q.id, q.created_at, q.status, q.reviewer, q.drawing_name,
-                          q.estimate, c.organization, c.email
-                   FROM quotes q LEFT JOIN contacts c ON c.id = q.contact_id
-                   ORDER BY q.id DESC LIMIT 30"""
-            ).fetchall()
-            out = []
-            for r in rows:
-                est = _json.loads(r["estimate"])
-                out.append(
-                    {
-                        "id": r["id"], "created_at": r["created_at"], "status": r["status"],
-                        "reviewer": r["reviewer"], "drawing": r["drawing_name"],
-                        "company": r["organization"], "email": r["email"],
-                        "per_1000_eur": (est.get("cost") or {}).get("per_1000_eur"),
-                        "saving_pct": (est.get("carbon") or {}).get("saving_pct"),
-                        "verdict": est["formability"]["verdict"],
-                    }
-                )
-            return jsonify(out)
+    @app.route("/api/leads/import", methods=["POST"])
+    def api_leads_import():
+        """A CSV of leads: checked first (dry_run), then imported."""
+        from modules import lead_import
 
         data = _json_body()
         if data is None:
             return jsonify({"error": "Content-Type: application/json required"}), 415
-        if not _reviewer():
-            return jsonify({"error": "An approved quote needs a named reviewer."}), 403
+        text = data.get("csv")
+        if not isinstance(text, str) or not text.strip():
+            return jsonify({"error": "The file is empty."}), 400
         try:
-            part = _part_from(data.get("part") or {})
+            result = lead_import.run(
+                db,
+                text,
+                channel=str(data.get("channel") or "third_party"),
+                filename=str(data.get("filename") or "")[:120],
+                dry_run=data.get("dry_run") is not False,
+            )
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
-        est = estimate(part)
-        if not est["cost"]:
-            return jsonify({"error": "This part cannot be quoted: " + "; ".join(est["formability"]["reasons"])}), 400
-        language = "it" if data.get("language") == "it" else "en"
-        email = (data.get("email") or "").strip().lower()
-        contact = db.get_contact_by_email(email) if email else None
-        if email and not contact:
-            return jsonify({"error": "That address is not a company in the leads."}), 400
-        text = quote_text(est, language)
-        with db._transaction() as conn:
-            cur = conn.execute(
-                """INSERT INTO quotes (created_at, contact_id, drawing_name, part, estimate,
-                                       language, status, quote_text, reviewer, decided_at)
-                   VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?)""",
-                (
-                    clock.db_now(), contact["id"] if contact else None,
-                    str(data.get("drawing_name") or "")[:120] or None,
-                    _json.dumps(asdict(part)), _json.dumps(est), language, text,
-                    _reviewer(), clock.db_now(),
-                ),
+        if result["added"]:
+            db.log_activity(
+                "LEADS_IMPORTED",
+                f"{result['added']} leads imported from a CSV by {_reviewer()}",
+                status="success",
             )
-            quote_id = cur.lastrowid
-        db.log_activity(
-            "QUOTE_APPROVED",
-            f"quote {quote_id} approved by {_reviewer()}"
-            + (f" for contact {contact['id']}" if contact else ""),
-            status="success",
-        )
-        reply_item = (
-            _review_queue().item_for(contact["id"], "reply") if contact else None
-        )
-        return jsonify(
-            {
-                "id": quote_id,
-                "quote_text": text,
-                "reply_item_id": reply_item["id"]
-                if reply_item and reply_item["status"] == "pending"
-                else None,
-            }
-        )
-
-    def _number(args, name, default=None, lo=0.0, hi=1e9):
-        raw = args.get(name)
-        if raw in (None, ""):
-            return default
-        try:
-            value = float(raw)
-        except (TypeError, ValueError):
-            raise ValueError(f"{name} must be a number") from None
-        if not lo <= value <= hi:
-            raise ValueError(f"{name} must be between {lo:g} and {hi:g}")
-        return value
-
-    @app.route("/api/carbon/cbam")
-    def api_carbon_cbam():
-        """The competitor's price with CBAM added, against Omega's, 2026-2034."""
-        from modules.cbam import compare
-
-        try:
-            mass = _number(request.args, "mass_g", None, 0.01, 50000)
-            competitor = _number(request.args, "competitor", None, 0, 1e7)
-            omega = _number(request.args, "omega", None, 0, 1e7)
-            price = _number(request.args, "price", None, 0, 2000)
-            embedded = _number(request.args, "embedded", None, 0, 50)
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        if mass is None or competitor is None or omega is None:
-            return jsonify({"error": "mass_g, competitor and omega are needed."}), 400
-        return jsonify(
-            compare(mass, competitor, omega, certificate_eur_per_t=price, embedded_t_per_t=embedded)
-        )
-
-    @app.route("/api/carbon/summary")
-    def api_carbon_summary():
-        """The headline for Today: lots measured, approved, and CO2 avoided."""
-        from modules import carbon_passport as cp
-
-        lots = cp.listing(db)
-        avoided_kg = 0.0
-        for lot in lots:
-            fp = lot["footprint"]
-            avoided_kg += (fp["china_default_g_co2"] - fp["per_part_g_co2"]) * lot["good_parts"] / 1000
-        approved = [lot for lot in lots if lot["status"] == "approved"]
-        ratios = [lot["footprint"]["times_lower"] for lot in lots if lot["footprint"]["times_lower"]]
-        return jsonify(
-            {
-                "lots": len(lots),
-                "approved": len(approved),
-                "drafts": len(lots) - len(approved),
-                "avoided_t_co2": round(avoided_kg / 1000, 1),
-                "median_times_lower": sorted(ratios)[len(ratios) // 2] if ratios else None,
-            }
-        )
-
-    @app.route("/api/carbon/paragraph")
-    def api_carbon_paragraph():
-        """A paragraph a reviewer may add to a draft, built only from passports
-        a person approved: no approved lot, no claim."""
-        from modules import carbon_passport as cp
-
-        approved = [lot for lot in cp.listing(db) if lot["status"] == "approved"]
-        if not approved:
-            return jsonify({"paragraph": None, "why": "No approved passport yet: approve one in Carbon first."})
-        ratios = sorted(lot["footprint"]["times_lower"] for lot in approved)
-        grams = sorted(lot["footprint"]["per_part_g_co2"] for lot in approved)
-        mid = len(ratios) // 2
-        lang = "it" if request.args.get("lang") == "it" else "en"
-        if lang == "it":
-            text = (
-                f"Formiamo a freddo da acciaio italiano da forno elettrico: i nostri ultimi {len(approved)} lotti "
-                f"misurati sono a circa {grams[mid]:g} g di CO2 per pezzo, {ratios[mid]:g} volte meno del valore "
-                "UE di riferimento per lo stesso pezzo importato dalla Cina. Possiamo darvi un passaporto "
-                "carbonio per ogni lotto, utile per i vostri dati Scope 3."
-            )
-        else:
-            text = (
-                f"We cold-form from Italian electric-arc steel: our last {len(approved)} measured lots came to about "
-                f"{grams[mid]:g} g of CO2 per part, {ratios[mid]:g} times less than the EU default for the same "
-                "part imported from China. Each lot can ship with a carbon passport for your Scope 3 reporting."
-            )
-        return jsonify({"paragraph": text, "lots": len(approved)})
-
-    @app.route("/api/carbon/lots", methods=["GET", "POST"])
-    def api_carbon_lots():
-        """GET lists the lots with their footprints; POST records a new lot
-        as a draft passport, which a person approves before it leaves."""
-        from modules import carbon_passport as cp
-
-        if request.method == "GET":
-            return jsonify(cp.listing(db))
-        data = _json_body()
-        if data is None:
-            return jsonify({"error": "Content-Type: application/json required"}), 415
-        if not _reviewer():
-            return jsonify({"error": "A lot needs a named person to record it."}), 403
-        try:
-            lot = {
-                "lot_code": str(data.get("lot_code") or "").strip()[:40],
-                "part_name": str(data.get("part_name") or "").strip()[:120],
-                "customer": str(data.get("customer") or "").strip()[:120] or None,
-                "steel_mill": str(data.get("steel_mill") or "").strip()[:120] or None,
-                "steel_route": "bf_bof" if data.get("steel_route") == "bf_bof" else "eaf_scrap",
-                "part_mass_g": _number(data, "part_mass_g", None, 0.01, 50000),
-                "mill_t_co2_per_t": _number(data, "mill_t_co2_per_t", None, 0, 10),
-                "wire_kg": _number(data, "wire_kg", None, 0.001, 1e7),
-                "good_parts": int(_number(data, "good_parts", 0, 1, 1e9) or 0),
-                "energy_kwh": _number(data, "energy_kwh", 0.0, 0, 1e8),
-            }
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        missing = [k for k in ("lot_code", "part_name", "part_mass_g", "wire_kg", "good_parts") if not lot[k]]
-        if missing:
-            return jsonify({"error": "Missing: " + ", ".join(missing)}), 400
-        try:
-            lot_id = cp.add(db, **lot)
-        except sqlite3.IntegrityError:
-            return jsonify({"error": "That lot code is already recorded."}), 409
-        db.log_activity("PASSPORT_DRAFTED", f"carbon passport {lot_id} drafted by {_reviewer()}", status="success")
-        return jsonify(cp.get(db, lot_id)), 201
-
-    @app.route("/api/carbon/lots/<int:lot_id>")
-    def api_carbon_lot(lot_id):
-        from modules import carbon_passport as cp
-
-        lot = cp.get(db, lot_id)
-        if lot is None:
-            return jsonify({"error": "No such lot."}), 404
-        return jsonify(lot)
-
-    @app.route("/api/carbon/lots/<int:lot_id>/approve", methods=["POST"])
-    def api_carbon_lot_approve(lot_id):
-        from modules import carbon_passport as cp
-
-        if _json_body() is None:
-            return jsonify({"error": "Content-Type: application/json required"}), 415
-        if cp.get(db, lot_id) is None:
-            return jsonify({"error": "No such lot."}), 404
-        try:
-            return jsonify(cp.approve(db, lot_id, _reviewer()))
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 409
-
-    @app.route("/api/carbon/lots/<int:lot_id>/passport.<fmt>")
-    def api_carbon_passport(lot_id, fmt):
-        """The passport a customer receives: only once a person approved it."""
-        from flask import Response
-
-        from modules import carbon_passport as cp
-
-        lot = cp.get(db, lot_id)
-        if lot is None:
-            return jsonify({"error": "No such lot."}), 404
-        if lot["status"] != "approved":
-            return jsonify({"error": "Approve the passport before it is downloaded."}), 409
-        name = re.sub(r"[^A-Za-z0-9_-]+", "-", lot["lot_code"])
-        if fmt == "pdf":
-            return Response(
-                cp.passport_pdf(lot),
-                mimetype="application/pdf",
-                headers={"Content-Disposition": f'attachment; filename="passport-{name}.pdf"'},
-            )
-        if fmt == "json":
-            return Response(
-                cp.pcf_json(lot),
-                mimetype="application/json",
-                headers={"Content-Disposition": f'attachment; filename="pcf-{name}.json"'},
-            )
-        return jsonify({"error": "pdf or json"}), 404
-
-    @app.route("/api/memory/similar", methods=["POST"])
-    def api_memory_similar():
-        """Past jobs and approved quotes nearest a part: to inform, not decide."""
-        from modules.job_memory import similar
-        from modules.quoting import asdict
-
-        data = _json_body()
-        if data is None:
-            return jsonify({"error": "Content-Type: application/json required"}), 415
-        try:
-            part = asdict(_part_from(data.get("part") or {}))
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        return jsonify(similar(part, str(data.get("description") or "")[:300], db=db))
-
-    @app.route("/api/memory/search")
-    def api_memory_search():
-        from modules.job_memory import search
-
-        return jsonify(search(str(request.args.get("q") or "")[:200], db=db))
+        return jsonify(result)
 
     @app.route("/api/review/summary")
     def api_review_summary():
@@ -4761,6 +4771,93 @@ def create_dashboard_app(settings: Settings):
                 }
             ), 503
 
+    # ── API: Connect Omega - what is left before a live email can go ──
+    @app.route("/api/setup")
+    def api_setup():
+        try:
+            report = readiness_report(settings)
+        except Exception:  # the page shows the message, the log the cause
+            logger.exception("Could not run the setup checks")
+            return jsonify({"error": "Could not run the checks just now."}), 503
+        by_label = {c["label"]: c for c in report["checks"]}
+        domain = (
+            settings.smtp_username.split("@")[-1] if "@" in settings.smtp_username else ""
+        )
+        steps = []
+
+        def step(key, title, how, checks=(), required=True, status=None, detail=None):
+            found = [by_label[label] for label in checks if label in by_label]
+            if status is None:
+                oks = [c["ok"] for c in found]
+                if not found:
+                    status = "unknown"
+                elif any(ok is False for ok in oks):
+                    status = "todo"
+                elif all(ok is True for ok in oks):
+                    status = "done"
+                else:
+                    status = "off"
+            if detail is None:
+                detail = "; ".join(c["detail"] for c in found)
+            steps.append(
+                {"key": key, "title": title, "status": status, "detail": detail,
+                 "how": how, "required": required}
+            )
+
+        step("mailbox", "Sending mailbox",
+             "Omega's IT creates an outreach mailbox on omegaifs.it and enters its "
+             "SMTP login, or connects Microsoft 365 without a password (docs/DEPLOY.md, section 12).",
+             ["SMTP credentials set"])
+        if domain:
+            spf, dmarc, _note = _auth_records(domain)
+            dkim, selector = _dkim_record(domain)
+            marks = {"SPF": spf, "DKIM": dkim, "DMARC": dmarc}
+            step("domain", f"Domain authentication ({domain})",
+                 "Omega's IT publishes SPF, DKIM and DMARC records for the sending "
+                 "domain, so mail is not marked as spam.",
+                 status="done" if all(marks.values())
+                 else "todo" if False in marks.values() else "unknown",
+                 detail=", ".join(
+                     f"{k} {'found' if v else 'missing' if v is False else 'not checked'}"
+                     for k, v in marks.items()
+                 ) + (f" (DKIM selector {selector})" if selector else ""))
+        else:
+            step("domain", "Domain authentication",
+                 "Set the sending mailbox first; then SPF, DKIM and DMARC are checked on its domain.",
+                 status="todo", detail="no sending domain yet")
+        step("legal", "Legal details in every email",
+             "Company name, registered office, registration number and the privacy page, "
+             "shown in each email's footer.",
+             ["Legal identity (email footer)", "Legal footer in templates"])
+        step("optout", "One-click opt-out",
+             "A public https address for the unsubscribe link (BASE_URL).",
+             ["Opt-out route"])
+        step("customers", "Existing customers excluded",
+             "Omega's customer list (and competitors, optional), so they are never cold-emailed.",
+             ["Client list file", "Competitor list file"])
+        step("countries", "Countries enabled",
+             "The countries Omega's lawyer has cleared for B2B email (ENABLED_COUNTRIES).",
+             ["Country lock"])
+        step("inbox", "Replies read automatically",
+             "IMAP access to the mailbox, so a reply, bounce or opt-out stops the follow-ups.",
+             ["Inbox read"], required=False)
+        ai_on = bool(settings.llm_base_url) and settings.ai_personalization_enabled
+        step("ai", "AI writer",
+             "An OpenAI-compatible model endpoint (LLM_BASE_URL). Without one, the agent uses "
+             "Omega's own template, which a person still approves.",
+             required=False, status="done" if ai_on else "off",
+             detail="drafts personalised by the model" if ai_on else "off: Omega's template is used")
+        required = [x for x in steps if x["required"]]
+        return jsonify(
+            {
+                "steps": steps,
+                "done": sum(x["status"] == "done" for x in required),
+                "required": len(required),
+                "can_send_live": report["can_send_live"],
+                "dry_run": report["dry_run"],
+            }
+        )
+
     # ── API: open data-subject requests ──
     @app.route("/api/data-requests")
     def api_data_requests():
@@ -4844,7 +4941,7 @@ def dashboard_password_refusal(settings: Settings) -> str | None:
 
     It needs a password wherever it listens. On loopback too: any other user
     or program on this machine reaches 127.0.0.1, and the dashboard sends mail
-    as SUPPLECO and shows every contact.
+    as the client and shows every contact.
     """
     password = settings.dashboard_password or ""
     if not password.strip():
@@ -4888,7 +4985,7 @@ def _behind_the_journal(behind: int) -> str:
     return (
         f"the database is behind its journal by {behind} line(s): it was "
         "restored from a backup, or it lost writes. Run "
-        "`py -3.11 main.py replay-journal` first: until then the emails sent "
+        "`py -3.15 main.py replay-journal` first: until then the emails sent "
         "since would go out again and the opt-outs made since would be lost"
     )
 
@@ -4979,7 +5076,7 @@ def cmd_dashboard(args, settings: Settings):
             from waitress import serve
         except ImportError:
             print("  Refusing to start: waitress, the dashboard's web server, is not")
-            print("  installed. Install it: py -3.11 -m pip install -r requirements.txt")
+            print("  installed. Install it: py -3.15 -m pip install -r requirements.txt")
             sys.exit(1)
     refuse_an_unsafe_start(settings)
     try:

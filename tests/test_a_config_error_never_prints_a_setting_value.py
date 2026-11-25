@@ -61,7 +61,7 @@ def test_a_cloud_ai_setting_stops_start_up_naming_the_line_to_delete(
     text = config_error_text(error)
     assert key in text
     assert f"Delete the line that starts {key}= from .env" in text
-    assert "SUPPLECO's own server" in text
+    assert "the client's own server" in text
     assert SECRET not in text
     assert SECRET not in str(error)
 

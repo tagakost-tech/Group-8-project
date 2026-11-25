@@ -17,7 +17,7 @@ engine and the AI output guard all sat silently broken, and only a commit made
 twenty minutes earlier made it recoverable. The copy is not an optimisation.
 
 A run that is killed never deletes its copy: two full copies, each holding
-SUPPLECO's client list, sat in %TEMP% for days, beside about 250 empty ones. A
+the client's client list, sat in %TEMP% for days, beside about 250 empty ones. A
 finished run could not delete its copy's folders either, because they keep
 this checkout's read-only mark, and it ignored the error. So the copy leaves
 out the client list (*.xlsx), settings files (.env and its variants) and the
@@ -85,7 +85,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Left out of the copy. The caches, data and logs only make it slow, and no
 # test run imports them. The rest must never leave the project folder:
-# SUPPLECO's client list (*.xlsx, encrypted or not), settings files, the Microsoft sign-in key
+# The client's client list (*.xlsx, encrypted or not), settings files, the Microsoft sign-in key
 # and the agents' folders.
 _SKIP = shutil.ignore_patterns(
     ".git",

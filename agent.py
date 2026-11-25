@@ -159,7 +159,7 @@ class OutreachAgent:
             logger.warning("Email template not found - using default template")
             self._email_template = self._default_template()
 
-        # SUPPLECO's Italian first email, for recipients ITALIAN_COUNTRIES lists.
+        # The client's Italian first email, for recipients ITALIAN_COUNTRIES lists.
         # Without it they get the English one, whole: said once, here. A file
         # of only white space counts as missing, as a reload and the dashboard
         # count it, or the footer guard would refuse every Italian contact.
@@ -501,7 +501,7 @@ class OutreachAgent:
         imported: raised, so the agent is never built without it."""
         return GuardUnavailable(
             f"{what} could not be loaded ({error}). The install is incomplete: "
-            "install the packages again (py -3.11 -m pip install -r "
+            "install the packages again (py -3.15 -m pip install -r "
             "requirements.txt), check that no file of the agent is missing, "
             "then start again. Nothing is sent without it."
         )
@@ -668,11 +668,11 @@ class OutreachAgent:
         return self.exclusion_manager.load_client_register()
 
     def load_competitor_register(self) -> bool:
-        """(Re)load SUPPLECO's named-competitor list from COMPETITOR_LIST_PATH."""
+        """(Re)load the client's named-competitor list from COMPETITOR_LIST_PATH."""
         return self.exclusion_manager.load_competitor_register()
 
     def refresh_lists_if_changed(self) -> None:
-        """Re-read the client or competitor list when SUPPLECO has edited it."""
+        """Re-read the client or competitor list when the client has edited it."""
         return self.exclusion_manager.refresh_lists_if_changed()
 
     def _contact_is_closed(self, contact: dict) -> str | None:

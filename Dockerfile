@@ -1,6 +1,6 @@
 # An exact version, so a rebuild cannot pull in another Python or Debian
 # release unnoticed. Move it on deliberately, for security updates.
-FROM python:3.11.13-slim-bookworm
+FROM python:3.15.2-slim-bookworm
 
 WORKDIR /app
 
@@ -33,5 +33,5 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Default: launch the monitoring dashboard. Start the agent from the dashboard
 # UI (same process), or override the command to run it standalone, e.g.:
-#   docker run --env-file .env suppleco-agent python main.py run --continuous
+#   docker run --env-file .env omega-outreach-agent python main.py run --continuous
 CMD ["python", "main.py", "dashboard"]

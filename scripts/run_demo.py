@@ -1,19 +1,22 @@
 """A demo of the review flow on invented companies, on this computer only.
 
-    py -3.11 scripts/run_demo.py            # seed data/demo.db and open the dashboard
-    py -3.11 scripts/run_demo.py --seed-only
+    py -3.15 scripts/run_demo.py            # seed data/demo.db and open the dashboard
+    py -3.15 scripts/run_demo.py --seed-only
 
 It builds its own settings (it never reads .env), stores invented European
 manufacturers as contacts, and runs the real first-email pass in dry run with
 first emails at "approve" - so what waits in the Review tab is what the agent
 itself proposed. Nothing is sent: dry run, .example domains, no mailbox.
 
-Demo logins (invented, for this demo only):
-    admin / demo-admin-password      may also change who decides
-    maria / demo-reviewer-password   a named reviewer
+Demo logins: "admin" (controls the agent) and "maria" (a named reviewer).
+Their passwords come from OMEGA_DEMO_ADMIN_PASSWORD and
+OMEGA_DEMO_REVIEWER_PASSWORD; when unset, fresh random ones are made at each
+start and printed here, so no password lives in the code.
 """
 
 import argparse
+import os
+import secrets
 import sys
 from pathlib import Path
 
@@ -72,8 +75,23 @@ COMPANIES = [
 ]
 
 
-def demo_settings():
+def demo_passwords() -> tuple[str, str, bool]:
+    """The admin's and the reviewer's password, and whether they were made
+    here (and so must be shown to the person starting the demo)."""
+    admin = os.environ.get("OMEGA_DEMO_ADMIN_PASSWORD", "").strip()
+    reviewer = os.environ.get("OMEGA_DEMO_REVIEWER_PASSWORD", "").strip()
+    made = not (admin and reviewer)
+    return (
+        admin or secrets.token_urlsafe(12),
+        reviewer or secrets.token_urlsafe(12),
+        made,
+    )
+
+
+def demo_settings(passwords: tuple[str, str] | None = None):
     from config import Settings
+
+    admin, reviewer = passwords or demo_passwords()[:2]
 
     return Settings(
         _env_file=None,
@@ -93,8 +111,8 @@ def demo_settings():
         privacy_contact_email="privacy@omega-demo.example",
         base_url="https://outreach.omega-demo.example",
         ERASURE_KEY="demo-erasure-key-" + "d" * 32,
-        DASHBOARD_PASSWORD="demo-admin-password",
-        DASHBOARD_REVIEWERS="maria:demo-reviewer-password",
+        DASHBOARD_PASSWORD=admin,
+        DASHBOARD_REVIEWERS=f"maria:{reviewer}",
         ENABLED_COUNTRIES="DE,IT,NL,SE,PT",
         client_list_path=str(DEMO_CLIENTS),
         autonomy_first_email="approve",
@@ -171,34 +189,77 @@ def seed(settings) -> int:
             }
         ]
     )
-    seed_lots(agent.db)
+    seed_history(agent.db, sid)
     return len(agent.review_queue.pending())
 
 
-# Invented lots: mills, customers and counts are made up for the demo.
-LOTS = [
-    ("L-26-0388", "2026-10-06 07:40:00", "Stepped pin with collar", "Schließtechnik Nord GmbH", 11.9,
-     "Acciaieria Lombarda (invented)", "eaf_scrap", 0.62, 1250, 102000, 310, "maria"),
-    ("L-26-0402", "2026-10-15 08:10:00", "Threaded stud M6", "Ferramenta Lago S.r.l.", 9.4,
-     "Acciaieria Lombarda (invented)", "eaf_scrap", 0.62, 980, 101500, 240, "maria"),
-    ("L-26-0417", "2026-11-02 08:00:00", "Hinge axle 5x46", "Ferramenta Lago S.r.l.", 7.1,
-     "Brescia EAF mill (invented)", "eaf_scrap", 0.58, 760, 104200, 205, None),
-    ("L-26-0431", "2026-11-12 09:20:00", "Rivet pin 5x20", "VoltaSwitch B.V.", 3.4,
-     None, "eaf_scrap", None, 360, 103000, 95, None),
+# An invented earlier campaign, so the funnel on Today has something to count:
+# who was emailed, who answered, and where each conversation ended up (set by
+# a reviewer). Every company and outcome is made up; nothing was ever sent.
+HISTORY = [
+    ("einkauf@tuerbeschlag-west.example", "Türbeschlag West GmbH", "DE", "won"),
+    ("purchasing@hingecraft.example", "Hingecraft Ltd", "IE", "meeting"),
+    ("acquisti@quadri-elettrici-po.example", "Quadri Elettrici Po S.r.l.", "IT", "interested"),
+    ("inkoop@schakeltechniek.example", "Schakeltechniek Noord B.V.", "NL", "lost"),
+    ("buyer@lockwerk-ost.example", "Lockwerk Ost GmbH", "AT", None),
+    ("compras@herrajes-levante.example", "Herrajes Levante S.L.", "ES", None),
+    ("inkop@fonsterbeslag.example", "Fönsterbeslag Syd AB", "SE", None),
+    ("achats@quincaillerie-rhone.example", "Quincaillerie Rhône SAS", "FR", None),
+    ("einkauf@klappenantrieb.example", "Klappenantrieb Mitte GmbH", "DE", None),
+    ("acquisti@cerniere-brianza.example", "Cerniere Brianza S.p.A.", "IT", None),
+    ("purchasing@valvekit.example", "Valvekit Components Ltd", "IE", None),
+    ("zakupy@okucia-wisla.example", "Okucia Wisła Sp. z o.o.", "PL", None),
 ]
 
 
-def seed_lots(db) -> None:
-    from modules import carbon_passport as cp
+# The rest of that campaign: emailed, no answer, as most cold emails are.
+# With them the funnel reads like real B2B outreach (a reply rate of about 6%).
+_REGIONS = {
+    "DE": ("GmbH", ["Rhein", "Main", "Weser", "Isar", "Neckar", "Saale"],
+           ["Beschlagtechnik", "Scharniere", "Schaltgeräte"]),
+    "IT": ("S.r.l.", ["Brianza", "Adda", "Mincio", "Piave", "Sesia", "Tanaro"],
+           ["Cerniere", "Ferramenta", "Quadri Elettrici"]),
+    "NL": ("B.V.", ["Maas", "Waal", "IJssel", "Eem"], ["Hang- en Sluitwerk", "Schakeltechniek"]),
+    "AT": ("GmbH", ["Enns", "Traun", "Mur"], ["Türtechnik", "Antriebe"]),
+    "SE": ("AB", ["Dal", "Ume", "Lule"], ["Beslag", "Elkomponenter"]),
+    "ES": ("S.L.", ["Ebro", "Duero", "Turia"], ["Herrajes", "Componentes"]),
+}
 
-    for code, at, part, customer, mass, mill, route, factor, wire, good, kwh, reviewer in LOTS:
-        lot_id = cp.add(
-            db, lot_code=code, created_at=at, part_name=part, customer=customer, part_mass_g=mass,
-            steel_mill=mill, steel_route=route, mill_t_co2_per_t=factor, wire_kg=wire,
-            good_parts=good, energy_kwh=kwh,
+
+def _quiet_companies():
+    n = 0
+    for country, (form, places, trades) in _REGIONS.items():
+        for place in places:
+            for trade in trades:
+                n += 1
+                yield (f"info@demo-company-{n}.example", f"{place} {trade} {form}", country, None)
+
+
+def seed_history(db, sid) -> None:
+    from modules import outcomes
+
+    for email, org, country, stage in [*HISTORY, *_quiet_companies()]:
+        cid = db.add_contact(
+            sid,
+            email,
+            organization=org,
+            qualification_rationale="Invented company from an earlier demo campaign.",
+            company_country=country,
+            company_country_source="page",
+            source_channel="own_website",
         )
-        if reviewer:
-            cp.approve(db, lot_id, reviewer)
+        db.log_email(
+            cid,
+            email,
+            "Special cold-formed parts to your drawing | Omega IFS",
+            delivery_status="sent",
+            message_id=f"<demo-{cid}@omega-demo.example>",
+        )
+        status = "responded" if stage else "emailed"
+        db.conn.execute("UPDATE contacts SET status = ? WHERE id = ?", (status, cid))
+        db.conn.commit()
+        if stage:
+            outcomes.set_stage(db, cid, stage, "maria")
 
 
 def main():
@@ -206,9 +267,10 @@ def main():
     parser.add_argument("--seed-only", action="store_true")
     args = parser.parse_args()
 
-    settings = demo_settings()
+    admin, reviewer, made = demo_passwords()
+    settings = demo_settings((admin, reviewer))
     waiting = seed(settings)
-    print(f"Seeded {DEMO_DB}: {waiting} proposals wait for a person.")
+    print(f"Seeded {DEMO_DB}: {waiting} proposals wait for a person.", flush=True)
     if args.seed_only:
         return
     from waitress import serve
@@ -216,7 +278,9 @@ def main():
     import main as dashboard
 
     app = dashboard.create_dashboard_app(settings)
-    print(f"Dashboard: http://127.0.0.1:{PORT}  (see the logins in this file)")
+    print(f"Dashboard: http://127.0.0.1:{PORT}", flush=True)
+    if made:
+        print(f"Logins for this run: admin / {admin}   maria / {reviewer}", flush=True)
     serve(app, host="127.0.0.1", port=PORT)
 
 

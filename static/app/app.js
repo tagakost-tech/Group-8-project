@@ -1,4 +1,4 @@
-/* Omega Carbon Advantage - the app shell.
+/* Omega Outreach Agent - the app shell.
    Plain DOM, no framework: every value from the server is escaped, and the
    draft HTML is parsed (DOMParser runs nothing), never injected. */
 (() => {
@@ -58,7 +58,7 @@
   const typing = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 
   // ── Router ───────────────────────────────────────────
-  const SCREENS = ["today", "review", "quotes", "carbon", "leads", "markets"];
+  const SCREENS = ["today", "review", "leads", "markets", "setup"];
   const loaders = {};
   let current = null;
 
@@ -69,7 +69,7 @@
       if (a.dataset.screen === name) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
-    document.title = `${$(`screen-${name}`).dataset.title} · Omega Carbon Advantage`;
+    document.title = `${$(`screen-${name}`).dataset.title} · Omega Outreach Agent`;
     current = name;
     if (loaders[name]) loaders[name]();
     if (focus) $("main").focus({ preventScroll: true });
@@ -120,18 +120,16 @@
   // ── Today ────────────────────────────────────────────
   loaders.today = async () => {
     $("todayDate").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-    const [rv, cs, list] = await Promise.all([
-      api("/api/review/summary"),
-      api("/api/carbon/summary"),
-      api("/api/review?view=waiting"),
-    ]);
+    const [rv, fn, list] = await Promise.all([api("/api/review/summary"), api("/api/funnel"), api("/api/review?view=waiting")]);
     const c = (rv.data && rv.data.counts) || {};
-    const k = cs.data || {};
+    const f = fn.ok ? fn.data : { stages: [], rates: {} };
+    const n = Object.fromEntries((f.stages || []).map((x) => [x.key, x.count]));
+    const pct = (v) => (v === null || v === undefined ? "–" : `${fmt(v, 0)}<small>%</small>`);
     $("todayTiles").innerHTML = [
       tile("review", "Waiting for review", fmt(c.waiting || 0), c.replies_waiting ? `${c.replies_waiting} ${c.replies_waiting === 1 ? "is a reply" : "are replies"}` : "First emails and follow-ups"),
-      tile("carbon", "Passports to approve", fmt(k.drafts || 0), `${fmt(k.approved || 0)} approved`),
-      tile("carbon", "Lower than imports", k.median_times_lower ? `${fmt(k.median_times_lower, 1)}<small>×</small>` : "–", "Median, against the EU default for China", "green"),
-      tile("carbon", "CO₂ avoided", `${fmt(k.avoided_t_co2 || 0, 1)}<small>t</small>`, `Across ${fmt(k.lots || 0)} measured lots`, "green"),
+      tile("leads", "Companies emailed", fmt(n.emailed || 0), `of ${fmt(n.found || 0)} found`),
+      tile("leads", "Reply rate", pct(f.rates && f.rates.reply), `${fmt(n.replied || 0)} replied`),
+      tile("leads", "Meetings booked", fmt(n.meeting || 0), `${fmt(n.won || 0)} became orders`, "green"),
     ].join("");
 
     const items = ((list.data && list.data.items) || []).slice(0, 6);
@@ -147,11 +145,17 @@
           .join("")
       : `<li class="list-empty">Nothing is waiting for you.</li>`;
 
-    $("todayCarbon").innerHTML = k.lots
-      ? `<div class="figure">${fmt(k.median_times_lower, 1)}<small>× lower</small></div>
-         <p class="lede">Omega's measured lots carry <strong>${fmt(k.median_times_lower, 1)} times less CO₂</strong> than the EU's default for the same part made in China. That is the figure a Tier-1 needs for its Scope 3 report.</p>
-         <div class="actions"><a class="btn primary" href="#carbon">Open passports</a><button class="btn" type="button" data-goto-cbam>See the CBAM curve</button></div>`
-      : `<p class="lede">No lot measured yet. Record one in Carbon to start.</p><a class="btn primary" href="#carbon">Record a lot</a>`;
+    const top = Math.max(1, ...(f.stages || []).map((x) => x.count));
+    $("todayFunnel").innerHTML = (f.stages || []).length
+      ? `<ul class="funnel" role="list">${f.stages
+          .map(
+            (x) => `<li><span class="f-label">${esc(x.label)}</span>
+              <span class="score-bar" aria-hidden="true"><i style="width:${(x.count / top) * 100}%"></i></span>
+              <span class="num">${fmt(x.count)}</span></li>`
+          )
+          .join("")}</ul>
+         <p class="row-sub">Mark a company as interested, meeting booked or won from Review or Leads.</p>`
+      : `<p class="lede">No figures yet.</p>`;
   };
   function tile(screen, label, value, note, cls = "") {
     return `<a class="tile ${cls}" href="#${screen}"><span class="tile-label">${esc(label)}</span>
@@ -160,11 +164,6 @@
   document.addEventListener("click", (e) => {
     const r = e.target.closest("[data-open-review]");
     if (r) review.pendingOpen = Number(r.dataset.openReview);
-    if (e.target.closest("[data-goto-cbam]")) {
-      carbon.view = "cbam";
-      location.hash = "#carbon";
-      if (current === "carbon") loaders.carbon();
-    }
   });
 
   // ── Review ───────────────────────────────────────────
@@ -246,8 +245,6 @@
     const body = waiting ? it.proposed_body : it.final_body || it.proposed_body;
     review.original = { subject: subject || "", body: body || "", text: draftToText(body) };
     const fit = it.fit || {};
-    const cp = fit.carbon_pressure || { level: "none", reasons: [] };
-    const cpPill = { high: "green", some: "blue" }[cp.level] || "";
     const words = ev.their_words || ev.found_on_their_site;
     $("reviewDetail").innerHTML = `
       <h2>${esc(ev.organization || it.organization || it.email)}</h2>
@@ -263,7 +260,6 @@
       ${
         waiting
           ? `<div class="actions">
-              <button class="btn ghost" type="button" id="rvCarbon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg> Add the carbon paragraph</button>
               <span class="spacer"></span>
               <span class="shortcut hide-narrow"><kbd>Ctrl</kbd> <kbd>Enter</kbd> approves</span>
               <button class="btn danger" type="button" id="rvReject">Reject…</button>
@@ -280,8 +276,8 @@
             <span class="num">${fmt(p.score)}</span><span class="why">${esc(p.why)}</span></div>`
         )
         .join("")}</div>
-      <p class="section-label">Carbon pressure <span class="pill ${cpPill}">${esc(cp.level)}</span></p>
-      ${cp.reasons.length ? `<ul class="reasons">${cp.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : `<p class="row-sub">No sign this buyer is asked about carbon yet.</p>`}`;
+      <p class="section-label">Outcome with this company</p>
+      ${outcomeControl(it.contact_id, it.outcome)}`;
     const ta = $("rvText");
     const grow = () => ((ta.style.height = "auto"), (ta.style.height = `${ta.scrollHeight + 2}px`));
     ta.addEventListener("input", grow);
@@ -289,21 +285,6 @@
     if (!waiting) return;
     $("rvApprove").addEventListener("click", approveReview);
     $("rvReject").addEventListener("click", rejectReview);
-    $("rvCarbon").addEventListener("click", addCarbonParagraph);
-  }
-
-  async function addCarbonParagraph() {
-    const it = review.current;
-    const { data } = await api(`/api/carbon/paragraph?lang=${it.language === "it" ? "it" : "en"}`);
-    if (!data.paragraph) return toast(data.why || "No approved passport yet.", "error");
-    const ta = $("rvText");
-    if (ta.value.includes(data.paragraph)) return toast("The paragraph is already in.");
-    const paras = ta.value.split(/\n\s*\n/);
-    const signOff = paras.findIndex((p) => /^(best|kind|warm)?\s*regards|^cordiali|^distinti|^saluti|^un cordiale/i.test(p.trim()));
-    paras.splice(signOff > 0 ? signOff : Math.max(1, paras.length - 1), 0, data.paragraph);
-    ta.value = paras.join("\n\n");
-    ta.dispatchEvent(new Event("input"));
-    toast(`Added, from ${data.lots} approved passport${data.lots === 1 ? "" : "s"}. Read it before you approve.`);
   }
 
   async function approveReview() {
@@ -361,11 +342,6 @@
       const i = review.current ? review.items.findIndex((x) => x.id === review.current.id) : -1;
       const n = review.items[Math.max(0, Math.min(review.items.length - 1, i + step))];
       if (n) openReview(n.id);
-    } else if (current === "carbon" && carbon.view === "passports") {
-      if (!carbon.lots.length) return;
-      const i = carbon.current ? carbon.lots.findIndex((x) => x.id === carbon.current) : -1;
-      const n = carbon.lots[Math.max(0, Math.min(carbon.lots.length - 1, i + step))];
-      if (n) openLot(n.id);
     }
   }
 
@@ -415,384 +391,106 @@
     b.setAttribute("aria-label", `${counts.waiting} waiting`);
   }
 
-  // ── Quotes ───────────────────────────────────────────
-  const quote = { part: null, estimate: null, drawing: null };
-  const PART_FIELDS = [
-    ["length", "Length", "mm"],
-    ["shank_d", "Shank diameter", "mm"],
-    ["head_d", "Head diameter", "mm"],
-    ["head_h", "Head height", "mm"],
-    ["collar_d", "Collar diameter", "mm"],
-    ["collar_h", "Collar height", "mm"],
-    ["thread", "Thread", ""],
-    ["thread_len", "Thread length", "mm"],
-    ["tolerance_mm", "Tightest tolerance", "± mm"],
-    ["annual_volume", "Parts a year", "pcs"],
-  ];
-  loaders.quotes = () => {};
-
-  $("drop").addEventListener("click", (e) => {
-    if (e.target.closest("#useSample")) return;
-    $("drawingInput").click();
-  });
-  $("drop").addEventListener("keydown", (e) => {
-    if (e.target === $("drop") && (e.key === "Enter" || e.key === " ")) (e.preventDefault(), $("drawingInput").click());
-  });
-  ["dragenter", "dragover"].forEach((t) =>
-    $("drop").addEventListener(t, (e) => (e.preventDefault(), $("drop").classList.add("is-over")))
-  );
-  ["dragleave", "drop"].forEach((t) => $("drop").addEventListener(t, () => $("drop").classList.remove("is-over")));
-  $("drop").addEventListener("drop", (e) => {
-    e.preventDefault();
-    const f = e.dataTransfer.files[0];
-    if (f) readDrawing(f, f.name);
-  });
-  $("drawingInput").addEventListener("change", (e) => {
-    const f = e.target.files[0];
-    if (f) readDrawing(f, f.name);
-    e.target.value = "";
-  });
-  $("useSample").addEventListener("click", async (e) => {
-    e.stopPropagation();
-    const res = await fetch("/api/quotes/sample");
-    if (!res.ok) return toast("No sample drawing on this server.", "error");
-    readDrawing(await res.blob(), "sample-drawing.pdf");
-  });
-
-  async function readDrawing(blob, name) {
-    const fd = new FormData();
-    fd.append("drawing", blob, name);
-    $("drop").querySelector(".drop-title").textContent = "Reading the drawing…";
-    const { ok, data } = await api("/api/quotes/read", { method: "POST", body: fd });
-    $("drop").querySelector(".drop-title").textContent = "Drop another drawing";
-    if (!ok) return toast(data.error || "Could not read it.", "error");
-    $("drop").classList.add("is-compact");
-    quote.drawing = data.drawing_name;
-    quote.part = data.part;
-    $("partSource").textContent = `read from ${data.drawing_name}`;
-    renderPartForm();
-    showEstimate(data.estimate);
-    $("quoteResult").hidden = false;
-    $("quoteText").hidden = true;
-    refreshMemory();
-  }
-
-  function renderPartForm() {
-    const p = quote.part;
-    $("partForm").innerHTML =
-      PART_FIELDS.map(
-        ([k, label, unit]) => `<label class="form-row"><span>${esc(label)}</span>
-          <input name="${k}" value="${esc(p[k] || (k === "thread" ? "" : 0))}" inputmode="${k === "thread" ? "text" : "decimal"}"><em>${esc(unit)}</em></label>`
-      ).join("") +
-      `<label class="form-row"><span>Material</span><select name="material">
-        ${["carbon_steel", "stainless", "brass"].map((m) => `<option value="${m}" ${p.material === m ? "selected" : ""}>${m.replace("_", " ")}</option>`).join("")}
-      </select><em></em></label>` +
-      ((p.notes || []).length ? `<p class="row-sub" style="padding:8px 16px">${esc(p.notes.join(" · "))}</p>` : "");
-  }
-  $("partForm").addEventListener(
-    "input",
-    debounce(async () => {
-      const f = new FormData($("partForm"));
-      quote.part = { ...quote.part, ...Object.fromEntries(f.entries()) };
-      const { ok, data } = await api("/api/quotes/estimate", { json: { part: quote.part } });
-      if (!ok) return toast(data.error || "Check the sizes.", "error");
-      showEstimate(data.estimate);
-      refreshMemory();
-    }, 350)
-  );
-
-  function showEstimate(est) {
-    quote.estimate = est;
-    const f = est.formability || {};
-    const verdictCls = { formable: "green", "not formable": "red" }[f.verdict] || "orange";
-    const c = est.cost;
-    const k = est.carbon;
-    $("estimateCard").innerHTML = `
-      <span class="pill ${verdictCls}">${esc(f.verdict)}</span>
-      ${(f.reasons || []).length ? `<ul class="reasons" style="margin-top:12px">${f.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
-      <div class="estimate-grid">
-        <div><div class="k">Price per 1,000</div><div class="v">${c ? eur(c.per_1000_eur) : "–"}</div></div>
-        <div><div class="k">Tooling, once</div><div class="v">${c ? eur(c.tooling_once_eur, 0) : "–"}</div></div>
-        <div><div class="k">Forming stations</div><div class="v">${fmt(f.stations)}</div></div>
-        <div><div class="k">Mass</div><div class="v">${fmt(est.mass_g, 1)}<small>g</small></div></div>
-        <div><div class="k">CO₂ per part, formed</div><div class="v">${k ? fmt(k.formed_g_co2_per_part, 1) : "–"}<small>g</small></div></div>
-        <div><div class="k">Less CO₂ than machining</div><div class="v" style="color:var(--green)">${k ? fmt(k.saving_pct) : "–"}<small>%</small></div></div>
-      </div>
-      ${(f.secondary || []).length ? `<p class="note">Then: ${esc(f.secondary.join(", "))}</p>` : ""}
-      <p class="note">${esc(c ? c.assumptions : "")}</p>`;
-    $("approveQuote").disabled = !c;
-    renderQuoteCbam();
-  }
-
-  const refreshMemory = debounce(async () => {
-    const { ok, data } = await api("/api/memory/similar", { json: { part: quote.part, description: quote.drawing || "" } });
-    if (!ok) return;
-    $("madeBefore").innerHTML = data.length ? data.map(jobRow).join("") : `<li class="list-empty">Nothing like it in the records.</li>`;
-  }, 200);
-  function jobRow(j) {
-    return `<li class="job-row">
-      <div class="job-head"><strong>${esc(j.part)}</strong><span class="closeness">${fmt(j.closeness)}% alike</span></div>
-      <div class="job-meta">${esc(j.ref)} · ${esc(j.year)} · ${fmt(j.stations)} stations · ${eur(j.per_1000_eur)}/1,000 · tooling ${eur(j.tooling_eur, 0)}</div>
-      <p class="job-note">${esc(j.notes || "")}</p></li>`;
-  }
-
-  function renderQuoteCbam() {
-    const c = quote.estimate && quote.estimate.cost;
-    if (!c) {
-      $("quoteCbam").innerHTML = `<p class="row-sub">Quote the part first.</p>`;
-      return;
-    }
-    $("quoteCbam").innerHTML = `
-      <label class="field"><span>A Chinese supplier's price, € per 1,000</span>
-        <input id="qImport" inputmode="decimal" placeholder="e.g. ${fmt(c.per_1000_eur * 0.7, 0)}"></label>
-      <div id="qCbamOut" style="margin-top:16px"><p class="row-sub">CBAM adds a carbon cost to that price each year. Type it to see.</p></div>`;
-    $("qImport").addEventListener(
-      "input",
-      debounce(async () => {
-        const v = parseFloat($("qImport").value.replace(",", "."));
-        if (!(v >= 0)) return;
-        const q = new URLSearchParams({ mass_g: quote.estimate.mass_g, competitor: v, omega: c.per_1000_eur });
-        const { ok, data } = await api(`/api/carbon/cbam?${q}`);
-        if (!ok) return toast(data.error, "error");
-        const pick = data.rows.filter((r) => [2026, 2030, 2034].includes(r.year));
-        $("qCbamOut").innerHTML = `<table class="table"><tr><th>Year</th><th class="r">CBAM</th><th class="r">Import landed</th><th class="r">Omega − import</th></tr>
-          ${pick.map((r) => `<tr><td>${r.year}</td><td class="r">${eur(r.cbam_eur_per_1000)}</td><td class="r">${eur(r.competitor_landed_eur_per_1000)}</td><td class="r">${eur(r.gap_eur_per_1000)}</td></tr>`).join("")}</table>
-          <p class="verdict">${cbamSentence(data)}</p>`;
-      }, 300)
-    );
-  }
-  function cbamSentence(d) {
-    const last = d.rows[d.rows.length - 1];
-    if (d.crossover_year)
-      return `From <strong>${d.crossover_year}</strong> the import costs more than Omega once CBAM is paid.`;
-    return `Even in ${last.year}, CBAM adds <strong>${eur(last.cbam_eur_per_1000)}</strong> per 1,000: not enough to close a ${eur(last.gap_eur_per_1000)} gap on its own. Lead with the footprint, not the tax.`;
-  }
-
-  $("approveQuote").addEventListener("click", async () => {
-    const { ok, data } = await api("/api/quotes", {
-      json: { part: quote.part, email: $("quoteEmail").value.trim(), language: $("quoteLang").value, drawing_name: quote.drawing },
-    });
-    if (!ok) return toast(data.error || "Refused.", "error");
-    $("quoteText").textContent = data.quote_text;
-    $("quoteText").hidden = false;
-    toast(data.reply_item_id ? "Quote approved. Its answer is waiting in Review." : "Quote approved and stored.");
-  });
-
-  $("memoryQuery").addEventListener(
-    "input",
-    debounce(async () => {
-      const q = $("memoryQuery").value.trim();
-      if (!q) return ($("memoryHits").innerHTML = "");
-      const { data } = await api(`/api/memory/search?q=${encodeURIComponent(q)}`);
-      $("memoryHits").innerHTML = (data || []).length ? data.map(jobRow).join("") : `<li class="list-empty">No note mentions that.</li>`;
-    }, 250)
-  );
-
-  // ── Carbon ───────────────────────────────────────────
-  const carbon = { view: "passports", lots: [], current: null };
-  loaders.carbon = async () => {
-    $("carbonViews").querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === carbon.view));
-    $("carbonPassports").hidden = carbon.view !== "passports";
-    $("carbonCbam").hidden = carbon.view !== "cbam";
-    if (carbon.view === "cbam") return runCbam();
-    const { ok, data } = await api("/api/carbon/lots");
-    if (!ok) return toast(data.error || "Could not load the lots.", "error");
-    carbon.lots = data;
-    renderLots();
-    if (carbon.current) openLot(carbon.current);
-  };
-  $("carbonViews").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-view]");
-    if (!b) return;
-    carbon.view = b.dataset.view;
-    loaders.carbon();
-  });
-
-  function renderLots() {
-    const drafts = carbon.lots.filter((l) => l.status === "draft").length;
-    const b = $("navCarbonCount");
-    b.textContent = drafts;
-    b.hidden = !drafts;
-    $("lotList").innerHTML = carbon.lots.length
-      ? carbon.lots
-          .map(
-            (l) => `<li><button class="row-btn" role="option" tabindex="-1" aria-selected="${carbon.current === l.id}" data-lot="${l.id}">
-              <span class="row-title">${esc(l.part_name)}</span>
-              <span class="row-sub">${esc(l.lot_code)} · ${esc(l.customer || "no customer")}</span>
-              <span class="row-end"><span class="num">${fmt(l.footprint.per_part_g_co2, 1)} g</span>
-                <span class="pill ${l.status === "approved" ? "green" : "orange"}">${l.status === "approved" ? "Approved" : "Draft"}</span></span>
-            </button></li>`
-          )
-          .join("")
-      : `<li class="list-empty">No lots yet.</li>`;
-  }
-  $("lotList").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-lot]");
-    if (b) openLot(Number(b.dataset.lot));
-  });
-
-  async function openLot(id) {
-    const { ok, data: l } = await api(`/api/carbon/lots/${id}`);
-    if (!ok) return;
-    carbon.current = id;
-    renderLots();
-    const fp = l.footprint;
-    const max = Math.max(fp.china_default_g_co2, fp.per_part_g_co2);
-    const approved = l.status === "approved";
-    $("lotDetail").innerHTML = `
-      <h2>${esc(l.part_name)}</h2>
-      <div class="meta"><span class="pill ${approved ? "green" : "orange"}">${approved ? "Approved" : "Draft"}</span>
-        <span>${esc(l.lot_code)}</span><span>·</span><span>${esc(l.customer || "no customer")}</span></div>
-      <div class="figure">${fmt(fp.per_part_g_co2, 2)}<small>g CO₂e per part</small></div>
-      <p class="lede"><strong>${fmt(fp.times_lower, 1)}× lower</strong> than the EU default for the same part made in China.</p>
-      <div class="bars" role="img" aria-label="Omega ${fmt(fp.per_part_g_co2, 1)} grams against ${fmt(fp.china_default_g_co2, 1)} grams for China">
-        <div class="bar-row"><span>This lot, Omega</span><span class="bar-track"><span class="bar-fill green" style="display:block;width:${(fp.per_part_g_co2 / max) * 100}%"></span></span><span class="num">${fmt(fp.per_part_g_co2, 1)} g</span></div>
-        <div class="bar-row"><span>China, EU default</span><span class="bar-track"><span class="bar-fill" style="display:block;width:${(fp.china_default_g_co2 / max) * 100}%"></span></span><span class="num">${fmt(fp.china_default_g_co2, 1)} g</span></div>
-      </div>
-      <dl class="facts">
-        <dt>Steel</dt><dd>${l.steel_mill ? `${esc(l.steel_mill)}, ` : "Mill not named, "}${fmt(fp.steel_factor, 2)} t CO₂/t (${esc(fp.steel_factor_from)})</dd>
-        <dt>Good parts</dt><dd>${fmt(l.good_parts)} from ${fmt(l.wire_kg)} kg of wire · yield ${fmt((fp.yield || 0) * 100, 1)}%</dd>
-        <dt>Energy</dt><dd>${fmt(l.energy_kwh)} kWh</dd>
-        <dt>Lot total</dt><dd>${fmt(fp.lot_kg_co2, 1)} kg CO₂e · steel ${fmt((fp.steel_share || 0) * 100)}%</dd>
-        <dt>Primary data</dt><dd>${fmt(fp.primary_data_share * 100)}%</dd>
-        <dt>Method</dt><dd>${esc(l.pcf.crossSectoralStandardsUsed.join(", "))}; Catena-X PCF fields</dd>
-        ${approved ? `<dt>Approved by</dt><dd>${esc(l.reviewer)} · ${esc(l.decided_at)}</dd>` : ""}
-      </dl>
-      <div class="actions">
-        ${approved ? "" : `<button class="btn primary" type="button" id="approveLot">Approve passport</button>`}
-        <a class="btn" ${approved ? `href="/api/carbon/lots/${l.id}/passport.pdf"` : `aria-disabled="true" tabindex="-1" style="opacity:.4;pointer-events:none"`}>Passport PDF</a>
-        <a class="btn" ${approved ? `href="/api/carbon/lots/${l.id}/passport.json"` : `aria-disabled="true" tabindex="-1" style="opacity:.4;pointer-events:none"`}>PCF data (JSON)</a>
-        ${approved ? "" : `<span class="note">Downloads open once a person approves.</span>`}
-      </div>
-      <p class="note">${esc(l.pcf.boundaryProcessesDescription)} ${esc(l.pcf.comment)}</p>`;
-    const a = $("approveLot");
-    if (a)
-      a.addEventListener("click", async () => {
-        const { ok: done, data } = await api(`/api/carbon/lots/${l.id}/approve`, { json: {} });
-        if (!done) return toast(data.error || "Refused.", "error");
-        toast("Passport approved. It can now go to the customer.");
-        loaders.carbon();
-      });
-  }
-
-  const LOT_FIELDS = [
-    ["lot_code", "Lot code", "", "L-26-0500"],
-    ["part_name", "Part", "", "Stepped pin"],
-    ["customer", "Customer", "", "optional"],
-    ["part_mass_g", "Mass of one part", "g", "11.9"],
-    ["steel_mill", "Steel mill", "", "from the certificate"],
-    ["mill_t_co2_per_t", "Mill CO₂ factor", "t/t", "route average if empty"],
-    ["wire_kg", "Wire used", "kg", "1250"],
-    ["good_parts", "Good parts", "pcs", "102000"],
-    ["energy_kwh", "Energy", "kWh", "310"],
-  ];
-  $("newLot").addEventListener("click", () =>
-    openSheet({
-      title: "Record a lot",
-      body: `<p>Steel parts only. The figures come from the steel certificate, the press counter and the meter. It is saved as a draft passport.</p>
-        <form class="form-list" id="lotForm">${LOT_FIELDS.map(
-          ([k, l, u, ph]) => `<label class="form-row"><span>${esc(l)}</span><input name="${k}" placeholder="${esc(ph)}"><em>${esc(u)}</em></label>`
-        ).join("")}
-        <label class="form-row"><span>Steel route</span><select name="steel_route"><option value="eaf_scrap">Electric arc</option><option value="bf_bof">Blast furnace</option></select><em></em></label></form>
-        <div class="sheet-error" id="sheetError"></div>`,
-      ok: "Save draft",
-      onOk: async () => {
-        const body = Object.fromEntries(new FormData($("lotForm")).entries());
-        Object.keys(body).forEach((k) => body[k] === "" && delete body[k]);
-        const { ok, data } = await api("/api/carbon/lots", { json: body });
-        if (!ok) {
-          $("sheetError").textContent = data.error || "Refused.";
-          return true;
-        }
-        carbon.current = data.id;
-        toast("Lot recorded as a draft passport.");
-        loaders.carbon();
-        return false;
-      },
-    })
-  );
-
-  const runCbam = async () => {
-    const f = Object.fromEntries(new FormData($("cbamForm")).entries());
-    Object.keys(f).forEach((k) => {
-      f[k] = String(f[k]).replace(",", ".").trim();
-      if (f[k] === "") delete f[k];
-    });
-    const { ok, data } = await api(`/api/carbon/cbam?${new URLSearchParams(f)}`);
-    if (!ok) {
-      $("cbamVerdict").textContent = data.error || "Check the figures.";
-      return;
-    }
-    drawCbam(data);
-    $("cbamTable").innerHTML = `<thead><tr><th>Year</th><th class="r">Charged</th><th class="r">CBAM per 1,000</th><th class="r">Import landed</th><th class="r">Omega</th><th class="r">Omega minus import</th></tr></thead>
-      <tbody>${data.rows
-        .map(
-          (r) => `<tr class="${r.gap_eur_per_1000 <= 0 ? "is-cross" : ""}"><td>${r.year}</td><td class="r">${fmt(r.charged_share * 100, 1)}%</td>
-          <td class="r">${eur(r.cbam_eur_per_1000)}</td><td class="r">${eur(r.competitor_landed_eur_per_1000)}</td>
-          <td class="r">${eur(r.omega_eur_per_1000)}</td><td class="r">${eur(r.gap_eur_per_1000)}</td></tr>`
-        )
-        .join("")}</tbody>`;
-    $("cbamVerdict").innerHTML = cbamSentence(data);
-    $("cbamSources").innerHTML = data.assumptions.map((a) => `<li>${esc(a)}</li>`).join("");
-  };
-  $("cbamForm").addEventListener("input", debounce(runCbam, 250));
-  window.addEventListener("resize", debounce(() => current === "carbon" && carbon.view === "cbam" && runCbam(), 200));
-  $("cbamForm").addEventListener("submit", (e) => e.preventDefault());
-
-  function drawCbam(d) {
-    const W = Math.max(300, $("cbamChart").clientWidth || 720), H = W < 500 ? 220 : 280, L = 52, R = 12, T = 12, B = 28;
-    const narrow = W < 500;
-    const rows = d.rows;
-    const vals = rows.flatMap((r) => [r.competitor_landed_eur_per_1000, r.omega_eur_per_1000]);
-    const lo = 0, hi = Math.max(...vals) * 1.1;
-    const x = (i) => L + (i * (W - L - R)) / (rows.length - 1);
-    const y = (v) => T + (1 - (v - lo) / (hi - lo || 1)) * (H - T - B);
-    const ticks = 4;
-    let g = '<g class="grid axis">';
-    for (let i = 0; i <= ticks; i++) {
-      const v = lo + ((hi - lo) * i) / ticks;
-      g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">€${fmt(v, 0)}</text>`;
-    }
-    rows.forEach((r, i) => (g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${narrow ? `’${String(r.year).slice(2)}` : r.year}</text>`));
-    g += "</g>";
-    const path = (k) => rows.map((r, i) => `${i ? "L" : "M"}${x(i)},${y(r[k])}`).join("");
-    const dots = (k, cls) => rows.map((r, i) => `<circle class="${cls}" cx="${x(i)}" cy="${y(r[k])}" r="3.5"><title>${r.year}: ${eur(r[k])}</title></circle>`).join("");
-    const last = rows[rows.length - 1];
-    $("cbamChart").innerHTML = `<div><svg viewBox="0 0 ${W} ${H}">${g}
-      <path class="import" d="${path("competitor_landed_eur_per_1000")}"/><path class="omega" d="${path("omega_eur_per_1000")}"/>
-      ${dots("competitor_landed_eur_per_1000", "dot-import")}${dots("omega_eur_per_1000", "dot-omega")}
-      </svg></div><div class="legend"><span><i style="background:var(--orange)"></i>Import from China, with CBAM</span><span><i style="background:var(--accent)"></i>Omega</span></div>`;
-    $("cbamChart").setAttribute(
-      "aria-label",
-      `Import price with CBAM rises from ${eur(rows[0].competitor_landed_eur_per_1000)} in ${rows[0].year} to ${eur(last.competitor_landed_eur_per_1000)} in ${last.year}; Omega stays at ${eur(last.omega_eur_per_1000)}.`
-    );
-  }
-
   // ── Leads ────────────────────────────────────────────
   let leads = [];
   const STATUS = { pending: "Not contacted", emailed: "Emailed", responded: "Replied", active_client: "Client", unsubscribed: "Opted out", bounced: "Bounced", rejected_in_review: "Rejected" };
   loaders.leads = async () => {
-    const { ok, data } = await api("/api/contacts?limit=200");
-    if (!ok) return toast(data.error || "Could not load the leads.", "error");
-    leads = data.filter((c) => c.status !== "erased");
-    renderLeads();
+    if (await loaders.leads.fetch()) renderLeads();
   };
+  loaders.leads.fetch = async () => {
+    const { ok, data } = await api("/api/contacts?limit=500");
+    if (!ok) return toast(data.error || "Could not load the leads.", "error"), false;
+    leads = data.filter((c) => c.status !== "erased");
+    return true;
+  };
+
+  // Where a conversation ended up: set by a person, counted on Today.
+  const OUTCOMES = [["", "–"], ["interested", "Interested"], ["meeting", "Meeting booked"], ["won", "Order won"], ["lost", "Not now"]];
+  function outcomeControl(contactId, value, compact = false) {
+    if (!contactId) return "";
+    return `<select class="outcome${compact ? " compact" : ""}" data-outcome="${contactId}" aria-label="Outcome">${OUTCOMES.map(
+      ([v, l]) => `<option value="${v}" ${v === (value || "") ? "selected" : ""}>${l}</option>`
+    ).join("")}</select>`;
+  }
+  document.addEventListener("change", async (e) => {
+    const sel = e.target.closest("select[data-outcome]");
+    if (!sel) return;
+    const id = Number(sel.dataset.outcome);
+    const { ok, data } = await api(`/api/contacts/${id}/outcome`, { json: { stage: sel.value || null } });
+    if (!ok) return toast(data.error || "Could not save the outcome.", "error");
+    const c = leads.find((x) => x.id === id);
+    if (c) c.outcome = data.stage;
+    if (review.current && review.current.contact_id === id) review.current.outcome = data.stage;
+    toast(data.stage ? `Saved: ${sel.options[sel.selectedIndex].text}.` : "Outcome cleared.");
+  });
+
+  // CSV import: a preview first, then the import, so nothing lands unseen.
+  function importLeads() {
+    let csv = null;
+    let name = "";
+    let previewed = false;
+    openSheet({
+      title: "Import leads from a CSV file",
+      body: `<p>One company per row. Columns are matched by name: <b>email</b> is required; company, website, country, sector and name are used when present.</p>
+        <label class="field"><span>File</span><input type="file" id="csvFile" accept=".csv,text/csv"></label>
+        <label class="field"><span>Where the list came from</span><select id="csvChannel">
+          <option value="third_party">A directory or listing</option>
+          <option value="trade_fair">A trade fair</option>
+          <option value="referral">A referral</option>
+          <option value="inbound_request">They asked us to contact them</option>
+          <option value="existing_customer">Existing customers</option>
+        </select></label>
+        <div id="csvPreview" aria-live="polite"></div>
+        <div class="sheet-error" id="sheetError"></div>`,
+      ok: "Check the file",
+      onOk: async () => {
+        $("sheetError").textContent = "";
+        if (!csv) return ($("sheetError").textContent = "Choose a CSV file first."), true;
+        const { ok, data } = await api("/api/leads/import", { json: { csv, filename: name, channel: $("csvChannel").value, dry_run: !previewed } });
+        if (!ok) return ($("sheetError").textContent = data.error || "Refused."), true;
+        if (!previewed) {
+          previewed = true;
+          const skipped = Object.entries(data.skipped || {}).filter(([, n]) => n);
+          $("csvPreview").innerHTML = `<p><b>${fmt(data.would_add)}</b> new ${data.would_add === 1 ? "company" : "companies"} to add.</p>
+            ${skipped.length ? `<ul class="reasons">${skipped.map(([k, n]) => `<li>${fmt(n)} skipped: ${esc(k)}</li>`).join("")}</ul>` : ""}
+            ${(data.problems || []).length ? `<p class="row-sub">${data.problems.slice(0, 3).map(esc).join("<br>")}</p>` : ""}`;
+          $("sheetOk").textContent = data.would_add ? `Import ${fmt(data.would_add)}` : "Close";
+          if (!data.would_add) previewed = "empty";
+          return true;
+        }
+        if (previewed === "empty") return false;
+        toast(`Imported ${fmt(data.added)} ${data.added === 1 ? "company" : "companies"}. They wait as new leads, screened like the ones the agent finds.`);
+        loaders.leads();
+        return false;
+      },
+    });
+    $("csvFile").addEventListener("change", async (e) => {
+      const f = e.target.files[0];
+      previewed = false;
+      $("csvPreview").innerHTML = "";
+      $("sheetOk").textContent = "Check the file";
+      if (!f) return (csv = null);
+      if (f.size > 2 * 1024 * 1024) return ($("sheetError").textContent = "The file is over 2 MB."), (csv = null);
+      csv = await f.text();
+      name = f.name;
+    });
+  }
+  $("importLeads").addEventListener("click", importLeads);
   function renderLeads() {
     const q = $("leadFilter").value.trim().toLowerCase();
     const rows = leads
       .filter((c) => !q || [c.organization, c.email, c.sector, c.company_country].join(" ").toLowerCase().includes(q))
       .sort((a, b) => (b.fit_score || 0) - (a.fit_score || 0));
-    $("leadTable").innerHTML = `<thead><tr><th>Company</th><th class="hide-narrow">Country</th><th class="hide-narrow">Sector</th><th>Fit</th><th>Carbon</th><th class="hide-narrow">Status</th></tr></thead>
+    $("leadTable").innerHTML = `<thead><tr><th>Company</th><th class="hide-narrow">Country</th><th class="hide-narrow">Sector</th><th>Fit</th><th>Outcome</th><th class="hide-narrow">Status</th></tr></thead>
       <tbody>${
         rows.length
           ? rows
               .map((c) => {
-                const cp = (c.carbon_pressure || {}).level || "none";
                 return `<tr><td class="company">${esc(c.organization || "–")}<small>${esc(c.email)}</small></td>
                   <td class="hide-narrow">${esc(c.company_country || "–")}</td>
                   <td class="hide-narrow">${esc(c.sector || "–")}</td>
                   <td><span class="score"><span class="num">${fmt(c.fit_score)}</span><span class="score-bar"><i style="width:${c.fit_score || 0}%"></i></span></span></td>
-                  <td><span class="pill ${{ high: "green", some: "blue" }[cp] || ""}" title="${esc(((c.carbon_pressure || {}).reasons || []).join("; "))}">${esc(cp)}</span></td>
+                  <td>${outcomeControl(c.id, c.outcome, true)}</td>
                   <td class="hide-narrow nowrap">${esc(STATUS[c.status] || c.status)}</td></tr>`;
               })
               .join("")
@@ -824,18 +522,44 @@
       : `<p class="row-sub">No sectors in the client profile.</p>`;
   };
 
+  // ── Setup: what is left before a live email can go ──
+  const SETUP_MARK = { done: ["green", "Done"], todo: ["orange", "To do"], off: ["", "Off"], unknown: ["", "Not checked"] };
+  loaders.setup = async () => {
+    const { ok, data } = await api("/api/setup");
+    if (!ok) return toast(data.error || "Could not run the checks.", "error");
+    updateSetupBadge(data);
+    $("setupSummary").innerHTML = `<p class="lede"><strong>${fmt(data.done)} of ${fmt(data.required)}</strong> required steps done.
+      ${data.can_send_live ? "Live sending can start." : "Until every required step is done, nothing is sent for real."}
+      ${data.dry_run ? " The agent is in dry-run mode: it drafts and logs, it sends nothing." : ""}</p>`;
+    $("setupSteps").innerHTML = data.steps
+      .map((st) => {
+        const [cls, word] = SETUP_MARK[st.status] || SETUP_MARK.unknown;
+        return `<li class="setup-step"><div class="setup-head"><span class="row-title">${esc(st.title)}</span>
+          ${st.required ? "" : '<span class="pill">Optional</span>'}<span class="pill ${cls}">${esc(word)}</span></div>
+          <p class="row-sub">${esc(st.detail || "")}</p>
+          ${st.status === "done" ? "" : `<p class="setup-how">${esc(st.how)}</p>`}</li>`;
+      })
+      .join("");
+  };
+  function updateSetupBadge(data) {
+    const b = $("navSetupCount");
+    const left = Math.max(0, (data.required || 0) - (data.done || 0));
+    b.textContent = left;
+    b.hidden = !left;
+    b.setAttribute("aria-label", `${left} steps left`);
+  }
+
   // ── Command palette ──────────────────────────────────
   const COMMANDS = [
     { label: "Today", hint: "1", run: () => (location.hash = "#today") },
     { label: "Review", hint: "2", run: () => (location.hash = "#review") },
-    { label: "Quotes", hint: "3", run: () => (location.hash = "#quotes") },
-    { label: "Carbon passports", hint: "4", run: () => ((carbon.view = "passports"), go("carbon")) },
-    { label: "CBAM comparison", hint: "", run: () => ((carbon.view = "cbam"), go("carbon")) },
-    { label: "Leads", hint: "5", run: () => (location.hash = "#leads") },
-    { label: "Markets", hint: "6", run: () => (location.hash = "#markets") },
-    { label: "Record a lot", hint: "", run: () => (go("carbon"), setTimeout(() => $("newLot").click(), 50)) },
-    { label: "Quote the sample drawing", hint: "", run: () => (go("quotes"), setTimeout(() => $("useSample").click(), 50)) },
+    { label: "Leads", hint: "3", run: () => (location.hash = "#leads") },
+    { label: "Markets", hint: "4", run: () => (location.hash = "#markets") },
+    { label: "Setup: connect Omega's mailbox", hint: "5", run: () => (location.hash = "#setup") },
+    { label: "Import leads from a CSV file", hint: "", run: () => (go("leads"), setTimeout(importLeads, 50)) },
+    { label: "Download approved leads (CSV)", hint: "", run: () => (location.href = "/api/export/leads.csv") },
     { label: "Open the classic dashboard", hint: "", run: () => (location.href = "/classic") },
+    { label: "Sign out", hint: "", run: () => document.querySelector(".signout").submit() },
   ];
   function go(name) {
     if (current === name) loaders[name]();
@@ -855,14 +579,14 @@
     $("palette").hidden = true;
     if (palReturn) palReturn.focus();
   }
-  function renderPalette(jobs) {
+  function renderPalette(companies) {
     const q = $("paletteInput").value.trim().toLowerCase();
     const cmds = COMMANDS.filter((c) => !q || c.label.toLowerCase().includes(q));
-    palItems = [...cmds, ...jobs.map((j) => ({ label: j.part, hint: j.ref, job: j }))];
+    palItems = [...cmds, ...companies.map((c) => ({ label: c.organization || c.email, hint: c.company_country || "", company: c }))];
     palIndex = Math.min(palIndex, Math.max(0, palItems.length - 1));
     let html = cmds.length ? `<li class="pal-head" role="presentation">Go to</li>` : "";
     palItems.forEach((it, i) => {
-      if (it.job && (i === cmds.length)) html += `<li class="pal-head" role="presentation">Past jobs</li>`;
+      if (it.company && i === cmds.length) html += `<li class="pal-head" role="presentation">Companies</li>`;
       html += `<li role="option" id="pal-${i}" data-i="${i}" aria-selected="${i === palIndex}">${esc(it.label)}<small>${esc(it.hint)}</small></li>`;
     });
     if (!palItems.length) html = `<li class="pal-head" role="presentation">Nothing found</li>`;
@@ -870,20 +594,20 @@
     $("paletteInput").setAttribute("aria-activedescendant", palItems.length ? `pal-${palIndex}` : "");
   }
   const palSearch = debounce(async () => {
-    const q = $("paletteInput").value.trim();
-    if (q.length < 3) return renderPalette([]);
-    const { data } = await api(`/api/memory/search?q=${encodeURIComponent(q)}`);
-    renderPalette(Array.isArray(data) ? data.slice(0, 5) : []);
-  }, 200);
+    const q = $("paletteInput").value.trim().toLowerCase();
+    if (q.length < 2) return renderPalette([]);
+    if (!leads.length) await loaders.leads.fetch();
+    renderPalette(leads.filter((c) => [c.organization, c.email].join(" ").toLowerCase().includes(q)).slice(0, 6));
+  }, 150);
   $("paletteInput").addEventListener("input", () => ((palIndex = 0), renderPalette([]), palSearch()));
   function runPalette(i) {
     const it = palItems[i];
     if (!it) return;
     closePalette();
-    if (it.job) {
-      go("quotes");
-      $("memoryQuery").value = it.job.ref + " " + it.job.part;
-      $("memoryHits").innerHTML = jobRow(it.job);
+    if (it.company) {
+      $("leadFilter").value = it.company.organization || it.company.email;
+      go("leads");
+      renderLeads();
     } else it.run();
   }
   $("paletteList").addEventListener("click", (e) => {
@@ -927,9 +651,9 @@
       e.preventDefault();
       location.hash = `#${SCREENS[n - 1]}`;
     } else if (e.key === "j" || e.key === "ArrowDown") {
-      if (current === "review" || current === "carbon") (e.preventDefault(), moveIn(null, 1));
+      if (current === "review") (e.preventDefault(), moveIn(null, 1));
     } else if (e.key === "k" || e.key === "ArrowUp") {
-      if (current === "review" || current === "carbon") (e.preventDefault(), moveIn(null, -1));
+      if (current === "review") (e.preventDefault(), moveIn(null, -1));
     } else if (e.key === "/") {
       e.preventDefault();
       openPalette();
@@ -939,10 +663,7 @@
   // ── Start ────────────────────────────────────────────
   if (navigator.platform && /Mac/.test(navigator.platform)) document.querySelectorAll(".search-pill kbd").forEach((k) => (k.textContent = "⌘K"));
   api("/api/review/summary").then(({ data }) => updateBadges(data && data.counts));
-  api("/api/carbon/summary").then(({ data }) => {
-    const b = $("navCarbonCount");
-    if (data && data.drafts) (b.textContent = data.drafts), (b.hidden = false);
-  });
+  api("/api/setup").then(({ ok, data }) => ok && updateSetupBadge(data));
   api("/api/review?view=approved").then(({ data }) => data && data.reviewer && ($("who").textContent = `Signed in as ${data.reviewer}`));
   show(location.hash.slice(1) || "today", { focus: false });
 })();

@@ -3,11 +3,11 @@
 Exchange Online already refuses a password for IMAP, and turns password SMTP
 AUTH off by default at the end of December 2026. A mailbox password kept on
 this machine is also the one thing that lets whoever copies it send spam or
-phishing from SUPPLECO's domain. So the agent signs in as an app registered in
-SUPPLECO's Microsoft Entra (OAuth 2.0 client credentials with a certificate):
+phishing from the client's domain. So the agent signs in as an app registered in
+the client's Microsoft Entra (OAuth 2.0 client credentials with a certificate):
 it signs a short assertion with the certificate's private key, Microsoft
 answers with an access token for Exchange Online, and IMAP and SMTP accept
-that token (SASL XOAUTH2) for the mailboxes SUPPLECO's IT gave the app.
+that token (SASL XOAUTH2) for the mailboxes the client's IT gave the app.
 
 The token comes only from login.microsoftonline.com, over verified TLS, with
 a time limit, no redirect and no proxy from the environment. It is kept in
@@ -105,7 +105,7 @@ def tenant_problem(tenant: str) -> str:
         return ""
     return (
         "MICROSOFT_TENANT_ID must be the Directory (tenant) ID, a GUID such as "
-        "00000000-0000-0000-0000-000000000000, or SUPPLECO's verified domain "
+        "00000000-0000-0000-0000-000000000000, or the client's verified domain "
         "such as suppleco.onmicrosoft.com"
     )
 
@@ -132,7 +132,7 @@ def key_file_problem(path) -> str:
     if owner_only() and _mode(path) & 0o077:
         return (
             "MICROSOFT_CERTIFICATE_PATH can be read by other accounts on this "
-            "machine. It holds the private key that signs in to SUPPLECO's "
+            "machine. It holds the private key that signs in to the client's "
             "mailboxes: make it readable by the agent's account only "
             "(chmod 600)"
         )
