@@ -121,8 +121,10 @@ _APPROVER = {"approve": ("draft", "requested"), "reject": ("draft", "rejected")}
 DECISIONS = (*_RECIPIENT, *_SENDER, *_APPROVER)
 # The states in which the quantity sits in the recipient's booked capacity.
 _HOLDS_CAPACITY = ("accepted", "in_progress")
-# The states a job's recipient never sees: nothing has been sent to it.
-_UNSENT = ("draft", "rejected")
+# A job reaches its recipient only once approved; a draft cancelled or
+# rejected before that stays unseen for good, so "was it ever sent" is read
+# from the approval, never from the current status alone.
+_REJECTED = "rejected"
 
 # Omega itself, made on first use so a new installation has an orchestrator.
 # Only what Omega publishes about itself; its weekly capacity is Omega's to
@@ -483,7 +485,11 @@ def _is_party(job, viewer: Viewer) -> bool:
     """The sender always; the recipient once the job has been sent to it."""
     if job["from_member_id"] == viewer.member_id:
         return True
-    return job["to_member_id"] == viewer.member_id and job["status"] not in _UNSENT
+    return (
+        job["to_member_id"] == viewer.member_id
+        and job["approved_at"] is not None
+        and job["status"] != _REJECTED
+    )
 
 
 def visible_job(db, viewer: Viewer, job_id: int):
@@ -505,11 +511,11 @@ def list_jobs(db, viewer: Viewer) -> list[dict]:
     else:
         rows = db.conn.execute(
             _JOB_SELECT
-            + f""" WHERE j.from_member_id = ?
-                   OR (j.to_member_id = ? AND j.status NOT IN
-                       ({", ".join("?" for _ in _UNSENT)}))
+            + """ WHERE j.from_member_id = ?
+                   OR (j.to_member_id = ? AND j.approved_at IS NOT NULL
+                       AND j.status != ?)
                    ORDER BY j.id DESC""",
-            (viewer.member_id, viewer.member_id, *_UNSENT),
+            (viewer.member_id, viewer.member_id, _REJECTED),
         ).fetchall()
     return [job_dict(r, viewer) for r in rows]
 
