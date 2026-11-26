@@ -889,4 +889,63 @@ PERSONAL_COLUMNS = {
         "sender_account": _NONE,
         "notice_version": _NONE,
     },
+    # The partner network. Members are companies, but each names a person to
+    # deal with, and a message between two members is free text that can name
+    # anyone. Neither is a prospect's data: gdpr_erase, which works from a
+    # prospect's address, does not reach these tables yet: until it does, a
+    # partner contact's request is met by hand, doing what is named here.
+    "network_members": {
+        "id": _NONE,
+        "name": _NONE,
+        "city": _NONE,
+        "country": _NONE,
+        "specialisations": _NONE,
+        "certifications": _NONE,
+        "capacity_per_week": _NONE,
+        "booked": _NONE,
+        "rating": _NONE,
+        "is_self": _NONE,
+        "contact_name": "cleared",
+        "contact_email": "cleared",
+        "login": _NONE,
+        "password_hash": _NONE,
+        "created_at": _NONE,
+    },
+    "network_jobs": {
+        c: _NONE
+        for c in (
+            "id",
+            "created_at",
+            "created_by",
+            "order_id",
+            "from_member_id",
+            "to_member_id",
+            "kind",
+            "operation",
+            "part",
+            "quantity",
+            "due_date",
+            "status",
+            "approved_by",
+            "approved_at",
+            "decided_by",
+            "decided_at",
+            "from_unread",
+            "to_unread",
+        )
+    }
+    | {"notes": "redacted"},
+    "network_orders": {
+        c: _NONE
+        for c in ("id", "created_at", "created_by", "part", "quantity", "self_quantity", "due_date")
+    }
+    | {"notes": "redacted"},
+    "network_messages": {
+        "id": _NONE,
+        "job_id": _NONE,
+        "created_at": _NONE,
+        "author": _NONE,
+        "from_member_id": _NONE,
+        "body": "redacted",
+    },
 }

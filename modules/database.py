@@ -843,6 +843,7 @@ class Database:
 
     def _init_db(self):
         """Create all tables on first run, and apply schema migrations for V2."""
+        from modules.network import SCHEMA_SQL as NETWORK_SCHEMA_SQL
         from modules.outcomes import SCHEMA_SQL as OUTCOMES_SCHEMA_SQL
         from modules.review_queue import SCHEMA_SQL as REVIEW_SCHEMA_SQL
 
@@ -850,6 +851,7 @@ class Database:
             conn.executescript(SCHEMA_SQL)
             conn.executescript(REVIEW_SCHEMA_SQL)
             conn.executescript(OUTCOMES_SCHEMA_SQL)
+            conn.executescript(NETWORK_SCHEMA_SQL)
             # Quotes and carbon passports were removed in Nov 2026: drop their
             # tables so no personal data is left where erasure no longer looks.
             conn.executescript("DROP TABLE IF EXISTS quotes; DROP TABLE IF EXISTS carbon_lots;")

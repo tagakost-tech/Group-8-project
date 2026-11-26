@@ -12,6 +12,11 @@ Demo logins: "admin" (controls the agent) and "maria" (a named reviewer).
 Their passwords come from OMEGA_DEMO_ADMIN_PASSWORD and
 OMEGA_DEMO_REVIEWER_PASSWORD; when unset, fresh random ones are made at each
 start and printed here, so no password lives in the code.
+
+The partner network is seeded too, with two partner logins, "tornitura"
+(Tornitura Adda) and "stampaggio" (Stampaggio Brianza). Their password is
+OMEGA_DEMO_MEMBER_PASSWORD, or the published demo one below: the group chose
+public partner logins for the hosted demo, as app.py does for its own.
 """
 
 import argparse
@@ -122,7 +127,7 @@ def demo_settings(passwords: tuple[str, str] | None = None):
     )
 
 
-def seed(settings) -> int:
+def seed(settings, member_password: str | None = None) -> int:
     from openpyxl import Workbook
 
     from agent import OutreachAgent
@@ -190,6 +195,7 @@ def seed(settings) -> int:
         ]
     )
     seed_history(agent.db, sid)
+    seed_network(agent.db, member_password or demo_member_password())
     return len(agent.review_queue.pending())
 
 
@@ -262,6 +268,195 @@ def seed_history(db, sid) -> None:
             outcomes.set_stage(db, cid, stage, "maria")
 
 
+DEMO_MEMBER_LOGIN = "demo-member-password"
+
+# The partner network around Omega, all invented: each member's trade, its
+# weekly capacity and how much of it is already booked, and its rating from
+# earlier jobs. Omega itself is the orchestrator (is_self).
+NETWORK = [
+    {
+        "name": "Omega IFS",
+        "city": "Cesano Maderno",
+        "country": "IT",
+        "specialisations": ["cold_forming"],
+        "certifications": "IATF 16949, ISO 9001, ISO 14001",
+        "capacity_per_week": 20000,
+        "booked": 14500,
+        "rating": None,
+        "contact_name": "Giulia Bianchi",
+        "contact_email": "network@omega-demo.example",
+        "is_self": True,
+    },
+    {
+        "name": "Stampaggio Brianza S.r.l.",
+        "city": "Seregno",
+        "country": "IT",
+        "specialisations": ["cold_forming"],
+        "certifications": "ISO 9001",
+        "capacity_per_week": 8000,
+        "booked": 3200,
+        "rating": 4.6,
+        "contact_name": "Luca Colombo",
+        "contact_email": "produzione@stampaggio-brianza.example",
+        "login": "stampaggio",
+    },
+    {
+        "name": "Tornitura Adda S.r.l.",
+        "city": "Lecco",
+        "country": "IT",
+        "specialisations": ["turning", "machining"],
+        "certifications": "ISO 9001",
+        "capacity_per_week": 3000,
+        "booked": 900,
+        "rating": 4.8,
+        "contact_name": "Sara Mauri",
+        "contact_email": "officina@tornitura-adda.example",
+        "login": "tornitura",
+    },
+    {
+        "name": "Trattamenti Termici Seveso S.r.l.",
+        "city": "Seveso",
+        "country": "IT",
+        "specialisations": ["heat_treatment"],
+        "certifications": "ISO 9001, CQI-9",
+        "capacity_per_week": 40000,
+        "booked": 26000,
+        "rating": 4.5,
+        "contact_name": "Marco Galli",
+        "contact_email": "forni@tt-seveso.example",
+    },
+    {
+        "name": "Zincatura Lambro S.r.l.",
+        "city": "Monza",
+        "country": "IT",
+        "specialisations": ["plating"],
+        "certifications": "ISO 9001, ISO 14001",
+        "capacity_per_week": 30000,
+        "booked": 21000,
+        "rating": 4.2,
+        "contact_name": "Elena Fumagalli",
+        "contact_email": "linea@zincatura-lambro.example",
+    },
+    {
+        "name": "Officina Meda S.r.l.",
+        "city": "Meda",
+        "country": "IT",
+        "specialisations": ["machining"],
+        "certifications": "",
+        "capacity_per_week": 1500,
+        "booked": 1200,
+        "rating": 4.4,
+        "contact_name": "Davide Brambilla",
+        "contact_email": "info@officina-meda.example",
+    },
+    {
+        "name": "Trafileria Lecchese S.p.A.",
+        "city": "Lecco",
+        "country": "IT",
+        "specialisations": ["wire"],
+        "certifications": "ISO 9001, IATF 16949",
+        "capacity_per_week": 100000,
+        "booked": 62000,
+        "rating": 4.9,
+        "contact_name": "Paola Valsecchi",
+        "contact_email": "vendite@trafileria-lecchese.example",
+    },
+]
+
+
+def demo_member_password() -> str:
+    return os.environ.get("OMEGA_DEMO_MEMBER_PASSWORD", "").strip() or DEMO_MEMBER_LOGIN
+
+
+def seed_network(db, member_password: str) -> None:
+    """The invented network, three approved jobs at different stages written
+    straight into the tables so the stages need no clicks, and one 1,000-bolt
+    order split three ways and waiting for a person to approve it. The
+    in-progress job's 800 bolts are already counted in Stampaggio's booked
+    capacity."""
+    from werkzeug.security import generate_password_hash
+
+    from modules import clock, network
+
+    ids = {}
+    with db._transaction() as conn:
+        for m in NETWORK:
+            login = m.get("login")
+            ids[m["name"]] = network._insert_member(
+                conn,
+                m,
+                is_self=m.get("is_self", False),
+                login=login,
+                password_hash=generate_password_hash(member_password) if login else None,
+            )
+    omega = ids["Omega IFS"]
+    jobs = [
+        ("Trattamenti Termici Seveso S.r.l.", "operation", "heat_treatment",
+         "M10x60 bolt, class 10.9: quench and temper", 5000, "done", "admin"),
+        ("Stampaggio Brianza S.r.l.", "capacity", "cold_forming",
+         "M8x40 bolt, class 8.8", 800, "in_progress", "stampaggio"),
+        ("Tornitura Adda S.r.l.", "operation", "turning",
+         "M8x40 bolt, turned groove", 1000, "requested", None),
+    ]
+    now = clock.db_now()
+    with db._transaction() as conn:
+        for to, kind, operation, part, quantity, status, decided_by in jobs:
+            job_id = conn.execute(
+                """INSERT INTO network_jobs (created_at, created_by, from_member_id,
+                       to_member_id, kind, operation, part, quantity, due_date,
+                       notes, status, approved_by, approved_at, decided_by, decided_at)
+                   VALUES (?, 'maria', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'maria', ?, ?, ?)""",
+                (
+                    now, omega, ids[to], kind, operation, part, quantity,
+                    "2026-12-18", "Drawing OM-2231 rev. C attached to the order.",
+                    status, now, decided_by, now if decided_by else None,
+                ),
+            ).lastrowid
+            if status == "requested":
+                turning_job = job_id
+        talk = [
+            (omega, "maria", (
+                "Hello Sara, 1,000 M8x40 bolts need the groove at 12 mm from "
+                "the head, drawing OM-2231. Can you fit them before the 18th?"
+            )),
+            (ids["Tornitura Adda S.r.l."], "tornitura", (
+                "We can start on the 9th. Is the groove tolerance +/-0.05 as "
+                "on the drawing?"
+            )),
+            (omega, "maria", "Yes, +/-0.05. The bolts leave our presses on the 6th."),
+        ]
+        for member_id, author, body in talk:
+            conn.execute(
+                """INSERT INTO network_messages (job_id, created_at, author,
+                       from_member_id, body) VALUES (?, ?, ?, ?, ?)""",
+                (turning_job, now, author, member_id, body),
+            )
+        # Omega's last message is news for Tornitura; Tornitura's for Omega
+        # was read when Omega answered.
+        conn.execute("UPDATE network_jobs SET to_unread = 1 WHERE id = ?", (turning_job,))
+
+    # The order the presentation walks through: Omega forms 200 of 1,000
+    # flange bolts, Stampaggio the other 800, Tornitura grooves all 1,000.
+    # Both jobs are drafts until someone clicks Approve.
+    network.create_order(
+        db,
+        network.Viewer(omega, "orchestrator", "maria"),
+        {
+            "part": "M10x60 flange bolt, class 10.9",
+            "quantity": 1000,
+            "self_quantity": 200,
+            "due_date": "2027-01-15",
+            "notes": "Drawing OM-2407 rev. A. Groove 3 mm wide, 15 mm from the head.",
+            "jobs": [
+                {"to_member_id": ids["Stampaggio Brianza S.r.l."],
+                 "operation": "cold_forming", "quantity": 800},
+                {"to_member_id": ids["Tornitura Adda S.r.l."],
+                 "operation": "turning", "quantity": 1000},
+            ],
+        },
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--seed-only", action="store_true")
@@ -281,6 +476,12 @@ def main():
     print(f"Dashboard: http://127.0.0.1:{PORT}", flush=True)
     if made:
         print(f"Logins for this run: admin / {admin}   maria / {reviewer}", flush=True)
+    print(
+        "Partner logins: tornitura and stampaggio"
+        + ("" if os.environ.get("OMEGA_DEMO_MEMBER_PASSWORD", "").strip()
+           else f", password {DEMO_MEMBER_LOGIN}"),
+        flush=True,
+    )
     serve(app, host="127.0.0.1", port=PORT)
 
 

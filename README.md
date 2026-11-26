@@ -75,6 +75,36 @@ CI tests 3.14 as well as 3.15. Vercel is serverless, so this is a **showcase onl
 from the invented data on each cold start, and the agent's background loop and
 inbox polling do not run there.
 
+## Network
+
+Omega orchestrates a network of specialist SMEs. Omega's staff send a job to a
+member, either spare capacity ("form 800 of these 1,000 bolts") or an operation
+Omega does not do (turning, heat treatment, plating). **Split an order** does it
+in one go: Omega keeps part of its own operation, the rest goes to partners
+with free capacity, and other operations go to the members that do them; the
+shares must add up to the order.
+
+Like an email, a job is sent only when a named person at Omega approves it.
+Every job starts as a draft the recipient cannot see; **Approve and send**
+records who approved it and when, **Reject** drops it unsent. The member then
+accepts or declines it, starts it and marks it done; accepting books the
+quantity against the member's weekly capacity, and declining, cancelling or
+finishing releases it. Each job has its own message thread between the two
+companies. The customer deals only with Omega: a job names the part, never the
+customer. The Jobs tab is the log of every routed job, its order and approver.
+
+A member signs in with its own login and sees only the network: its own jobs,
+the member list and the matching. Omega's leads, contacts, reviews and settings
+answer 403. The administrator admits a partner (**Add a partner**, or
+`POST /api/network/members`) and sets each card's weekly capacity; a partner
+can change only its own capacity.
+
+The demo seeds seven invented members, three jobs and a 1,000-bolt order
+waiting for approval. Partner logins:
+`tornitura` (Tornitura Adda) and `stampaggio` (Stampaggio Brianza), password
+`demo-member-password`, or `OMEGA_DEMO_MEMBER_PASSWORD` when set. Like the
+other demo logins, it is public on purpose.
+
 ## Run it in production
 
 Production is a single small server (a VM or an on-premise box) running the

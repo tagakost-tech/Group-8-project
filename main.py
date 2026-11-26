@@ -2619,13 +2619,16 @@ def create_dashboard_app(settings: Settings):
     from flask import (
         Flask,
         Response,
+        g,
         jsonify,
         redirect,
         render_template,
         request,
         session,
     )
+    from werkzeug.security import check_password_hash, generate_password_hash
 
+    from modules import network
     from modules.rate_limit import RequestLimiter
 
     refusal = dashboard_password_refusal(settings)
@@ -2679,6 +2682,7 @@ def create_dashboard_app(settings: Settings):
     # signing key is derived from the passwords themselves, so changing any
     # password signs everyone out.
     import hashlib
+    import secrets
     from datetime import timedelta as _session_span
 
     from flask.sessions import SecureCookieSessionInterface
@@ -2728,6 +2732,36 @@ def create_dashboard_app(settings: Settings):
                 return account
         return None
 
+    # ── Network members' own logins ──
+    # A partner company signs in to share work with Omega and nothing else.
+    # Its password is stored only as a hash; when no member has the login
+    # given, a throwaway hash is checked instead, so the time taken does not
+    # say which member logins exist. A staff name is never a member login, so
+    # a wrong staff password is refused without hashing: the lock-out counts
+    # those guesses at the speed it always has.
+    _no_member_hash = generate_password_hash(secrets.token_urlsafe(16))
+
+    def _member_with(name: str, password: str) -> dict | None:
+        if name in {account for account, _ in _accounts()}:
+            return None
+        row = network.member_by_login(db, name)
+        stored = (row or {}).get("password_hash") or _no_member_hash
+        right = check_password_hash(stored, password)
+        return row if row and row.get("password_hash") and right else None
+
+    def _session_member() -> dict | None:
+        """The signed-in member, while its session and password still hold:
+        the fingerprint covers the stored hash, so a new password ends it."""
+        login, mark = session.get("member"), session.get("fp")
+        if not login or not mark:
+            return None
+        row = network.member_by_login(db, login)
+        if row and row.get("password_hash") and hmac.compare_digest(
+            mark, _fingerprint(row["login"], row["password_hash"])
+        ):
+            return row
+        return None
+
     def _wants_the_page() -> bool:
         """A person's browser opening a page, as opposed to a script or a
         fetch: they get the sign-in page instead of the browser's own box."""
@@ -2744,6 +2778,9 @@ def create_dashboard_app(settings: Settings):
     def _require_dashboard_auth():
         if any(request.path.startswith(p) for p in _AUTH_EXEMPT_PREFIXES):
             return None  # public endpoints
+        g.member_login = _session_member()
+        if g.member_login is not None:
+            return None
         if request.path in ("/login", "/static/app/app.css") or _session_user():
             return None
         # The connection's own address: no trusted-proxy setting exists, so a
@@ -2781,6 +2818,13 @@ def create_dashboard_app(settings: Settings):
         # A list, not a generator: any() would stop at the first match.
         compared = [matches(n, pw) for n, pw in accounts] if auth else []
         ok = any(compared)
+        if not ok and auth is not None:
+            # Not a member of staff: perhaps a network member. A wrong member
+            # password counts toward the same lock-out as any other.
+            g.member_login = _member_with(
+                (auth.username or "").strip().lower(), auth.password or ""
+            )
+            ok = g.member_login is not None
         if not ok:
             # A request with no credentials is the browser asking for the
             # login box, not a guess.
@@ -2879,7 +2923,38 @@ def create_dashboard_app(settings: Settings):
         r"^/(login|logout)$"
         r"|^/api/review/(paste-reply|\d+/(open|approve|reject|reopen))$"
         r"|^/api/contacts/\d+/outcome$"
+        # Sharing work with the network (drafting, approving, splitting an
+        # order) is staff work; admitting or changing a member stays the
+        # administrator's.
+        r"|^/api/network/(?!members(/|$))"
     )
+
+    def _network_only_for_members():
+        """A partner's login reaches the app shell and the network, never
+        Omega's leads, contacts, reviews or settings: those are the data a
+        partner must not see, or the network would hand out Omega's customers.
+        Deny by default, as for reviewers."""
+        member = getattr(g, "member_login", None)
+        if member is None:
+            return None
+        path, method = request.path, request.method
+        if (
+            (path == "/" and method in ("GET", "HEAD"))
+            or path == "/login"
+            or (path == "/logout" and method == "POST")
+            or path.startswith("/static/")
+            or path == "/healthz"
+            or (
+                path.startswith("/api/network/")
+                and not (path == "/api/network/members" and method != "GET")
+            )
+        ):
+            return None
+        if path.startswith("/api/"):
+            return jsonify({"error": "A network member's login cannot open that."}), 403
+        return Response("A network member's login cannot open that.", 403)
+
+    app.before_request(_network_only_for_members)
 
     @app.before_request
     def _require_admin_for_control():
@@ -2888,6 +2963,12 @@ def create_dashboard_app(settings: Settings):
         if any(request.path.startswith(p) for p in _AUTH_EXEMPT_PREFIXES):
             return None
         if _REVIEWER_WRITES.match(request.path):
+            return None
+        # A partner changes its own card (network.update_member refuses any
+        # other); Omega's reviewers do not change members.
+        if getattr(g, "member_login", None) is not None and re.fullmatch(
+            r"/api/network/members/\d+", request.path
+        ):
             return None
         if hmac.compare_digest(
             _reviewer().encode("utf-8"), settings.dashboard_username.encode("utf-8")
@@ -2917,6 +2998,15 @@ def create_dashboard_app(settings: Settings):
             same &= hmac.compare_digest(given, password.encode("utf-8"))
             if same:
                 found = (account, password)
+        member = None if found else _member_with(name.lower(), given.decode("utf-8"))
+        if member is not None:
+            session.clear()
+            session.permanent = True
+            session["member"] = member["login"]
+            session["fp"] = _fingerprint(member["login"], member["password_hash"])
+            logger.info("Network sign-in: member %s", member["id"])
+            # The classic dashboard is Omega's alone; a member starts at the app.
+            return redirect("/")
         if found is None:
             login_failures.hit(client)
             return render_template(
@@ -2972,6 +3062,116 @@ def create_dashboard_app(settings: Settings):
             (k for k in keys if data.get(k) is not None and not isinstance(data[k], str)),
             None,
         )
+
+    # ── API: Network - Omega and its partners share work ──
+    # The rules (who may decide what, capacity booking, who reads which
+    # conversation) live in modules/network.py; these routes say who is asking.
+    def _network_viewer() -> network.Viewer:
+        member = getattr(g, "member_login", None)
+        if member is not None:
+            return network.Viewer(member["id"], "member", member["login"])
+        return network.Viewer(network.self_member(db)["id"], "orchestrator", _reviewer())
+
+    def _network_answer(work, ok_status=200):
+        try:
+            return jsonify(work()), ok_status
+        except network.WrongState as e:
+            return jsonify({"error": str(e)}), 409
+        except PermissionError as e:
+            return jsonify({"error": str(e)}), 403
+        except LookupError as e:
+            return jsonify({"error": str(e)}), 404
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.route("/api/network/me")
+    def network_me():
+        viewer = _network_viewer()
+        return jsonify(
+            {
+                "role": viewer.role,
+                "member": network.member_dict(network.get_member(db, viewer.member_id)),
+                "name": viewer.name,
+                # Only the administrator changes a member's card.
+                "manages_members": viewer.is_staff
+                and hmac.compare_digest(
+                    viewer.name.encode("utf-8"), settings.dashboard_username.encode("utf-8")
+                ),
+            }
+        )
+
+    @app.route("/api/network/members", methods=["GET", "POST"])
+    def network_members():
+        if request.method == "GET":
+            return jsonify(network.list_members(db))
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Send the member as JSON."}), 400
+        return _network_answer(
+            lambda: network.add_member(
+                db,
+                data,
+                generate_password_hash,
+                taken_logins=[account for account, _ in _accounts()],
+            ),
+            201,
+        )
+
+    @app.route("/api/network/members/<int:member_id>", methods=["PATCH"])
+    def network_member_update(member_id):
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Send the change as JSON."}), 400
+        return _network_answer(
+            lambda: network.update_member(db, _network_viewer(), member_id, data)
+        )
+
+    @app.route("/api/network/orders", methods=["POST"])
+    def network_orders():
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Send the order as JSON."}), 400
+        return _network_answer(lambda: network.create_order(db, _network_viewer(), data), 201)
+
+    @app.route("/api/network/match")
+    def network_match():
+        return _network_answer(
+            lambda: network.match(
+                db,
+                _network_viewer(),
+                request.args.get("operation"),
+                request.args.get("quantity", ""),
+            )
+        )
+
+    @app.route("/api/network/jobs", methods=["GET", "POST"])
+    def network_jobs():
+        viewer = _network_viewer()
+        if request.method == "GET":
+            return jsonify(network.list_jobs(db, viewer))
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Send the job as JSON."}), 400
+        return _network_answer(lambda: network.create_job(db, viewer, data), 201)
+
+    @app.route("/api/network/jobs/<int:job_id>/decision", methods=["POST"])
+    def network_decision(job_id):
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Send the decision as JSON."}), 400
+        return _network_answer(
+            lambda: network.decide(db, _network_viewer(), job_id, data.get("decision"))
+        )
+
+    @app.route("/api/network/jobs/<int:job_id>/messages", methods=["GET", "POST"])
+    def network_messages(job_id):
+        viewer = _network_viewer()
+        if request.method == "GET":
+            return _network_answer(lambda: network.messages(db, viewer, job_id))
+        data = _json_body()
+        if data is None:
+            return jsonify({"error": "Send the message as JSON."}), 400
+        return _network_answer(lambda: network.post_message(db, viewer, job_id, data), 201)
 
     def _update_config():
         """Apply operator config changes.

@@ -58,12 +58,15 @@
   const typing = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 
   // ── Router ───────────────────────────────────────────
-  const SCREENS = ["today", "review", "leads", "markets", "setup"];
+  // A partner's login sees only the network; the rest is Omega's own data,
+  // so the list of screens shrinks to that one once /api/network/me answers.
+  let SCREENS = ["today", "review", "leads", "markets", "network", "setup"];
+  let isMember = false;
   const loaders = {};
   let current = null;
 
   function show(name, { focus = true } = {}) {
-    if (!SCREENS.includes(name)) name = "today";
+    if (!SCREENS.includes(name)) name = SCREENS[0];
     SCREENS.forEach((s) => ($(`screen-${s}`).hidden = s !== name));
     document.querySelectorAll(".nav a").forEach((a) => {
       if (a.dataset.screen === name) a.setAttribute("aria-current", "page");
@@ -337,6 +340,12 @@
   }
 
   function moveIn(list, step) {
+    if (current === "network" && network.view === "jobs") {
+      if (!network.jobs.length) return;
+      const i = network.current ? network.jobs.findIndex((x) => x.id === network.current.id) : -1;
+      const n = network.jobs[Math.max(0, Math.min(network.jobs.length - 1, i + step))];
+      if (n) openJob(n.id);
+    }
     if (current === "review") {
       if (!review.items.length) return;
       const i = review.current ? review.items.findIndex((x) => x.id === review.current.id) : -1;
@@ -549,18 +558,604 @@
     b.setAttribute("aria-label", `${left} steps left`);
   }
 
+  // ── Network: Omega and the partner SMEs it routes work to ──
+  const SPECS = {
+    cold_forming: "Cold forming",
+    turning: "Turning",
+    heat_treatment: "Heat treatment",
+    plating: "Plating & coating",
+    machining: "Machining",
+    wire: "Wire",
+    logistics: "Logistics",
+  };
+  const KINDS = { capacity: "Extra capacity", operation: "An operation on our parts" };
+  const JOB_STATUS = {
+    draft: ["orange", "Waiting for approval"],
+    rejected: ["", "Rejected"],
+    requested: ["orange", "Sent"],
+    accepted: ["blue", "Accepted"],
+    in_progress: ["blue", "In progress"],
+    done: ["green", "Done"],
+    declined: ["", "Declined"],
+    cancelled: ["", "Cancelled"],
+  };
+  const JOB_ACTIONS = {
+    approve: ["Approve and send", "primary"],
+    reject: ["Reject", "danger"],
+    accept: ["Accept", "primary"],
+    decline: ["Decline", "danger"],
+    start: ["Start", ""],
+    done: ["Mark done", "primary"],
+    cancel: ["Cancel", "danger"],
+  };
+  const DIR_ICON = {
+    in: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 5 5 15M5 8v7h7"/></svg>',
+    out: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M8 5h7v7"/></svg>',
+    between: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14M13 6l4 4-4 4"/></svg>',
+  };
+  const network = { me: null, view: "members", members: [], jobs: [], current: null, pendingOpen: null };
+  const specName = (k) => SPECS[k] || k;
+  const pcs = (n) => `${fmt(n)} ${n === 1 ? "piece" : "pieces"}`;
+  // Server times are the wall clock in Omega's own time zone with no offset;
+  // read and written back as local, they show exactly as Omega logged them.
+  function when(s) {
+    if (!s) return "–";
+    const d = new Date(String(s).replace(" ", "T"));
+    return Number.isNaN(d.getTime())
+      ? String(s)
+      : d.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+  function day(s) {
+    if (!s) return "–";
+    const d = new Date(`${s}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? String(s) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }
+  const needsMe = (j) => ["accept", "approve"].some((a) => (j.actions || []).includes(a)) || (j.unread || 0) > 0;
+  function otherSide(j) {
+    if (j.direction === "out") return j.to_member.name;
+    if (j.direction === "in") return j.from_member.name;
+    return `${j.from_member.name} → ${j.to_member.name}`;
+  }
+  const dirWords = (j) => ({ in: "Sent to you by", out: "You sent to", between: "Between" })[j.direction] || "";
+
+  loaders.network = async () => {
+    const [ms, js] = await Promise.all([api("/api/network/members"), api("/api/network/jobs")]);
+    if (!ms.ok) toast(ms.data.error || "Could not load the network.", "error");
+    if (!js.ok) toast(js.data.error || "Could not load the jobs.", "error");
+    if (ms.ok) network.members = ms.data || [];
+    if (js.ok) network.jobs = js.data || [];
+    renderMembers();
+    renderJobs();
+    updateNetworkBadge();
+    const want = network.pendingOpen;
+    network.pendingOpen = null;
+    if (want && network.jobs.some((j) => j.id === want)) openJob(want);
+    else if (network.current) {
+      const still = network.jobs.find((j) => j.id === network.current.id);
+      if (still) renderJobDetail(still, { keepThread: true });
+      else clearJobDetail();
+    }
+  };
+
+  async function refreshNetworkBadge() {
+    const { ok, data } = await api("/api/network/jobs");
+    if (!ok) return;
+    network.jobs = data || [];
+    updateNetworkBadge();
+  }
+  function updateNetworkBadge() {
+    const n = network.jobs.filter(needsMe).length;
+    [$("navNetworkCount"), $("nwJobsCount")].forEach((b) => {
+      b.textContent = n;
+      b.hidden = !n;
+      b.setAttribute("aria-label", `${n} ${n === 1 ? "job needs" : "jobs need"} you`);
+    });
+  }
+
+  function setNetworkView(view) {
+    network.view = view;
+    $("networkViews").querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === view));
+    $("nwMembers").hidden = view !== "members";
+    $("nwJobs").hidden = view !== "jobs";
+  }
+  $("networkViews").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-view]");
+    if (b) setNetworkView(b.dataset.view);
+  });
+  const onAList = () => current === "review" || (current === "network" && network.view === "jobs");
+
+  function renderMembers() {
+    $("nwAddMember").hidden = !(network.me && network.me.manages_members);
+    const ms = network.members;
+    const others = ms.filter((m) => !m.is_self);
+    const free = others.reduce((s, m) => s + Math.max(0, m.free || 0), 0);
+    $("nwMembersLede").innerHTML = ms.length
+      ? `<strong>${fmt(others.length)} ${others.length === 1 ? "partner" : "partners"}</strong> besides ${esc((ms.find((m) => m.is_self) || {}).name || "you")}, with <strong>${pcs(free)}</strong> of free capacity this week.`
+      : "";
+    $("nwMemberGrid").innerHTML = ms.length
+      ? ms.map(memberCard).join("")
+      : `<p class="row-sub">No members in the network yet.</p>`;
+  }
+  function memberCard(m) {
+    const cap = Math.max(0, m.capacity_per_week || 0);
+    const free = Math.max(0, m.free || 0);
+    const share = cap ? Math.min(100, (free / cap) * 100) : 0;
+    const tight = cap && free / cap < 0.2;
+    return `<article class="card nw-member${m.is_self ? " is-self" : ""}" aria-label="${esc(m.name)}">
+      <div class="nw-member-head">
+        <h2>${esc(m.name)}</h2>
+        ${m.is_self ? `<span class="pill blue">${isMember ? "You" : "Omega · orchestrator"}</span>` : ""}
+      </div>
+      <p class="row-sub">${esc([m.city, m.country].filter(Boolean).join(", ") || "–")}</p>
+      <div class="tags">${(m.specialisations || []).map((s) => `<span class="pill">${esc(specName(s))}</span>`).join("")}</div>
+      ${m.certifications ? `<p class="nw-certs">${esc(m.certifications)}</p>` : ""}
+      <div class="nw-cap">
+        <div class="nw-cap-text"><span>Free this week</span><span class="num">${fmt(free)} of ${fmt(cap)} free</span></div>
+        <span class="bar-track" aria-hidden="true"><span class="bar-fill${tight ? " is-tight" : ""}" style="width:${share}%"></span></span>
+      </div>
+      <div class="nw-member-foot">
+        <span class="nw-rating">${m.rating === null || m.rating === undefined ? "No rating yet" : `Rating <b class="num">${fmt(m.rating, 1)}</b>`}</span>
+        <span class="nw-member-btns">
+        ${canEdit(m) ? `<button class="btn" type="button" data-capacity="${esc(m.id)}" aria-label="Set the weekly capacity of ${esc(m.name)}">Set capacity</button>` : ""}
+        ${m.is_self ? "" : `<button class="btn" type="button" data-send-to="${esc(m.id)}" aria-label="Send a job to ${esc(m.name)}">Send a job</button>`}
+        </span>
+      </div>
+    </article>`;
+  }
+  // Omega's staff set any card (the server keeps it to the administrator);
+  // a partner sets only its own.
+  const canEdit = (m) =>
+    isMember ? !!(network.me && network.me.member && network.me.member.id === m.id) : !!(network.me && network.me.manages_members);
+  $("nwMemberGrid").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-send-to]");
+    if (b) openSendJob(Number(b.dataset.sendTo));
+    const c = e.target.closest("[data-capacity]");
+    if (c) openCapacity(Number(c.dataset.capacity));
+  });
+  $("nwSendJob").addEventListener("click", () => openSendJob());
+  $("nwSplitOrder").addEventListener("click", () => openSplitOrder());
+  $("nwAddMember").addEventListener("click", () => openAddMember());
+
+  // The administrator admits a partner with its own login; the partner then
+  // signs in and sees only the network.
+  function openAddMember() {
+    openSheet({
+      title: "Add a partner",
+      body: `<p>Admit a certified company to the network. It signs in with its own login and sees only its jobs and the member list, never Omega's customers.</p>
+        <div class="nw-form">
+          <label class="field nw-wide"><span>Company name</span><input id="amName" maxlength="120" autocomplete="off"></label>
+          <label class="field"><span>City</span><input id="amCity" maxlength="80" autocomplete="off"></label>
+          <label class="field"><span>Country (2 letters)</span><input id="amCountry" maxlength="2" value="IT" autocomplete="off"></label>
+          <fieldset class="nw-wide nw-specs"><legend>What it does</legend>${Object.entries(SPECS)
+            .map(([k, l]) => `<label><input type="checkbox" value="${k}"> ${esc(l)}</label>`)
+            .join("")}</fieldset>
+          <label class="field"><span>Certifications</span><input id="amCerts" maxlength="200" placeholder="e.g. ISO 9001" autocomplete="off"></label>
+          <label class="field"><span>Pieces per week</span><input id="amCap" type="number" inputmode="numeric" min="0" max="10000000" step="1" value="0"></label>
+          <label class="field"><span>Contact name</span><input id="amContact" maxlength="120" autocomplete="off"></label>
+          <label class="field"><span>Contact email</span><input id="amEmail" type="email" maxlength="254" autocomplete="off"></label>
+          <label class="field"><span>Login</span><input id="amLogin" maxlength="40" autocomplete="off" placeholder="e.g. tornitura"></label>
+          <label class="field"><span>Password (12+ characters)</span><input id="amPass" type="password" minlength="12" autocomplete="new-password"></label>
+        </div>
+        <div class="sheet-error" id="sheetError"></div>`,
+      ok: "Add the partner",
+      onOk: async () => {
+        const specs = [...document.querySelectorAll(".nw-specs input:checked")].map((x) => x.value);
+        if (!specs.length) return (($("sheetError").textContent = "Tick at least one thing the partner does."), true);
+        const { ok, data } = await api("/api/network/members", {
+          json: {
+            name: $("amName").value.trim(),
+            city: $("amCity").value.trim(),
+            country: $("amCountry").value.trim(),
+            specialisations: specs,
+            certifications: $("amCerts").value.trim(),
+            capacity_per_week: Number($("amCap").value) || 0,
+            contact_name: $("amContact").value.trim(),
+            contact_email: $("amEmail").value.trim(),
+            login: $("amLogin").value.trim(),
+            password: $("amPass").value,
+          },
+        });
+        if (!ok) return (($("sheetError").textContent = data.error || "Refused."), true);
+        toast(`${data.name} joined the network.`);
+        loaders.network();
+        return false;
+      },
+    });
+  }
+
+  function openCapacity(id) {
+    const m = network.members.find((x) => x.id === id);
+    if (!m) return;
+    openSheet({
+      title: `Weekly capacity · ${m.name}`,
+      body: `<p>How many pieces ${esc(m.is_self ? "Omega" : m.name)} can make in a week. Accepted jobs are booked against it; ${pcs(m.booked || 0)} are booked now.</p>
+        <label class="field"><span>Pieces per week</span><input id="nwCap" type="number" inputmode="numeric" min="0" max="10000000" step="1" value="${esc(m.capacity_per_week || 0)}"></label>
+        <div class="sheet-error" id="sheetError"></div>`,
+      ok: "Save",
+      onOk: async () => {
+        const n = Number($("nwCap").value);
+        if (!Number.isInteger(n) || n < 0 || n > 10000000) return (($("sheetError").textContent = "A whole number from 0 to 10,000,000."), true);
+        const { ok, data } = await api(`/api/network/members/${id}`, { method: "PATCH", json: { capacity_per_week: n } });
+        if (!ok) return (($("sheetError").textContent = data.error || "Refused."), true);
+        toast("Capacity saved.");
+        loaders.network();
+        return false;
+      },
+    });
+  }
+
+  // One customer order, split: Omega keeps part of its own operation, the rest
+  // of it goes to partners with room, and operations Omega does not do go to
+  // the members that do. Every line becomes a draft a named person approves.
+  function openSplitOrder() {
+    const mine = ((network.me && network.me.member) || {}).specialisations || ["cold_forming"];
+    const main = mine[0] || "cold_forming";
+    let rowSeq = 0;
+    const rowHtml = (op, qty) => {
+      const n = ++rowSeq;
+      return `<div class="nw-line" data-line="${n}">
+        <label class="field"><span>Operation</span><select data-op>${Object.entries(SPECS)
+          .map(([k, l]) => `<option value="${k}" ${k === op ? "selected" : ""}>${esc(l)}</option>`)
+          .join("")}</select></label>
+        <label class="field"><span>Partner</span><select data-to><option value="">Finding partners…</option></select></label>
+        <label class="field"><span>Pieces</span><input data-qty type="number" inputmode="numeric" min="1" max="10000000" step="1" value="${esc(qty)}"></label>
+        <button class="btn" type="button" data-remove aria-label="Remove this line">Remove</button>
+      </div>`;
+    };
+    openSheet({
+      title: "Split an order",
+      body: `<p>Partners see the part, their quantity and the date, never Omega's customer. Nothing is sent until a named person approves each job.</p>
+        <div class="nw-form">
+          <label class="field nw-wide"><span>Part</span><input id="soPart" maxlength="120" placeholder="e.g. M10×60 flange bolt, 10.9" autocomplete="off"></label>
+          <label class="field"><span>Order quantity (pieces)</span><input id="soQty" type="number" inputmode="numeric" min="1" max="10000000" step="1" value="1000"></label>
+          <label class="field"><span>Omega makes itself</span><input id="soSelf" type="number" inputmode="numeric" min="0" max="10000000" step="1" value="200"></label>
+          <label class="field"><span>Due date</span><input id="soDue" type="date"></label>
+          <label class="field nw-wide"><span>Notes for the partners</span><textarea id="soNotes" rows="2" maxlength="1000" placeholder="Drawing number, tolerances, packaging"></textarea></label>
+        </div>
+        <fieldset class="nw-lines"><legend>Jobs for partners</legend><div id="soLines">${rowHtml(main, 800)}${rowHtml(Object.keys(SPECS).find((k) => !mine.includes(k)) || "turning", 1000)}</div>
+          <button class="btn" type="button" id="soAdd">Add a job</button>
+          <p class="row-sub" id="soSum" aria-live="polite"></p></fieldset>
+        <div class="sheet-error" id="sheetError"></div>`,
+      ok: "Save for approval",
+      onOk: async () => {
+        const err = (t) => (($("sheetError").textContent = t), true);
+        const part = $("soPart").value.trim();
+        if (!part) return err("Describe the part first.");
+        const jobs = [...$("soLines").querySelectorAll(".nw-line")].map((r) => ({
+          operation: r.querySelector("[data-op]").value,
+          to_member_id: Number(r.querySelector("[data-to]").value) || null,
+          quantity: Number(r.querySelector("[data-qty]").value),
+        }));
+        if (!jobs.length) return err("Add at least one job for a partner.");
+        if (jobs.some((j) => !j.to_member_id)) return err("Choose a partner for every job.");
+        const { ok, data } = await api("/api/network/orders", {
+          json: {
+            part,
+            quantity: Number($("soQty").value),
+            self_quantity: Number($("soSelf").value),
+            due_date: $("soDue").value || null,
+            notes: $("soNotes").value.trim(),
+            jobs,
+          },
+        });
+        if (!ok) return err(data.error || "Refused.");
+        toast(`${data.jobs.length} jobs saved. Each one waits for a named person to approve it.`);
+        network.pendingOpen = data.jobs[0].id;
+        setNetworkView("jobs");
+        if (current === "network") loaders.network();
+        else location.hash = "#network";
+        return false;
+      },
+    });
+    const sum = () => {
+      const total = Number($("soQty").value) || 0;
+      const own = Number($("soSelf").value) || 0;
+      const shared = [...$("soLines").querySelectorAll(".nw-line")]
+        .filter((r) => mine.includes(r.querySelector("[data-op]").value))
+        .reduce((t, r) => t + (Number(r.querySelector("[data-qty]").value) || 0), 0);
+      const made = own + shared;
+      $("soSum").textContent = `${specName(main)}: Omega ${fmt(own)} + partners ${fmt(shared)} = ${fmt(made)} of ${fmt(total)}${made === total ? " ✓" : made < total ? `, ${fmt(total - made)} still to place` : `, ${fmt(made - total)} too many`}.`;
+    };
+    async function fill(row) {
+      const sel = row.querySelector("[data-to]");
+      const op = row.querySelector("[data-op]").value;
+      const q = Number(row.querySelector("[data-qty]").value);
+      const { ok, data } = await api(`/api/network/match?operation=${encodeURIComponent(op)}&quantity=${Number.isInteger(q) && q > 0 ? q : 1}`);
+      const keep = sel.value;
+      if (!ok || !(data || []).length) {
+        sel.innerHTML = `<option value="">No partner does ${esc(specName(op).toLowerCase())}</option>`;
+        return;
+      }
+      sel.innerHTML = data
+        .map((m) => `<option value="${esc(m.id)}">${esc(m.name)} · ${fmt(m.free)} free${m.fits ? "" : " (short)"}</option>`)
+        .join("");
+      if (keep && data.some((m) => String(m.id) === keep)) sel.value = keep;
+    }
+    const lines = $("soLines");
+    lines.querySelectorAll(".nw-line").forEach(fill);
+    lines.addEventListener("change", (e) => {
+      const row = e.target.closest(".nw-line");
+      if (row && e.target.matches("[data-op]")) fill(row);
+      sum();
+    });
+    lines.addEventListener("input", debounce((e) => {
+      const row = e.target.closest(".nw-line");
+      if (row && e.target.matches("[data-qty]")) fill(row);
+      sum();
+    }, 250));
+    lines.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-remove]");
+      if (b) (b.closest(".nw-line").remove(), sum());
+    });
+    $("soAdd").addEventListener("click", () => {
+      lines.insertAdjacentHTML("beforeend", rowHtml(Object.keys(SPECS).find((k) => !mine.includes(k)) || "turning", Number($("soQty").value) || 1));
+      fill(lines.lastElementChild);
+      sum();
+    });
+    ["soQty", "soSelf"].forEach((id) => $(id).addEventListener("input", sum));
+    sum();
+  }
+
+  // The sheet asks the server who can do the operation at that quantity, best
+  // first, and refreshes the list as the operation or the quantity changes.
+  function openSendJob(toId) {
+    const target = network.members.find((m) => m.id === toId);
+    const mine = ((network.me && network.me.member) || {}).specialisations || [];
+    const op0 = (target && (target.specialisations || [])[0]) || Object.keys(SPECS).find((k) => !mine.includes(k)) || "cold_forming";
+    let chosen = target ? target.id : null;
+    let kindTouched = false;
+    let seq = 0;
+    const kindFor = (op) => (mine.includes(op) ? "capacity" : "operation");
+    openSheet({
+      title: "Send a job",
+      body: `<p>The partner sees the part, quantity and date, never Omega's customer. Nothing is sent until a named person at Omega approves it.</p>
+        <div class="nw-form">
+          <label class="field"><span>Operation</span><select id="nwOp">${Object.entries(SPECS)
+            .map(([k, l]) => `<option value="${k}" ${k === op0 ? "selected" : ""}>${esc(l)}</option>`)
+            .join("")}</select></label>
+          <label class="field"><span>What you need</span><select id="nwKind">${Object.entries(KINDS)
+            .map(([k, l]) => `<option value="${k}" ${k === kindFor(op0) ? "selected" : ""}>${esc(l)}</option>`)
+            .join("")}</select></label>
+          <label class="field nw-wide"><span>Part</span><input id="nwPart" maxlength="120" placeholder="e.g. M8×40 flange bolt, 10.9, zinc flake" autocomplete="off"></label>
+          <label class="field"><span>Quantity (pieces)</span><input id="nwQty" type="number" inputmode="numeric" min="1" max="10000000" step="1" value="1000"></label>
+          <label class="field"><span>Due date</span><input id="nwDue" type="date"></label>
+          <label class="field nw-wide"><span>Notes</span><textarea id="nwNotes" rows="2" maxlength="1000" placeholder="Drawing number, tolerances, packaging"></textarea></label>
+        </div>
+        <fieldset class="nw-recipients"><legend>Send to</legend><div id="nwRecipients" aria-live="polite"><p class="loading">Finding partners…</p></div></fieldset>
+        <div class="sheet-error" id="sheetError"></div>`,
+      ok: "Save for approval",
+      onOk: async () => {
+        const err = (t) => (($("sheetError").textContent = t), true);
+        const part = $("nwPart").value.trim();
+        const quantity = Number($("nwQty").value);
+        if (!part) return err("Describe the part first.");
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000000) return err("The quantity is a whole number from 1 to 10,000,000.");
+        if (!chosen) return err("Choose who gets the job.");
+        const { ok, data } = await api("/api/network/jobs", {
+          json: {
+            to_member_id: chosen,
+            kind: $("nwKind").value,
+            operation: $("nwOp").value,
+            part,
+            quantity,
+            due_date: $("nwDue").value || null,
+            notes: $("nwNotes").value.trim(),
+          },
+        });
+        if (!ok) return err(data.error || "Refused.");
+        toast(`Saved. ${data.to_member ? data.to_member.name : "The partner"} sees it once a named person at Omega approves it.`);
+        network.pendingOpen = data.id;
+        setNetworkView("jobs");
+        if (current === "network") loaders.network();
+        else location.hash = "#network";
+        return false;
+      },
+    });
+    async function refresh() {
+      const mine = ++seq;
+      const op = $("nwOp").value;
+      const q = Number($("nwQty").value);
+      const quantity = Number.isInteger(q) && q > 0 ? q : 1;
+      const { ok, data } = await api(`/api/network/match?operation=${encodeURIComponent(op)}&quantity=${quantity}`);
+      if (mine !== seq || $("sheet").hidden) return;
+      const box = $("nwRecipients");
+      if (!box) return;
+      if (!ok) return (box.innerHTML = `<p class="row-sub">${esc(data.error || "Could not ask who is free.")}</p>`), (chosen = null);
+      const list = data || [];
+      if (!list.length) {
+        chosen = null;
+        box.innerHTML = `<p class="row-sub">No partner does ${esc(specName(op).toLowerCase())} yet.</p>`;
+        return;
+      }
+      if (!list.some((m) => m.id === chosen)) chosen = list[0].id;
+      box.innerHTML = list
+        .map(
+          (m, i) => `<label class="nw-recipient">
+            <input type="radio" name="nwTo" value="${esc(m.id)}" ${m.id === chosen ? "checked" : ""}>
+            <span class="nw-recipient-text"><span class="row-title">${esc(m.name)}${i === 0 ? ' <span class="hint">best match</span>' : ""}</span>
+              <span class="row-sub">${esc([m.city, m.country].filter(Boolean).join(", "))} · ${fmt(m.free)} of ${fmt(m.capacity_per_week)} free</span></span>
+            ${m.fits ? '<span class="pill green">Fits</span>' : '<span class="pill orange">Short on capacity</span>'}
+          </label>`
+        )
+        .join("");
+    }
+    const later = debounce(refresh, 250);
+    $("nwOp").addEventListener("change", () => {
+      if (!kindTouched) $("nwKind").value = kindFor($("nwOp").value);
+      refresh();
+    });
+    $("nwKind").addEventListener("change", () => (kindTouched = true));
+    $("nwQty").addEventListener("input", later);
+    $("nwRecipients").addEventListener("change", (e) => {
+      if (e.target.name === "nwTo") chosen = Number(e.target.value);
+    });
+    refresh();
+  }
+
+  function renderJobs() {
+    const el = $("nwJobList");
+    if (!network.jobs.length) {
+      el.innerHTML = `<li class="list-empty">No jobs yet. Send one from Members.</li>`;
+      return;
+    }
+    el.innerHTML = network.jobs
+      .map((j) => {
+        const [cls, word] = JOB_STATUS[j.status] || ["", j.status];
+        const sel = network.current && network.current.id === j.id;
+        return `<li><button class="row-btn nw-job" role="option" aria-selected="${sel}" data-job="${esc(j.id)}" tabindex="-1">
+          <span class="row-title"><span class="nw-dir ${esc(j.direction)}">${DIR_ICON[j.direction] || ""}<span class="sr">${esc(dirWords(j))}</span></span>${esc(otherSide(j))}</span>
+          <span class="row-sub">${j.order ? `Order ${esc(j.order.id)} · ` : ""}${esc(j.part)} · ${pcs(j.quantity)} · ${esc(specName(j.operation))}</span>
+          <span class="row-end">${j.unread ? `<span class="nw-dot" title="${fmt(j.unread)} new"><span class="sr">${fmt(j.unread)} new ${j.unread === 1 ? "message" : "messages"}</span></span>` : ""}<span class="pill ${cls}">${esc(word)}</span></span>
+        </button></li>`;
+      })
+      .join("");
+  }
+  $("nwJobList").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-job]");
+    if (b) openJob(Number(b.dataset.job));
+  });
+
+  function clearJobDetail() {
+    network.current = null;
+    $("nwJobDetail").innerHTML = `<div class="empty"><p class="empty-title">Choose a job</p><p>Use <kbd>J</kbd> and <kbd>K</kbd> to move through the list.</p></div>`;
+  }
+
+  async function openJob(id) {
+    const j = network.jobs.find((x) => x.id === id);
+    if (!j) return;
+    network.current = j;
+    if (network.view !== "jobs") setNetworkView("jobs");
+    renderJobs();
+    const btn = $("nwJobList").querySelector(`[data-job="${id}"]`);
+    if (btn) btn.scrollIntoView({ block: "nearest" });
+    renderJobDetail(j);
+  }
+
+  function renderJobDetail(j, { keepThread = false } = {}) {
+    const [cls, word] = JOB_STATUS[j.status] || ["", j.status];
+    const draft = keepThread && $("nwMsg") ? $("nwMsg").value : "";
+    $("nwJobDetail").innerHTML = `
+      <h2>${esc(j.part)}</h2>
+      <div class="meta"><span class="pill ${cls}">${esc(word)}</span>
+        <span>${esc(KINDS[j.kind] || j.kind)}</span><span>${esc(dirWords(j))} ${esc(otherSide(j))}</span></div>
+      <dl class="facts">
+        <dt>From</dt><dd>${esc(j.from_member.name)}</dd>
+        <dt>To</dt><dd>${esc(j.to_member.name)}</dd>
+        <dt>Operation</dt><dd>${esc(specName(j.operation))}</dd>
+        <dt>Quantity</dt><dd class="num">${pcs(j.quantity)}</dd>
+        <dt>Due</dt><dd>${j.due_date ? esc(day(j.due_date)) : "No date set"}</dd>
+        ${j.order ? `<dt>Order</dt><dd>Order ${esc(j.order.id)}: ${pcs(j.order.quantity)} of ${esc(j.order.part)}, Omega makes ${pcs(j.order.self_quantity)}</dd>` : ""}
+        <dt>Drafted</dt><dd>${esc(when(j.created_at))}${j.created_by ? ` by ${esc(j.created_by)}` : ""}</dd>
+        <dt>${j.status === "rejected" ? "Rejected" : "Approved"}</dt><dd>${j.approved_at ? `${esc(when(j.approved_at))} by ${esc(j.approved_by || "–")}` : "Not yet: nothing has been sent"}</dd>
+        ${j.decided_at ? `<dt>Decided</dt><dd>${esc(when(j.decided_at))}${j.decided_by ? ` by ${esc(j.decided_by)}` : ""}</dd>` : ""}
+        ${j.notes ? `<dt>Notes</dt><dd class="nw-notes">${esc(j.notes)}</dd>` : ""}
+      </dl>
+      ${
+        (j.actions || []).length
+          ? `<div class="actions">${j.actions
+              .filter((a) => JOB_ACTIONS[a])
+              .map((a) => `<button class="btn ${JOB_ACTIONS[a][1]}" type="button" data-decide="${a}">${JOB_ACTIONS[a][0]}</button>`)
+              .join("")}</div>`
+          : ""
+      }
+      <p class="section-label" id="nwThreadTitle">Messages</p>
+      <ol class="nw-thread" id="nwThread" aria-labelledby="nwThreadTitle"><li class="loading">Loading…</li></ol>
+      <label class="field nw-compose"><span>Message</span><textarea id="nwMsg" rows="3" maxlength="2000" placeholder="Write to ${esc(j.direction === "in" ? j.from_member.name : j.direction === "out" ? j.to_member.name : "both sides")}"></textarea></label>
+      <div class="actions"><span class="spacer"></span>
+        <span class="shortcut hide-narrow"><kbd>Ctrl</kbd> <kbd>Enter</kbd> sends</span>
+        <button class="btn primary" type="button" id="nwMsgSend">Send</button></div>`;
+    $("nwMsg").value = draft;
+    $("nwJobDetail").querySelectorAll("[data-decide]").forEach((b) => b.addEventListener("click", () => decideJob(j, b.dataset.decide)));
+    $("nwMsgSend").addEventListener("click", () => postMessage(j));
+    $("nwMsg").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) (e.preventDefault(), postMessage(j));
+    });
+    loadThread(j);
+  }
+
+  async function loadThread(j) {
+    const { ok, data } = await api(`/api/network/jobs/${j.id}/messages`);
+    if (!network.current || network.current.id !== j.id || !$("nwThread")) return;
+    if (!ok) return ($("nwThread").innerHTML = `<li class="row-sub">${esc(data.error || "Could not load the messages.")}</li>`);
+    renderThread(data || []);
+    if (j.unread) {
+      j.unread = 0;
+      renderJobs();
+      updateNetworkBadge();
+    }
+  }
+  function renderThread(msgs) {
+    const meId = network.me && network.me.member ? network.me.member.id : null;
+    $("nwThread").innerHTML = msgs.length
+      ? msgs
+          .map(
+            (m) => `<li class="nw-msg${m.from_member && m.from_member.id === meId ? " mine" : ""}">
+              <p class="nw-msg-head"><b>${esc(m.author)}</b> · ${esc(m.from_member ? m.from_member.name : "")} · <time>${esc(when(m.created_at))}</time></p>
+              <p class="nw-msg-body">${esc(m.body)}</p></li>`
+          )
+          .join("")
+      : `<li class="row-sub">No messages yet.</li>`;
+  }
+
+  async function postMessage(j) {
+    const ta = $("nwMsg");
+    const body = ta.value.trim();
+    if (!body) return toast("Write the message first.", "error");
+    if (body.length > 2000) return toast("A message is at most 2,000 characters.", "error");
+    $("nwMsgSend").disabled = true;
+    const { ok, data } = await api(`/api/network/jobs/${j.id}/messages`, { json: { body } });
+    if ($("nwMsgSend")) $("nwMsgSend").disabled = false;
+    if (!ok) return toast(data.error || "The message was not sent.", "error");
+    ta.value = "";
+    loadThread(j);
+  }
+
+  const DECIDED = { approve: "Approved and sent.", reject: "Rejected. It was never sent.", accept: "Accepted. The quantity is booked against your capacity.", decline: "Declined.", start: "Started.", done: "Marked done. The capacity is free again.", cancel: "Cancelled." };
+  function decideJob(j, decision) {
+    const run = async () => {
+      const { ok, data } = await api(`/api/network/jobs/${j.id}/decision`, { json: { decision } });
+      if (!ok) return toast(data.error || "Refused.", "error"), false;
+      toast(DECIDED[decision] || "Saved.");
+      network.pendingOpen = j.id;
+      await loaders.network();
+      return true;
+    };
+    if (!["decline", "cancel", "reject"].includes(decision)) return run();
+    if (decision === "reject")
+      return openSheet({
+        title: "Reject this job",
+        body: `<p>${esc(pcs(j.quantity))} of ${esc(j.part)} for ${esc(j.to_member.name)}. It has not been sent and never will be; draft a new one if plans change.</p><div class="sheet-error" id="sheetError"></div>`,
+        ok: "Reject",
+        okClass: "danger",
+        onOk: async () => !(await run()),
+      });
+    openSheet({
+      title: decision === "decline" ? "Decline this job" : "Cancel this job",
+      body: `<p>${esc(pcs(j.quantity))} of ${esc(j.part)}, ${esc(decision === "decline" ? `from ${j.from_member.name}` : `to ${j.to_member.name}`)}. This cannot be undone; send a new job if plans change.</p>
+        <div class="sheet-error" id="sheetError"></div>`,
+      ok: decision === "decline" ? "Decline" : "Cancel the job",
+      okClass: "danger",
+      onOk: async () => !(await run()),
+    });
+  }
+
   // ── Command palette ──────────────────────────────────
-  const COMMANDS = [
-    { label: "Today", hint: "1", run: () => (location.hash = "#today") },
-    { label: "Review", hint: "2", run: () => (location.hash = "#review") },
-    { label: "Leads", hint: "3", run: () => (location.hash = "#leads") },
-    { label: "Markets", hint: "4", run: () => (location.hash = "#markets") },
-    { label: "Setup: connect Omega's mailbox", hint: "5", run: () => (location.hash = "#setup") },
-    { label: "Import leads from a CSV file", hint: "", run: () => (go("leads"), setTimeout(importLeads, 50)) },
-    { label: "Download approved leads (CSV)", hint: "", run: () => (location.href = "/api/export/leads.csv") },
-    { label: "Open the classic dashboard", hint: "", run: () => (location.href = "/classic") },
+  // `staff` marks what only Omega's own people may reach; a partner's palette leaves it out.
+  const ALL_COMMANDS = [
+    { label: "Today", hint: "1", staff: true, run: () => (location.hash = "#today") },
+    { label: "Review", hint: "2", staff: true, run: () => (location.hash = "#review") },
+    { label: "Leads", hint: "3", staff: true, run: () => (location.hash = "#leads") },
+    { label: "Markets", hint: "4", staff: true, run: () => (location.hash = "#markets") },
+    { label: "Network: members and jobs", hint: "5", run: () => (location.hash = "#network") },
+    { label: "Setup: connect Omega's mailbox", hint: "6", staff: true, run: () => (location.hash = "#setup") },
+    { label: "Send a job to a partner", hint: "", run: () => (go("network"), setTimeout(() => openSendJob(), 50)) },
+    { label: "Split an order across the network", hint: "", staff: true, run: () => (go("network"), setTimeout(() => openSplitOrder(), 50)) },
+    { label: "Import leads from a CSV file", hint: "", staff: true, run: () => (go("leads"), setTimeout(importLeads, 50)) },
+    { label: "Download approved leads (CSV)", hint: "", staff: true, run: () => (location.href = "/api/export/leads.csv") },
+    { label: "Open the classic dashboard", hint: "", staff: true, run: () => (location.href = "/classic") },
     { label: "Sign out", hint: "", run: () => document.querySelector(".signout").submit() },
   ];
+  let COMMANDS = ALL_COMMANDS;
   function go(name) {
     if (current === name) loaders[name]();
     else location.hash = `#${name}`;
@@ -595,7 +1190,7 @@
   }
   const palSearch = debounce(async () => {
     const q = $("paletteInput").value.trim().toLowerCase();
-    if (q.length < 2) return renderPalette([]);
+    if (q.length < 2 || isMember) return renderPalette([]);
     if (!leads.length) await loaders.leads.fetch();
     renderPalette(leads.filter((c) => [c.organization, c.email].join(" ").toLowerCase().includes(q)).slice(0, 6));
   }, 150);
@@ -651,9 +1246,9 @@
       e.preventDefault();
       location.hash = `#${SCREENS[n - 1]}`;
     } else if (e.key === "j" || e.key === "ArrowDown") {
-      if (current === "review") (e.preventDefault(), moveIn(null, 1));
+      if (onAList()) (e.preventDefault(), moveIn(null, 1));
     } else if (e.key === "k" || e.key === "ArrowUp") {
-      if (current === "review") (e.preventDefault(), moveIn(null, -1));
+      if (onAList()) (e.preventDefault(), moveIn(null, -1));
     } else if (e.key === "/") {
       e.preventDefault();
       openPalette();
@@ -662,8 +1257,36 @@
 
   // ── Start ────────────────────────────────────────────
   if (navigator.platform && /Mac/.test(navigator.platform)) document.querySelectorAll(".search-pill kbd").forEach((k) => (k.textContent = "⌘K"));
-  api("/api/review/summary").then(({ data }) => updateBadges(data && data.counts));
-  api("/api/setup").then(({ ok, data }) => ok && updateSetupBadge(data));
-  api("/api/review?view=approved").then(({ data }) => data && data.reviewer && ($("who").textContent = `Signed in as ${data.reviewer}`));
-  show(location.hash.slice(1) || "today", { focus: false });
+  // Who is signed in decides what may be asked for: a partner's login is
+  // refused everything outside the network, so it must not ask at all.
+  async function start() {
+    const me = await api("/api/network/me");
+    if (me.ok && me.data) network.me = me.data;
+    if (network.me && network.me.role === "member") {
+      enterMemberMode();
+    } else {
+      api("/api/review/summary").then(({ data }) => updateBadges(data && data.counts));
+      api("/api/setup").then(({ ok, data }) => ok && updateSetupBadge(data));
+      api("/api/review?view=approved").then(({ data }) => data && data.reviewer && ($("who").textContent = `Signed in as ${data.reviewer}`));
+    }
+    show(location.hash.slice(1) || SCREENS[0], { focus: false });
+    if (current !== "network" && network.me) refreshNetworkBadge();
+  }
+
+  function enterMemberMode() {
+    isMember = true;
+    SCREENS = ["network"];
+    COMMANDS = ALL_COMMANDS.filter((c) => !c.staff).map((c) => (c.hint === "5" ? { ...c, hint: "1" } : c));
+    document.querySelectorAll(".nav a[data-screen]").forEach((a) => {
+      if (a.dataset.screen !== "network") a.closest("li").hidden = true;
+      else a.setAttribute("aria-keyshortcuts", "1");
+    });
+    document.querySelector(".sidebar-foot .classic-link[href='/classic']").hidden = true;
+    $("networkEyebrow").textContent = "Your work in Omega's network";
+    $("nwSplitOrder").hidden = true;
+    const m = network.me.member || {};
+    $("who").textContent = `Signed in as ${network.me.name || ""}${m.name ? ` · ${m.name}` : ""}`;
+  }
+
+  start();
 })();
