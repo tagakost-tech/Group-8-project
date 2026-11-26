@@ -2743,8 +2743,6 @@ def create_dashboard_app(settings: Settings):
 
     def _member_with(name: str, password: str) -> dict | None:
         if name in {account for account, _ in _accounts()}:
-            # Hash anyway, so a staff name takes as long as any other.
-            check_password_hash(_no_member_hash, password)
             return None
         row = network.member_by_login(db, name)
         stored = (row or {}).get("password_hash") or _no_member_hash
