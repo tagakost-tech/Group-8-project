@@ -5,10 +5,13 @@ there when a server instance starts. Each instance starts from the same
 invented data; approvals last only as long as that instance runs.
 
 The logins come from the host's environment variables
-OMEGA_DEMO_ADMIN_PASSWORD and OMEGA_DEMO_REVIEWER_PASSWORD. Without both the
-app refuses to start: each serverless instance would otherwise make its own
-random passwords, and nobody could log in.
+OMEGA_DEMO_ADMIN_PASSWORD and OMEGA_DEMO_REVIEWER_PASSWORD. Without them the
+demo uses the published demo logins below (the group's choice for the course
+showcase): every serverless instance must share them, and the demo holds only
+invented companies and sends nothing.
 """
+
+DEMO_LOGINS = ("demo-admin-password", "demo-reviewer-password")
 
 import os
 import sys
@@ -32,10 +35,7 @@ run_demo.DEMO_CLIENTS = work / "demo_clients.xlsx"
 
 admin, reviewer, made = run_demo.demo_passwords()
 if made:
-    raise RuntimeError(
-        "Set OMEGA_DEMO_ADMIN_PASSWORD and OMEGA_DEMO_REVIEWER_PASSWORD "
-        "in the host's environment variables."
-    )
+    admin, reviewer = DEMO_LOGINS
 settings = run_demo.demo_settings((admin, reviewer))
 run_demo.seed(settings)
 

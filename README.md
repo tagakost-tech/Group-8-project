@@ -66,8 +66,10 @@ searches, `Ctrl Enter` approves the open email.
 
 ### The hosted demo
 
-`app.py` serves the same demo on Vercel. It needs the two password variables
-above in the project's environment settings and refuses to start without them.
+`app.py` serves the same demo on Vercel: <https://group-8-omega.vercel.app>.
+Sign in as `admin` / `demo-admin-password` or the reviewer `maria` /
+`demo-reviewer-password`. These demo logins are public on purpose; set the two
+password variables above in Vercel to replace them.
 Vercel's newest Python is 3.14, so `.python-version` pins the demo to it;
 CI tests 3.14 as well as 3.15. Vercel is serverless, so this is a **showcase only**: the database is rebuilt
 from the invented data on each cold start, and the agent's background loop and
