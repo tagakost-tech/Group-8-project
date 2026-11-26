@@ -287,8 +287,10 @@ def test_the_sign_in_page_gets_its_style_and_readability_script_without_a_sessio
     client, _db = _client(tmp_path, settings_factory)
     page = anonymous(client).get("/login").get_data(as_text=True)
     assert 'src="/static/app/boot.js"' in page
+    assert 'src="/static/img/omega-logo.webp"' in page
     assert anonymous(client).get("/static/app/app.css").status_code == 200
     assert anonymous(client).get("/static/app/boot.js").status_code == 200
+    assert anonymous(client).get("/static/img/omega-logo.webp").status_code == 200
     assert anonymous(client).get("/static/app/app.js").status_code == 401
 
 
