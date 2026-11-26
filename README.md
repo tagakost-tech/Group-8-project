@@ -44,36 +44,16 @@ requests) is at **`/classic`**.
 | CRM | HubSpot-ready CSV export |
 | **Not in other tools** | **Every email approved by a named person, checked by hash before sending; rejections teach the agent which companies to skip** |
 
-## Try the demo
+## First run
 
-Python 3.15 on Windows (the `py` launcher):
+The app starts empty: no companies, no partners, no invented data. Configure
+`.env` (see `.env.example` and `docs/DEPLOY.md`), start it, and sign in as the
+administrator. **Setup** lists every step left before the first live email.
+In **Network**, set Omega's own weekly capacity on its card (**Set capacity**)
+and admit each certified partner (**Add a partner**) with its own login.
 
-```powershell
-py -3.15 -m pip install -r requirements.txt
-py -3.15 scripts/run_demo.py
-```
-
-Open <http://127.0.0.1:5078>. The logins for that run (`admin`, who controls
-the agent, and the reviewer `maria`) are printed in the terminal; set
-`OMEGA_DEMO_ADMIN_PASSWORD` and `OMEGA_DEMO_REVIEWER_PASSWORD` to choose them.
-
-The demo builds its own settings and never reads `.env`. It seeds invented
-companies (`.example` addresses, which cannot receive mail) and runs in dry-run
-mode, so nothing is sent.
-
-Keyboard: `1`–`5` switch screens, `J`/`K` move through a list, `Ctrl K`
+Keyboard: `1`–`6` switch screens, `J`/`K` move through a list, `Ctrl K`
 searches, `Ctrl Enter` approves the open email.
-
-### The hosted demo
-
-`app.py` serves the same demo on Vercel: <https://group-8-omega.vercel.app>.
-Sign in as `admin` / `demo-admin-password` or the reviewer `maria` /
-`demo-reviewer-password`. These demo logins are public on purpose; set the two
-password variables above in Vercel to replace them.
-Vercel's newest Python is 3.14, so `.python-version` pins the demo to it;
-CI tests 3.14 as well as 3.15. Vercel is serverless, so this is a **showcase only**: the database is rebuilt
-from the invented data on each cold start, and the agent's background loop and
-inbox polling do not run there.
 
 ## Network
 
@@ -98,12 +78,6 @@ the member list and the matching. Omega's leads, contacts, reviews and settings
 answer 403. The administrator admits a partner (**Add a partner**, or
 `POST /api/network/members`) and sets each card's weekly capacity; a partner
 can change only its own capacity.
-
-The demo seeds seven invented members, three jobs and a 1,000-bolt order
-waiting for approval. Partner logins:
-`tornitura` (Tornitura Adda) and `stampaggio` (Stampaggio Brianza), password
-`demo-member-password`, or `OMEGA_DEMO_MEMBER_PASSWORD` when set. Like the
-other demo logins, it is public on purpose.
 
 ## Run it in production
 
@@ -143,7 +117,7 @@ Microsoft 365 sign-in, backups and security updates.
 | `templates/app.html`, `static/app/` | The app (`/`). |
 | `templates/dashboard.html`, `static/js/` | The operator dashboard (`/classic`). |
 | `main.py` | The web app and the command line (`py -3.15 main.py --help`). |
-| `.github/workflows/ci.yml` | Lint, tests on Python 3.15 (production) and 3.14 (the Vercel demo), browser tests. |
+| `.github/workflows/ci.yml` | Lint, tests on Python 3.15, browser tests. |
 
 ## Tests
 
@@ -160,13 +134,9 @@ and `tests/ui/test_app_shell.py`.
 
 ## Limits
 
-- **This is a prototype for a course.** The demo companies and logins are
-  invented.
+- **This is a prototype for a course**, handed over to Omega IFS.
 - **The lawful-basis rules** in `modules/compliance.py` are the developers'
   proposals and need a lawyer's review before live use.
-- **The hosted demo on Vercel resets** to its invented data whenever its
-  server restarts, and runs no background sending: Vercel keeps no disk. The
-  production path is the Docker image on an always-on server.
 - **The older tests** run against a fixed stand-in client ("Suppleco") so they
   check the machinery, not Omega's wording; Omega's own words live only in
   `client/omega.json` and `templates/`.
