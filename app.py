@@ -33,9 +33,16 @@ work.mkdir(parents=True, exist_ok=True)
 run_demo.DEMO_DB = work / "demo.db"
 run_demo.DEMO_CLIENTS = work / "demo_clients.xlsx"
 
-admin, reviewer, made = run_demo.demo_passwords()
-if made:
-    admin, reviewer = DEMO_LOGINS
+# Each login falls back on its own: a password the operator set is never
+# replaced by the published one.
+admin = os.environ.get("OMEGA_DEMO_ADMIN_PASSWORD", "").strip() or DEMO_LOGINS[0]
+reviewer = os.environ.get("OMEGA_DEMO_REVIEWER_PASSWORD", "").strip() or DEMO_LOGINS[1]
+if DEMO_LOGINS[0] == admin or DEMO_LOGINS[1] == reviewer:
+    print(
+        "WARNING: the public demo logins are in use; set OMEGA_DEMO_ADMIN_PASSWORD "
+        "and OMEGA_DEMO_REVIEWER_PASSWORD to replace them.",
+        file=sys.stderr,
+    )
 settings = run_demo.demo_settings((admin, reviewer))
 run_demo.seed(settings)
 
