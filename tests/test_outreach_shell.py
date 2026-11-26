@@ -276,6 +276,22 @@ def test_a_browser_without_a_session_gets_the_sign_in_page_not_a_pop_up(
     assert api.status_code == 401 and "WWW-Authenticate" in api.headers
 
 
+def test_the_sign_in_page_gets_its_style_and_readability_script_without_a_session(
+    tmp_path, settings_factory
+):
+    """The sign-in page loads app.css and boot.js (the saved text size and
+    contrast) before anyone has signed in, so both must answer without one;
+    the app's own script stays behind the sign-in."""
+    from conftest import anonymous
+
+    client, _db = _client(tmp_path, settings_factory)
+    page = anonymous(client).get("/login").get_data(as_text=True)
+    assert 'src="/static/app/boot.js"' in page
+    assert anonymous(client).get("/static/app/app.css").status_code == 200
+    assert anonymous(client).get("/static/app/boot.js").status_code == 200
+    assert anonymous(client).get("/static/app/app.js").status_code == 401
+
+
 def test_signing_in_gives_a_session_that_records_who_acted(tmp_path, settings_factory):
     from conftest import TEST_DASHBOARD_PASSWORD, TEST_DASHBOARD_USERNAME
 

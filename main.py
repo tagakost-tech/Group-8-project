@@ -2781,7 +2781,7 @@ def create_dashboard_app(settings: Settings):
         g.member_login = _session_member()
         if g.member_login is not None:
             return None
-        if request.path in ("/login", "/static/app/app.css") or _session_user():
+        if request.path in ("/login", "/static/app/app.css", "/static/app/boot.js") or _session_user():
             return None
         # The connection's own address: no trusted-proxy setting exists, so a
         # header the caller writes, such as X-Forwarded-For, is never read.
