@@ -5,11 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <title>Omega Outreach Agent</title>
+  <script src="{{ url_for('static', filename='app/boot.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='app/app.css') }}">
   <script src="{{ url_for('static', filename='app/app.js') }}" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
+
+  <div class="read-wrap">
+    <button class="read-btn" type="button" id="readBtn" aria-expanded="false" aria-controls="readPanel" aria-label="Readability: text size, contrast and spacing">Aa</button>
+    <div class="read-panel" id="readPanel" role="group" aria-labelledby="readTitle" hidden>
+      <h2 id="readTitle">Readability</h2>
+      <p class="read-note">Saved on this computer only.</p>
+      <div class="read-row">
+        <span id="sizeLabel">Text size</span>
+        <span class="read-size" role="group" aria-labelledby="sizeLabel">
+          <button class="btn" type="button" id="sizeDown" aria-label="Smaller text">A−</button>
+          <output id="sizeOut" aria-live="polite">100%</output>
+          <button class="btn" type="button" id="sizeUp" aria-label="Larger text">A+</button>
+        </span>
+      </div>
+      <div class="read-row"><span id="contrastLabel">Higher contrast</span><button class="switch" type="button" role="switch" id="contrastSw" aria-checked="false" aria-labelledby="contrastLabel"></button></div>
+      <div class="read-row"><span id="easyLabel">Easier reading<small>More space between letters, words and lines</small></span><button class="switch" type="button" role="switch" id="easySw" aria-checked="false" aria-labelledby="easyLabel"></button></div>
+      <div class="read-row"><span id="motionLabel">Reduce motion</span><button class="switch" type="button" role="switch" id="motionSw" aria-checked="false" aria-labelledby="motionLabel"></button></div>
+      <button class="btn" type="button" id="readReset">Reset</button>
+    </div>
+  </div>
 
   <div class="shell">
     <nav class="sidebar" aria-label="Sections">
