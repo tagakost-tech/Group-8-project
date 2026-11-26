@@ -78,7 +78,70 @@
     if (focus) $("main").focus({ preventScroll: true });
     window.scrollTo({ top: 0 });
   }
-  window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+  const screenFromHash = () => location.hash.slice(1).split("&")[0];
+  window.addEventListener("hashchange", () => show(screenFromHash()));
+
+  // ── Readability: text size, higher contrast, easier reading, less motion ──
+  // Saved on this computer only; storage can be blocked, so every read and
+  // write is guarded and the choice then lasts until the page is closed.
+  const root = document.documentElement;
+  const SIZES = [90, 100, 110, 120, 130, 140, 150];
+  function readState() {
+    return {
+      size: Number(String(root.style.fontSize || "100%").replace("%", "")) || 100,
+      contrast: root.dataset.contrast === "more" ? "more" : "",
+      easy: root.dataset.easy === "on" ? "on" : "",
+      motion: root.dataset.motion === "reduce" ? "reduce" : "",
+    };
+  }
+  function applyRead(s) {
+    root.style.fontSize = s.size === 100 ? "" : `${s.size}%`;
+    for (const [key, on] of [["contrast", "more"], ["easy", "on"], ["motion", "reduce"]]) {
+      if (s[key] === on) root.dataset[key] = on;
+      else delete root.dataset[key];
+    }
+    try {
+      localStorage.setItem("omega-read", JSON.stringify(s));
+    } catch {
+      /* storage blocked: the choice lasts until the page is closed */
+    }
+    syncRead();
+  }
+  function syncRead() {
+    const s = readState();
+    $("sizeOut").textContent = `${s.size}%`;
+    $("sizeDown").disabled = s.size <= SIZES[0];
+    $("sizeUp").disabled = s.size >= SIZES[SIZES.length - 1];
+    $("contrastSw").setAttribute("aria-checked", String(s.contrast === "more"));
+    $("easySw").setAttribute("aria-checked", String(s.easy === "on"));
+    $("motionSw").setAttribute("aria-checked", String(s.motion === "reduce"));
+  }
+  function stepSize(d) {
+    const s = readState();
+    const i = SIZES.indexOf(s.size);
+    applyRead({ ...s, size: SIZES[Math.max(0, Math.min(SIZES.length - 1, (i === -1 ? 1 : i) + d))] });
+  }
+  const flip = (key, on) => () => {
+    const s = readState();
+    applyRead({ ...s, [key]: s[key] === on ? "" : on });
+  };
+  $("sizeDown").addEventListener("click", () => stepSize(-1));
+  $("sizeUp").addEventListener("click", () => stepSize(1));
+  $("contrastSw").addEventListener("click", flip("contrast", "more"));
+  $("easySw").addEventListener("click", flip("easy", "on"));
+  $("motionSw").addEventListener("click", flip("motion", "reduce"));
+  $("readReset").addEventListener("click", () => applyRead({ size: 100, contrast: "", easy: "", motion: "" }));
+  function setReadOpen(open) {
+    $("readPanel").hidden = !open;
+    $("readBtn").setAttribute("aria-expanded", String(open));
+    if (open) syncRead();
+  }
+  $("readBtn").addEventListener("click", () => setReadOpen($("readPanel").hidden));
+  document.addEventListener("click", (e) => {
+    if (!$("readPanel").hidden && !e.target.closest(".read-wrap")) setReadOpen(false);
+  });
+  syncRead();
+  if (/(^|&)read=open(&|$)/.test(location.hash.slice(1))) setReadOpen(true);
 
   // ── Sheet (a small modal) ────────────────────────────
   let sheetDone = null;
@@ -498,7 +561,7 @@
                 return `<tr><td class="company">${esc(c.organization || "–")}<small>${esc(c.email)}</small></td>
                   <td class="hide-narrow">${esc(c.company_country || "–")}</td>
                   <td class="hide-narrow">${esc(c.sector || "–")}</td>
-                  <td><span class="score"><span class="num">${fmt(c.fit_score)}</span><span class="score-bar"><i style="width:${c.fit_score || 0}%"></i></span></span></td>
+                  <td><span class="score"><span class="num">${fmt(c.fit_score)}</span><span class="score-bar"><i style="width:${Math.max(0, Math.min(100, Number(c.fit_score) || 0))}%"></i></span></span></td>
                   <td>${outcomeControl(c.id, c.outcome, true)}</td>
                   <td class="hide-narrow nowrap">${esc(STATUS[c.status] || c.status)}</td></tr>`;
               })
@@ -532,7 +595,7 @@
   };
 
   // ── Setup: what is left before a live email can go ──
-  const SETUP_MARK = { done: ["green", "Done"], todo: ["orange", "To do"], off: ["", "Off"], unknown: ["", "Not checked"] };
+  const SETUP_MARK = { done: ["green", "Done"], todo: ["orange", "To do"], off: ["", "Off"], unknown: ["", "Check did not run"] };
   loaders.setup = async () => {
     const { ok, data } = await api("/api/setup");
     if (!ok) return toast(data.error || "Could not run the checks.", "error");
@@ -1234,6 +1297,7 @@
     if (e.key === "Escape") {
       if (!$("palette").hidden) return closePalette();
       if (!$("sheet").hidden) return closeSheet();
+      if (!$("readPanel").hidden) return setReadOpen(false), $("readBtn").focus();
     }
     if (!$("palette").hidden || !$("sheet").hidden) return;
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && current === "review" && review.current) {
@@ -1269,7 +1333,7 @@
       api("/api/setup").then(({ ok, data }) => ok && updateSetupBadge(data));
       api("/api/review?view=approved").then(({ data }) => data && data.reviewer && ($("who").textContent = `Signed in as ${data.reviewer}`));
     }
-    show(location.hash.slice(1) || SCREENS[0], { focus: false });
+    show(screenFromHash() || SCREENS[0], { focus: false });
     if (current !== "network" && network.me) refreshNetworkBadge();
   }
 
