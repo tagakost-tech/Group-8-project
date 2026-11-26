@@ -15,7 +15,8 @@ checks:
     ("made and checked in the same plant") is not a label;
   - the text really is 1.5 times larger at 150%, and higher contrast and
     easier reading really change the page;
-  - Omega's logo is shown in the sidebar on wide screens.
+  - Omega's logo is shown and loaded: on the sign-in page, in the sidebar on
+    wide screens and in the top corner on phones.
 Then it opens the Readability panel, checks Escape closes it, and checks a
 choice survives a reload.
 
@@ -72,6 +73,8 @@ def main() -> int:
         page.on("request", lambda r: urlparse(r.url).netloc not in (host, "") and outside.append(r.url))
 
         page.goto(f"{base}/login")
+        page.wait_for_load_state("networkidle")
+        problems += [f"sign-in page: {x}" for x in _logo(page, ".signin .brand-logo", 48)]
         page.fill("input[name=username]", user)
         page.fill("input[name=password]", password)
         page.click("button[type=submit]")
@@ -129,7 +132,9 @@ def main() -> int:
                             if mode != "plain" and look["spacing"] == b["spacing"]:
                                 problems.append(f"{where}: easier reading did not change letter spacing")
                         if width == 1440:
-                            problems += [f"{where}: {x}" for x in _logo(page)]
+                            problems += [f"{where}: {x}" for x in _logo(page, ".sidebar .brand-logo", 48)]
+                        else:
+                            problems += [f"{where}: {x}" for x in _logo(page, ".top-logo", 24)]
         problems += _panel(page, base)
         browser.close()
 
@@ -161,18 +166,22 @@ def _look(page) -> dict:
     )
 
 
-def _logo(page) -> list[str]:
+def _logo(page, selector: str, min_width: int) -> list[str]:
     info = page.evaluate(
-        """() => { const el = document.querySelector('.sidebar .brand-logo'); if (!el) return null;
+        """(sel) => { const el = document.querySelector(sel); if (!el) return null;
              const r = el.getBoundingClientRect(); const cs = getComputedStyle(el);
              return { loaded: el.complete && el.naturalWidth > 0, width: r.width, filter: cs.filter,
-                      src: el.getAttribute('src') }; }"""
+                      visible: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0,
+                      src: el.getAttribute('src') }; }""",
+        selector,
     )
     if info is None:
-        return ["no logo in the sidebar"]
+        return [f"no Omega logo ({selector})"]
     out = []
-    if not info["loaded"] or info["width"] < 24:
-        out.append(f"the logo is not shown ({info['width']:.0f}px)")
+    if not info["loaded"]:
+        out.append(f"the Omega logo did not load ({selector})")
+    if not info["visible"] or info["width"] < min_width:
+        out.append(f"the Omega logo is {info['width']:.0f}px wide, under {min_width}px ({selector})")
     if info["filter"] not in ("none", ""):
         out.append(f"the logo has a filter: {info['filter']}")
     if "omega-logo" not in (info["src"] or ""):

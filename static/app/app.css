@@ -399,7 +399,12 @@ select.outcome.compact { min-width: 0; padding: 4px 6px; font-size: 0.8125rem; }
 .nw-rating b { color: var(--label); font-weight: 600; }
 
 .nw-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.brand-logo { width: 34px; height: auto; border-radius: 4px; flex: none; }
+.brand-logo { width: 56px; height: auto; border-radius: 4px; flex: none; }
+.signin .brand-logo { width: 72px; }
+.top-logo { display: none; }
+@media (max-width: 760px) {
+  .top-logo { display: block; position: fixed; top: 8px; left: 16px; z-index: 35; width: 32px; height: auto; border-radius: 3px; }
+}
 .nw-specs { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
 .nw-specs legend { font-weight: 600; margin-bottom: 6px; }
 .nw-specs label { display: inline-flex; gap: 6px; align-items: center; }
