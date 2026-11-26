@@ -192,6 +192,16 @@ def test_a_rejected_draft_is_never_sent(net):
     assert _decide(client, job["id"], "approve").status_code == 409
 
 
+def test_a_draft_cancelled_before_approval_is_never_seen_by_the_recipient(net):
+    client, _db, ids = net
+    job = _job(client, ids["turner"], 10, "turning", approve=False).get_json()
+    client.post(f"/api/network/jobs/{job['id']}/messages", json={"body": "Internal: price?"})
+    r = _decide(client, job["id"], "cancel")
+    assert r.status_code == 200 and r.get_json()["status"] == "cancelled"
+    assert client.get("/api/network/jobs", headers=TURNER).get_json() == []
+    assert client.get(f"/api/network/jobs/{job['id']}/messages", headers=TURNER).status_code == 404
+
+
 def test_only_omegas_staff_approve_and_a_reviewer_may(net):
     client, _db, ids = net
     # A partner's own draft waits for Omega too; neither partner approves it.
